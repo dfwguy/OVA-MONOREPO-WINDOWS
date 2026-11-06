@@ -1,0 +1,30 @@
+[Unit]
+Description=NVIS read-only Slurm job observability collector
+After=network-online.target prometheus-node-exporter.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=SLURM_BIN=/cm/local/apps/slurm/current/bin
+Environment=SLURM_CONF=/cluster/slurm/etc/slurm/slurm.conf
+Environment=NVIS_JOB_LOG_DIR=/cluster/OVA/logs/iren_mkz-16k-validation
+Environment=NVIS_JOB_STATE_FILE=/var/lib/nvis-observability/slurm-job-collector-state.json
+Environment=NVIS_JOB_NODE_LIMIT=4096
+Environment=NVIS_ACTIVE_TELEMETRY_NODE_LIMIT=4096
+ExecStart=/usr/bin/python3 /opt/observability/iren_mkz/exporters/slurm-job/job-collector.py /var/lib/prometheus/node-exporter/nvis-slurm-jobs.prom
+Nice=15
+IOSchedulingClass=idle
+CPUQuota=25%
+MemoryMax=384M
+TimeoutStartSec=55
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadOnlyPaths=/cluster /cm
+ReadWritePaths=/var/lib/prometheus/node-exporter /var/lib/nvis-observability
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictSUIDSGID=true
+CapabilityBoundingSet=

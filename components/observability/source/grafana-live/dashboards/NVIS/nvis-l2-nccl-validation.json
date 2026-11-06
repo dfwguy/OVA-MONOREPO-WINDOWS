@@ -1,0 +1,1722 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Measurable prerequisites for collective validation, from DCGM NVLink counters on the trays. No collective-benchmark exporter is live.",
+  "editable": true,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 151,
+      "options": {
+        "content": "<div style=\"font-size:12.5px;line-height:1.7;color:#c7ccd1\"><b style='color:#e6e9ed'>NCCL / collective validation \u2014 area home.</b> <span style='color:#B77D34'>Scope note:</span> no collective-benchmark exporter is currently producing (there is no live source of bus bandwidth or collective latency on this stack), so this area reports what the trays themselves can prove: which GPUs are carrying NVLink traffic, and whether any of them is throwing interconnect errors while doing it. Everything below is measured, not inferred.<div style=\"margin-top:8px\"><a href=\"/d/iren_mkz-llmb-validation\" style=\"display:inline-block;padding:3px 9px;margin:2px 4px 2px 0;border-radius:3px;background:#20242b;border:1px solid #333a44;color:#9aa4b1;text-decoration:none\">Live Job &amp; GPU Telemetry</a><a href=\"/d/nvis-l2-llmb-validation\" style=\"display:inline-block;padding:3px 9px;margin:2px 4px 2px 0;border-radius:3px;background:#20242b;border:1px solid #333a44;color:#9aa4b1;text-decoration:none\">LLMB Area Home</a><a href=\"/d/iren_mkz-llmb-deepseek\" style=\"display:inline-block;padding:3px 9px;margin:2px 4px 2px 0;border-radius:3px;background:#20242b;border:1px solid #333a44;color:#9aa4b1;text-decoration:none\">Run Drill-Down \u00b7 GPU Compute</a><a href=\"/d/iren_mkz-llmb-nemotron\" style=\"display:inline-block;padding:3px 9px;margin:2px 4px 2px 0;border-radius:3px;background:#20242b;border:1px solid #333a44;color:#9aa4b1;text-decoration:none\">Run Drill-Down \u00b7 Host &amp; Memory</a><span style=\"display:inline-block;padding:3px 9px;margin:2px 4px 2px 0;border-radius:3px;background:#2a3f2a;border:1px solid #3d5a3d;color:#a8c8a8;font-weight:600\">NCCL Area Home</span><a href=\"/d/iren_mkz-nccl-validation\" style=\"display:inline-block;padding:3px 9px;margin:2px 4px 2px 0;border-radius:3px;background:#20242b;border:1px solid #333a44;color:#9aa4b1;text-decoration:none\">NCCL Runs \u00b7 NVLink &amp; Interconnect</a><a href=\"/d/iren_mkz-nccl-acceptance-matrix\" style=\"display:inline-block;padding:3px 9px;margin:2px 4px 2px 0;border-radius:3px;background:#20242b;border:1px solid #333a44;color:#9aa4b1;text-decoration:none\">Collective Run Coverage Matrix</a></div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 152,
+      "panels": [],
+      "title": "GPUs able to report interconnect telemetry",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "GPUs currently exporting a DCGM NVLink throughput counter. The table beneath breaks this down by rack; that column sums to this number exactly.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 5000
+              },
+              {
+                "color": "dark-green",
+                "value": 7000
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 4
+      },
+      "id": 153,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL) or on() vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs reporting NVLink throughput",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "GPUs visible to DCGM whose NVLink counters are absent \u2014 these are blind spots for any collective run.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              },
+              {
+                "color": "dark-red",
+                "value": 200
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 4
+      },
+      "id": 154,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(DCGM_FI_DEV_GPU_UTIL unless on(node,gpu) DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL) or on() vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs reporting DCGM but NOT NVLink throughput",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Peak NVLink bandwidth above zero at any point in the selected time range. Instantaneous NVLink is zero between collectives, so this is measured over the window rather than at a single instant.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 4
+      },
+      "id": 155,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(max_over_time(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL[$__range]) > 0) or on() vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs that moved NVLink traffic in this window",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "None \u2014 every GPU visible to DCGM also reports NVLink counters.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Util %"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#B77D34",
+                      "value": null
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 64
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tray"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 168
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "id": 156,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": true,
+          "enablePagination": false,
+          "fields": [],
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Util %"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "DCGM_FI_DEV_GPU_UTIL unless on(node,gpu) DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs with no NVLink counters \u2014 the exact GPUs (footer Count = the stat above)",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "err_code": true,
+              "err_msg": true,
+              "gpu_ordinal": true,
+              "instance": true,
+              "job": true,
+              "link": true,
+              "modelName": true,
+              "namespace": true,
+              "pci_bus_id": true,
+              "pod": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "service": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value": "Util %",
+              "gpu": "GPU",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Peak NVLink throughput per rack over the window. The 'GPUs moving traffic' column is built from the identical selector as the stat above and sums to it exactly.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NVLink total"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-blue",
+                      "value": null
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "KBs"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 64
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs moving traffic"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "id": 157,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": true,
+          "enablePagination": false,
+          "fields": [],
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "NVLink total"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sort_desc(sum by(rack,su)(max_over_time(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL[$__range])))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(rack)(max_over_time(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL[$__range]) > 0)",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "B"
+        }
+      ],
+      "title": "Racks moving NVLink traffic \u2014 the 'GPUs moving traffic' column sums to the stat above",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "rack",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "err_code": true,
+              "err_msg": true,
+              "gpu_ordinal": true,
+              "instance": true,
+              "job": true,
+              "link": true,
+              "modelName": true,
+              "namespace": true,
+              "pci_bus_id": true,
+              "pod": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "service": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value #A": "NVLink total",
+              "Value #B": "GPUs moving traffic",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 158,
+      "panels": [],
+      "title": "Collective activity attributable to a Slurm job in this window",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Slurm jobs in the window whose trays can actually be measured for collective traffic.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 20
+      },
+      "id": 159,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(jobid)(max_over_time(cgroup_info{username!=\"\",username!=\"root\"}[$__range]) and on(node) count by(node)(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL))) or on() vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Jobs in this window on trays with NVLink telemetry",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "The measurable footprint of collectives run inside a Slurm job during the selected window.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 20
+      },
+      "id": 160,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(max_over_time(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL[$__range]) > 0 and on(node) max by(node)(max_over_time(cgroup_info{username!=\"\",username!=\"root\"}[$__range]))) or on() vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Job GPUs that moved NVLink traffic in this window",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Allocated and instrumented, but never moved a byte over NVLink in the selected window \u2014 a rank that is not participating in any collective.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 20
+      },
+      "id": 161,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(max_over_time(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL[$__range]) == 0 and on(node) max by(node)(max_over_time(cgroup_info{username!=\"\",username!=\"root\"}[$__range]))) or on() vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Job GPUs silent on NVLink for the whole window",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "No job in the window ran on a tray with NVLink telemetry.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trays"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-blue",
+                      "value": null
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 0,
+        "y": 24
+      },
+      "id": 162,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": true,
+          "enablePagination": false,
+          "fields": [],
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Trays"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(jobid,username)(max_over_time(cgroup_info{username!=\"\",username!=\"root\"}[$__range]) and on(node) count by(node)(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Jobs measurable for collective traffic \u2014 the exact jobs (footer Count = the stat above)",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "err_code": true,
+              "err_msg": true,
+              "gpu_ordinal": true,
+              "instance": true,
+              "job": true,
+              "link": true,
+              "modelName": true,
+              "namespace": true,
+              "pci_bus_id": true,
+              "pod": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "service": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value": "Trays",
+              "jobid": "Job",
+              "username": "User"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "No GPU inside a running job moved NVLink traffic in this window.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NVLink"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-blue",
+                      "value": null
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "KBs"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 64
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tray"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 168
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 8,
+        "y": 24
+      },
+      "id": 163,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": true,
+          "enablePagination": false,
+          "fields": [],
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "NVLink"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sort_desc(max_over_time(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL[$__range]) > 0 and on(node) max by(node)(max_over_time(cgroup_info{username!=\"\",username!=\"root\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Job GPUs that moved NVLink traffic \u2014 the exact GPUs (footer Count = the stat above)",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "err_code": true,
+              "err_msg": true,
+              "gpu_ordinal": true,
+              "instance": true,
+              "job": true,
+              "link": true,
+              "modelName": true,
+              "namespace": true,
+              "pci_bus_id": true,
+              "pod": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "service": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value": "NVLink",
+              "gpu": "GPU",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "None \u2014 every instrumented GPU inside a job moved NVLink traffic.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NVLink"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#B77D34",
+                      "value": null
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "KBs"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 64
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tray"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 168
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 24
+      },
+      "id": 164,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": true,
+          "enablePagination": false,
+          "fields": [],
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "NVLink"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max_over_time(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL[$__range]) == 0 and on(node) max by(node)(max_over_time(cgroup_info{username!=\"\",username!=\"root\"}[$__range]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Job GPUs silent on NVLink \u2014 the exact GPUs (footer Count = the stat above)",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "err_code": true,
+              "err_msg": true,
+              "gpu_ordinal": true,
+              "instance": true,
+              "job": true,
+              "link": true,
+              "modelName": true,
+              "namespace": true,
+              "pci_bus_id": true,
+              "pod": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "service": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value": "NVLink",
+              "gpu": "GPU",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Traffic outside a job step is either a manual run or a leftover process.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "unit": "KBs"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 35
+      },
+      "id": 165,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL)",
+          "instant": false,
+          "legendFormat": "All GPUs",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL and on(node) max by(node)(max_over_time(cgroup_info{username!=\"\",username!=\"root\"}[$__range])))",
+          "instant": false,
+          "legendFormat": "GPUs inside a job",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Fleet NVLink throughput and the share of it inside a Slurm job",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Identical selector to the stat above, grouped by rack. The 'GPUs reporting' column sums to the stat; the footer Count is the number of racks.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "None \u2014 no GPU is reporting an NVLink counter.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs reporting"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
+      "id": 930,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": true,
+          "enablePagination": false,
+          "fields": [],
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "GPUs reporting"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sort_desc(count by(rack,su)(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs reporting NVLink throughput, by rack \u2014 this column sums to the stat above",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "err_code": true,
+              "err_msg": true,
+              "gpu_ordinal": true,
+              "instance": true,
+              "job": true,
+              "jobid": true,
+              "link": true,
+              "modelName": true,
+              "namespace": true,
+              "pci_bus_id": true,
+              "pod": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "service": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true,
+              "username": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value": "GPUs reporting",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "nccl",
+    "validation",
+    "home"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Data source",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "15m",
+      "30m",
+      "1h"
+    ]
+  },
+  "timezone": "browser",
+  "title": "NCCL / Collective Validation \u2014 Area Home",
+  "uid": "nvis-l2-nccl-validation",
+  "version": 1
+}

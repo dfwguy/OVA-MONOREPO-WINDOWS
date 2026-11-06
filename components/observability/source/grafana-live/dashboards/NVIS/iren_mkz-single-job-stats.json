@@ -1,0 +1,2949 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Per-job resource accounting for IREN_MKZ GB300. Canonical owner of per-job placement, per-tray accounting and per-GPU detail. Fault triage for the same job lives on Job Health.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Job Stats",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/iren_mkz-single-job-stats"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Job Health \u2014 fault triage",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/iren_mkz-job-health"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Jobs & Cluster home",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/nvis-l2-job-cluster"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Cross-domain impact",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/nvis-impact-analysis"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "<style>\n.nvh{font-family:Inter,Roboto,sans-serif;color:#c7d0d9;line-height:1.5;padding:2px 2px}\n.nvh h4{font-size:15px;font-weight:600;color:#e6edf3;margin:0 0 4px 0}\n.nvh code{color:#9fb4c7}\n.nvn{margin-top:8px}\n.nvn a{display:inline-block;padding:4px 11px;margin-right:8px;border:1px solid #2b3138;\n border-radius:4px;background:#181b1f;color:#c7d0d9;text-decoration:none;font-size:12px}\n.nvn a:hover{border-color:#3d7a4e;color:#e6edf3}\n.nvn a.on{border-color:#3d7a4e;color:#e6edf3;background:#1c2026}\n</style><div class=\"nvh\"><h4>Job Stats &mdash; placement and resources for one job</h4>The tray set for the selected <b>Job&nbsp;ID</b> is resolved from <code>cgroup_info</code> published by the Slurm cgroup exporter on every tray; GPU and host series are then restricted to exactly those trays. Each tile below is backed by the table under it &mdash; row count for counts, column total for sums. Faults for this job live on <b>Job&nbsp;Health</b>.<div class=\"nvn\"><a class=\"on\" href=\"/d/iren_mkz-single-job-stats?var-cluster=$cluster&var-jobid=$jobid\">Job Stats</a><a class=\"\" href=\"/d/iren_mkz-job-health?var-cluster=$cluster&var-jobid=$jobid\">Job Health \u2014 fault triage</a><a class=\"\" href=\"/d/nvis-l2-job-cluster?var-cluster=$cluster&var-jobid=$jobid\">Jobs &amp; Cluster home</a><a class=\"\" href=\"/d/nvis-impact-analysis?var-cluster=$cluster&var-jobid=$jobid\">Cross-domain impact</a></div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 10,
+      "panels": [],
+      "title": "Job footprint and resource totals \u2014 every number below is a column total of the table beneath",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Distinct trays that hosted a cgroup for this job inside the dashboard time range. Equals the row count of \u201cEvery tray in this job\u201d below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 5
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Trays in job",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "GPUs reporting DCGM on the job's trays. Equals the row count of \u201cPer-GPU detail\u201d below and the GPUs total in the per-tray table. A tray that has stopped reporting since the job ran contributes 0.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 5
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(((count by(node,rack,su)(DCGM_FI_DEV_GPU_TEMP and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) and count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) or (0 * count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))))) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs in job",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Equals the row count of \u201cRacks and SUs this job spans\u201d.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 8,
+        "y": 5
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(rack)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Racks spanned",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Sum of cgroup RSS across the job's trays (last sample in range). Equals the Resident memory total in the per-tray table.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 11,
+        "y": 5
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(((sum by(node,rack,su)(last_over_time(cgroup_memory_rss_bytes{cluster=~\"$cluster\",cgroup=~\".*job_$jobid\"}[$__range])) and count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) or (0 * count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))))) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Job resident memory",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "CPU core-hours consumed by the job's cgroups over the dashboard range. Equals the CPU core-hours total in the per-tray table.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 15,
+        "y": 5
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(((sum by(node,rack,su)(increase(cgroup_cpu_total_seconds{cluster=~\"$cluster\",cgroup=~\".*job_$jobid\"}[$__range])) and count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) or (0 * count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))))) / 3600 or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Job CPU time in range (core-hours)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Sum of DCGM board power over every GPU on this job's trays, at the latest scrape. DCGM cannot attribute power to a Slurm job, so if the job has finished this reads the trays' current draw rather than the job's. Equals the GPU power column total of the table below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 5
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(((sum by(node,rack,su)(DCGM_FI_DEV_POWER_USAGE and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) and count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) or (0 * count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))))) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "GPU power on the job's trays",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Exactly which trays this job landed on and what each one is consuming. Same selector as the tiles above; every column total in the footer row is one of the tiles. A tray showing 0 GPUs and 0 W has stopped reporting telemetry since it ran this job.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "No cgroup for this job on any tray in the selected range",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Resident memory"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 160
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU core-hours"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU power"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 16,
+        "x": 0,
+        "y": 9
+      },
+      "id": 17,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": [],
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((count by(node,rack,su)(DCGM_FI_DEV_GPU_TEMP and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) and count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) or (0 * count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((sum by(node,rack,su)(last_over_time(cgroup_memory_rss_bytes{cluster=~\"$cluster\",cgroup=~\".*job_$jobid\"}[$__range])) and count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) or (0 * count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((sum by(node,rack,su)(increase(cgroup_cpu_total_seconds{cluster=~\"$cluster\",cgroup=~\".*job_$jobid\"}[$__range])) and count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) or (0 * count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))) / 3600",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((sum by(node,rack,su)(DCGM_FI_DEV_POWER_USAGE and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) and count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) or (0 * count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        }
+      ],
+      "title": "L2 \u00b7 Every tray in this job \u2014 rows = \u201cTrays in job\u201d, column totals = the tiles above",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #A": 3,
+              "Value #B": 4,
+              "Value #C": 5,
+              "Value #D": 6,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "Value #A": "GPUs",
+              "Value #B": "Resident memory",
+              "Value #C": "CPU core-hours",
+              "Value #D": "GPU power",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Resident memory"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Rack-level footprint of the job. A job spread over many racks pays the inter-rack fabric cost on every collective. The GPUs and GPU power totals are the tiles above.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "No cgroup for this job on any tray in the selected range",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trays"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU power"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 9
+      },
+      "id": 18,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": [],
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(rack,su)(count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((count by(rack,su)(DCGM_FI_DEV_GPU_TEMP and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) and count by(rack,su)(count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))) or (0 * count by(rack,su)(count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((sum by(rack,su)(DCGM_FI_DEV_POWER_USAGE and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) and count by(rack,su)(count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))) or (0 * count by(rack,su)(count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        }
+      ],
+      "title": "L2 \u00b7 Racks and SUs this job spans \u2014 rows = \u201cRacks spanned\u201d",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "rack": 0,
+              "su": 1
+            },
+            "renameByName": {
+              "Value #A": "Trays",
+              "Value #B": "GPUs",
+              "Value #C": "GPU power",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Trays"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 20,
+      "panels": [],
+      "title": "The job's GPUs \u2014 DCGM on the trays the job is running on",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "A persistent gap between min and max is a straggler rank.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "axisWidth": null,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 20
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_GPU_UTIL and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "avg",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(DCGM_FI_DEV_GPU_UTIL and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "max",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "min(DCGM_FI_DEV_GPU_UTIL and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "min",
+          "refId": "C"
+        }
+      ],
+      "title": "GPU utilisation \u2014 min / avg / max across the job's GPUs",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Sustained ~600 W per GPU is real training; a flat low line is idle or blocked on a collective.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "axisWidth": null,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 20
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_POWER_USAGE and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "avg",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(DCGM_FI_DEV_POWER_USAGE and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "max",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "min(DCGM_FI_DEV_POWER_USAGE and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "min",
+          "refId": "C"
+        }
+      ],
+      "title": "GPU power \u2014 min / avg / max across the job's GPUs",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Sensor values of 150 \u00b0C and above are DCGM's not-available sentinel and are excluded.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "axisWidth": null,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 20
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_GPU_TEMP < 150 and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "chip avg",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(DCGM_FI_DEV_GPU_TEMP < 150 and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "chip max",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_MEMORY_TEMP < 150 and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "HBM avg",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(DCGM_FI_DEV_MEMORY_TEMP < 150 and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "HBM max",
+          "refId": "D"
+        }
+      ],
+      "title": "GPU temperature \u2014 chip and HBM",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "DCGM reports framebuffer in MiB; converted to bytes here.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "axisWidth": null,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 20
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_FB_USED and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) * 1048576",
+          "legendFormat": "avg",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(DCGM_FI_DEV_FB_USED and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) * 1048576",
+          "legendFormat": "max",
+          "refId": "B"
+        }
+      ],
+      "title": "GPU framebuffer in use \u2014 avg / max per GPU",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Every GPU this job is using. Filter the Tray column to isolate a rank.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "No GPU telemetry on this job's trays in the selected range",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Chip \u00b0C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 80
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HBM \u00b0C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 80
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Util %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Framebuffer used"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Power"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SM clock (MHz)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 25,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su,gpu)(DCGM_FI_DEV_GPU_TEMP and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su,gpu)(DCGM_FI_DEV_MEMORY_TEMP and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su,gpu)(DCGM_FI_DEV_GPU_UTIL and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su,gpu)(DCGM_FI_DEV_FB_USED and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) * 1048576",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su,gpu)(DCGM_FI_DEV_POWER_USAGE and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su,gpu)(DCGM_FI_DEV_SM_CLOCK and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        }
+      ],
+      "title": "L2 \u00b7 Per-GPU detail \u2014 rows = \u201cGPUs in job\u201d, hottest first",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #A": 4,
+              "Value #B": 5,
+              "Value #C": 6,
+              "Value #D": 7,
+              "Value #E": 8,
+              "Value #F": 9,
+              "gpu": 3,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "Value #A": "Chip \u00b0C",
+              "Value #B": "HBM \u00b0C",
+              "Value #C": "Util %",
+              "Value #D": "Framebuffer used",
+              "Value #E": "Power",
+              "Value #F": "SM clock (MHz)",
+              "gpu": "GPU",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Chip \u00b0C"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "id": 30,
+      "panels": [],
+      "title": "Host resources on the job's trays \u2014 node exporter",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Ranked independently at every point in time, so more than ten trays can appear across the window. Every tray of the job is listed in the table at the foot of this page.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "axisWidth": null,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 31,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(10, 100 - (avg by(node)(rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval]) and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) * 100))",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Tray CPU busy \u2014 the 10 busiest trays at each point",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Ranked independently at every point in time, so more than ten trays can appear across the window. Every tray of the job is listed in the table at the foot of this page.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "axisWidth": null,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "id": 32,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(10, (1 - avg by(node)(node_memory_MemAvailable_bytes and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) / avg by(node)(node_memory_MemTotal_bytes and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))) * 100)",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Tray memory used \u2014 the 10 heaviest trays at each point",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "axisWidth": null,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 48
+      },
+      "id": 33,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rate(node_disk_read_bytes_total{device!~\"loop.*|dm-.*|ram.*|sr.*\"}[$__rate_interval]) and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "read",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rate(node_disk_written_bytes_total{device!~\"loop.*|dm-.*|ram.*|sr.*\"}[$__rate_interval]) and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "write",
+          "refId": "B"
+        }
+      ],
+      "title": "Local disk throughput \u2014 job total",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "axisWidth": null,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "iops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 48
+      },
+      "id": 34,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rate(node_disk_reads_completed_total{device!~\"loop.*|dm-.*|ram.*|sr.*\"}[$__rate_interval]) and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "reads",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rate(node_disk_writes_completed_total{device!~\"loop.*|dm-.*|ram.*|sr.*\"}[$__rate_interval]) and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "writes",
+          "refId": "B"
+        }
+      ],
+      "title": "Local disk IOPS \u2014 job total",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Should be flat zero. Any sustained rate means shared storage is stalling the job.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "axisWidth": null,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 48
+      },
+      "id": 35,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rate(node_nfs_rpc_retransmissions_total[$__rate_interval]) and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "legendFormat": "retransmits/s",
+          "refId": "A"
+        }
+      ],
+      "title": "NFS RPC retransmissions \u2014 job trays",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "One row per tray in the job \u2014 the row count equals the \u201cTrays in job\u201d tile. Silent for is the age of that tray's newest node-exporter sample; when it is over 5 minutes the tray has stopped answering and its load, memory and I/O cells are blank because there is no current reading, not because they are zero.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Load (1 m)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 72
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 144
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory used %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 85
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 95
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "I/O wait %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Disk r+w"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NFS retransmits"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 140
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OOM kills"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Silent for"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 300
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 56
+      },
+      "id": 36,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su)(node_load1 and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su)((1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg by(node,rack,su)(rate(node_cpu_seconds_total{mode=\"iowait\"}[$__rate_interval]) * 100 and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum by(node,rack,su)(rate(node_disk_read_bytes_total{device!~\"loop.*|dm-.*|ram.*|sr.*\"}[$__rate_interval]) + rate(node_disk_written_bytes_total{device!~\"loop.*|dm-.*|ram.*|sr.*\"}[$__rate_interval]) and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum by(node,rack,su)(increase(node_nfs_rpc_retransmissions_total[$__range]) and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum by(node,rack,su)(increase(node_vmstat_oom_kill[$__range]) and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((min by(node,rack,su)((time() - tlast_over_time(up{job=~\"node|node-exporter\"}[$__range])) and on(instance) max by(instance)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) and count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))) or (0 * count by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=~\"$jobid\"}[$__range]))))",
+          "format": "table",
+          "instant": true,
+          "refId": "G"
+        }
+      ],
+      "title": "L2 \u00b7 Host pressure per tray \u2014 rows = \u201cTrays in job\u201d, silent trays first",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #A": 3,
+              "Value #B": 4,
+              "Value #C": 5,
+              "Value #D": 6,
+              "Value #E": 7,
+              "Value #F": 8,
+              "Value #G": 9,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "Value #A": "Load (1 m)",
+              "Value #B": "Memory used %",
+              "Value #C": "I/O wait %",
+              "Value #D": "Disk r+w",
+              "Value #E": "NFS retransmits",
+              "Value #F": "OOM kills",
+              "Value #G": "Silent for",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Silent for"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "jobs",
+    "slurm",
+    "L1"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "nvis-victoriametrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 2,
+        "label": "Datasource",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "clusterQuery"
+        },
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(cgroup_info{cluster=~\"$cluster\"}, jobid)",
+        "description": "Slurm job ID seen by the tray-side cgroup exporter, newest first.",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job ID",
+        "multi": false,
+        "name": "jobid",
+        "options": [],
+        "query": {
+          "query": "label_values(cgroup_info{cluster=~\"$cluster\"}, jobid)",
+          "refId": "jobidQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 4,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": false,
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "30m",
+      "1h",
+      "2h"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Job Stats \u2014 placement and resources for one job",
+  "uid": "iren_mkz-single-job-stats",
+  "version": 1,
+  "weekStart": ""
+}

@@ -1,0 +1,58 @@
+// Safe 16K central gateway. It contains no pull collectors or fleet targets.
+logging {
+	level  = "info"
+	format = "logfmt"
+}
+
+prometheus.receive_http "gateway" {
+	http {
+		listen_address = "0.0.0.0"
+		listen_port    = 9099
+	}
+	forward_to = [prometheus.relabel.stamp_cluster.receiver]
+}
+
+prometheus.relabel "stamp_cluster" {
+	forward_to = [prometheus.remote_write.vm.receiver]
+
+	rule {
+		source_labels = ["cluster"]
+		regex         = "^$"
+		target_label  = "cluster"
+		replacement   = coalesce(sys.env("CLUSTER_NAME"), "IREN_MKZ")
+	}
+}
+
+prometheus.remote_write "vm" {
+	endpoint {
+		url = sys.env("VM_REMOTE_WRITE_URL")
+
+		queue_config {
+			capacity             = 20000
+			max_samples_per_send = 5000
+			max_shards           = 50
+			batch_send_deadline  = "5s"
+		}
+
+		metadata_config {
+			send = false
+		}
+	}
+}
+
+loki.source.api "gateway" {
+	http {
+		listen_address = "0.0.0.0"
+		listen_port    = 9098
+	}
+	forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+	endpoint {
+		url = sys.env("LOKI_PUSH_URL")
+	}
+	external_labels = {
+		cluster = coalesce(sys.env("CLUSTER_NAME"), "IREN_MKZ"),
+	}
+}

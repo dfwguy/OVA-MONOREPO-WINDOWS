@@ -1,0 +1,24 @@
+# Native Windows compatibility assessment
+
+The requested deployment places the central services on an ITSS/NVIDIA Windows VM, connected over VPN to the customer BCM head node and app server. Only thin collectors and approved workloads should run on cluster hosts. WSL, a Linux VM and Linux containers do not satisfy this requirement.
+
+The supplied November 5 package implements Windows control of Linux backends. Its PowerShell helpers and embedded Windows Python can be tested independently, but that does not establish native operation of the six backends. The operator reports that another agent has already deployed the package on a Windows VM. That deployment's actual files, service definitions and acceptance results must be reconciled before concluding that its adaptations are present here.
+
+| Component | Source finding | Native Windows implication |
+| --- | --- | --- |
+| Exemplar recipe | [README](../components/nvisova-exemplar_recipe/source/README.md) specifies Slurm, Enroot and Pyxis. | Preparation and SSH orchestration can be native Windows; selected GPU workload execution remains on approved cluster nodes. No Windows orchestration adapter is qualified by the source audit. |
+| P2P | [Image inventory](../components/nvis-p2p/offline/image-inventory.json) supplies Linux amd64 Redis, nginx and PostgreSQL archives; [renderer](../components/nvis-p2p/scripts/render-minimal.py) emits systemd units. | Those runtime payloads cannot establish a native Windows central deployment. A native core/dependency/service implementation requires qualification. |
+| Rack Status (PythonCM) | [Backend](../components/rack-status-pythoncm/backend/app.py) imports `fcntl` at line 62; [rack locks](../components/rack-status-pythoncm/backend/rack_locks.py) imports it at line 33; [requirements](../components/rack-status-pythoncm/backend/requirements.txt) includes Gunicorn. | The shipped backend has direct Unix-only import and process-serving dependencies. Porting must preserve durable locks, activity state and BCM behavior. An optional desktop shell does not qualify the backend. |
+| Auto action trigger | [README](../components/auto-action-trigger/source/README.md) describes per-node systemd timers and Slurm jobs. | Node-side tests belong on cluster nodes. Native Windows supervision/control requires the deployed adapter or a separately validated implementation. Automatic remediation remains disabled pending scoped commissioning. |
+| Observability | [Dependency index](../control/DEPENDENCIES.json) targets Linux amd64/arm64; [Compose](../components/observability/deploy/compose.yml) uses Linux images and `sh` for lake services. | Native Windows central backends must replace the delivered Linux runtime route and demonstrate ingestion, dashboard queries and persistent storage. |
+| OVA collection framework | [Durable writes](../components/OVA_Collection_Framework/source/app/durable.py) use `os.O_DIRECTORY`; [history](../components/OVA_Collection_Framework/source/app/history.py) uses `fcntl`; [installer](../components/OVA_Collection_Framework/source/README.md) creates 13 systemd units. | Native durable writes, locking, service/timer scheduling and remote Slurm source access require reconciliation and recovery tests. |
+
+The structured findings, exact source locations and required resolutions are in [native-windows-compatibility.json](../evidence/native-windows-compatibility.json). This is a source audit, not a claim that the deployed Windows VM has failed.
+
+## Evidence collection and acceptance
+
+Run [Get-NativeWindowsDeploymentEvidence.ps1](../scripts/Get-NativeWindowsDeploymentEvidence.ps1) on the actual VM, choosing a fresh private output directory outside this repository. Optional `-BcmHeadNode` and `-AppServer` arguments perform read-only SSH-port connectivity checks to the supplied approved endpoints. The report inventories services, process executable paths, listeners, disks, adapters and native tool availability. It omits process/service command lines and credential contents. Keep the inventory private because it contains internal host information.
+
+The GitLab Windows job runs [Test-WindowsControls.ps1](../tests/Test-WindowsControls.ps1) in a Windows Server 2019 container. It checks real PowerShell parsing, embedded native Python startup, payload hashes and extraction of all six supplied tool ZIPs. Its transport construction tests use mocks and explicitly do not contact VPN, SSH or customer hosts. A passing job establishes this control-layer scope only.
+
+For each deployed backend, record the Windows service/process and executable version, configuration location, data directory, loopback listener, functional request and result, remote collector relationship, persistence/restart behavior and rollback instructions. Match the native deployment source to a Git commit. Actual workload and remediation acceptance additionally requires approved target nodes and bounded operation scope.

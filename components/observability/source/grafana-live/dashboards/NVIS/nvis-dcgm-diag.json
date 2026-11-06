@@ -1,0 +1,3769 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"font:13px/1.55 Inter,Roboto,sans-serif;color:#c7d0d9\"><div style=\"font-size:15px;font-weight:600;color:#e6edf3;margin-bottom:4px\">GPU readiness checks &mdash; throttle state, HBM and violation counters</div><div style=\"color:#8b98a5;margin-bottom:8px\">There is no <code>dcgmi diag</code> exporter in this deployment, so no <code>r1&ndash;r4</code> pass/fail record exists to display. This board runs the equivalent gates continuously against the DCGM fields that <em>are</em> collected from every tray reporting DCGM: clock-throttle reason, HBM capacity and occupancy, and the cumulative power / reliability / low-utilisation violation counters. Every tile below is a gate; each one is backed by a table naming the exact GPUs.</div><div style=\"font-size:12px\"><span style=\"color:#8b98a5\">GPU area&nbsp;&rsaquo;&nbsp;</span><a href=\"/d/nvis-l2-gpu-health/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">Area home</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/gpu-health/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">Coverage &middot; thermal &middot; power &middot; clocks</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/gpu-errors/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">Error surface &mdash; ECC &middot; XID &middot; violations</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/gpu-nvlink-health/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">NVLink &amp; bandwidth</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<span style=\"color:#e6edf3;font-weight:600\">Readiness checks</span></div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Readiness gates \u2014 every GPU in scope, checked against the live DCGM fields",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Distinct GPUs tripping at least one of the five gates to the right. The table below is built from the identical expression \u2014 its row count equals this number. Note that one of the five gates, 'Holding more than 1 GiB of HBM', is tripped by any GPU running a job, so a non-zero value here is not by itself a fault: read the 'Gates failed' and 'Throttle reason' columns below to see which gate fired.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 5
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(count by(node, rack, su, gpu) ((label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1, \"gate\", \"throttle_not_idle\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1024, \"gate\", \"hbm_allocated\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) < 282000, \"gate\", \"hbm_reduced\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0, \"gate\", \"power_violation\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0, \"gate\", \"reliability_violation\", \"\", \"\")))) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs tripping a readiness gate",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "DCGM_FI_DEV_CLOCK_THROTTLE_REASONS is a bitmask; bit 0 (value 1) is 'GPU idle' and every GPU on this fleet currently reports exactly that. This gate counts anything above idle \u2014 software or hardware power cap, thermal slowdown, sync boost. Named in the 'Throttle reason' column of the table below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 5
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 1) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Throttled \u2014 not idle",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPUs with more than 1 GiB of resident framebuffer. Read it against what the estate is doing: before a run this is a leaked context and should be cleared; during a run it simply means the GPU is in use and is expected. It is amber, not red, for that reason. The 'HBM in use' column of the table below names the exact GPUs, and 'HBM in use by SU' shows whether the allocation tracks a live job.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 5
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 1024) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Holding more than 1 GiB of HBM",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPUs whose total framebuffer (free + used) is under 282,000 MiB. A healthy GB300 presents 283,136 MiB; a lower figure means HBM has been retired. Named in the 'HBM presented' column below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 5
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count((DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) < 282000) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Presenting reduced HBM",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPUs whose DCGM_FI_DEV_POWER_VIOLATION counter is still increasing over the last 15 minutes, i.e. they are being held back by the enforced power cap right now. The lifetime total is large on most GPUs; only the derivative tells you it is happening now.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 5
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m]) > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Power-cap viol. accruing",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPUs whose DCGM_FI_DEV_RELIABILITY_VIOLATION counter is still increasing over the last 15 minutes.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 5
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m]) > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Reliability viol. accruing",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Worklist for the six tiles above, built from the identical selector, filter and variables. The row count equals 'GPUs failing a readiness gate'; each of the other five tiles equals the number of rows breaching that column.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "Every GPU in scope passes all five readiness gates.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Gates tripped"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Throttle reason"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 170
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "index": 0,
+                        "text": "none"
+                      },
+                      "1": {
+                        "index": 1,
+                        "text": "1 \u00b7 GPU idle"
+                      },
+                      "128": {
+                        "index": 8,
+                        "text": "128 \u00b7 HW power brake"
+                      },
+                      "16": {
+                        "index": 5,
+                        "text": "16 \u00b7 sync boost"
+                      },
+                      "2": {
+                        "index": 2,
+                        "text": "2 \u00b7 clocks setting"
+                      },
+                      "256": {
+                        "index": 9,
+                        "text": "256 \u00b7 display clocks"
+                      },
+                      "32": {
+                        "index": 6,
+                        "text": "32 \u00b7 SW thermal"
+                      },
+                      "4": {
+                        "index": 3,
+                        "text": "4 \u00b7 SW power cap"
+                      },
+                      "64": {
+                        "index": 7,
+                        "text": "64 \u00b7 HW thermal"
+                      },
+                      "8": {
+                        "index": 4,
+                        "text": "8 \u00b7 HW slowdown"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HBM in use"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HBM presented"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 160
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Power viol. rate"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 160
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reliability viol. rate"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tray"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 240
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Gates tripped"
+          }
+        ]
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(node, rack, su, gpu) ((label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1, \"gate\", \"throttle_not_idle\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1024, \"gate\", \"hbm_allocated\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) < 282000, \"gate\", \"hbm_reduced\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0, \"gate\", \"power_violation\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0, \"gate\", \"reliability_violation\", \"\", \"\")))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) ((max by(node, gpu) (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1) or (max by(node, gpu) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1024) or (max by(node, gpu) (DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) < 282000) or (max by(node, gpu) (rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0) or (max by(node, gpu) (rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} * 1048576) and on(node, gpu) ((max by(node, gpu) (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1) or (max by(node, gpu) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1024) or (max by(node, gpu) (DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) < 282000) or (max by(node, gpu) (rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0) or (max by(node, gpu) (rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) ((DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) * 1048576) and on(node, gpu) ((max by(node, gpu) (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1) or (max by(node, gpu) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1024) or (max by(node, gpu) (DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) < 282000) or (max by(node, gpu) (rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0) or (max by(node, gpu) (rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) and on(node, gpu) ((max by(node, gpu) (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1) or (max by(node, gpu) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1024) or (max by(node, gpu) (DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) < 282000) or (max by(node, gpu) (rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0) or (max by(node, gpu) (rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) and on(node, gpu) ((max by(node, gpu) (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1) or (max by(node, gpu) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 1024) or (max by(node, gpu) (DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) < 282000) or (max by(node, gpu) (rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0) or (max by(node, gpu) (rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m])) > 0))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "F"
+        }
+      ],
+      "title": "GPUs tripping a readiness gate \u2014 the exact GPUs",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "gate": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value #A": 4,
+              "Value #B": 5,
+              "Value #C": 6,
+              "Value #D": 7,
+              "Value #E": 8,
+              "Value #F": 9,
+              "gpu": 3,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "Value #A": "Gates tripped",
+              "Value #B": "Throttle reason",
+              "Value #C": "HBM in use",
+              "Value #D": "HBM presented",
+              "Value #E": "Power viol. rate",
+              "Value #F": "Reliability viol. rate",
+              "gpu": "GPU",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "L2 for the stat 'Throttled \u2014 not idle'. Row count equals count(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS > 1) under the same $cluster/$datahall/$su/$rack/$node/$gpu variables. Value is the DCGM throttle-reason bitmask.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "None in scope \u2014 nothing matches this gate right now.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Throttle reasons (bitmask)"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 2
+                    },
+                    {
+                      "color": "red",
+                      "value": 4
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 30,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Throttle reasons (bitmask)"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 1",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Throttled GPUs \u2014 the exact GPUs",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "DCGM_FI_DRIVER_VERSION 1": true,
+              "DCGM_FI_DRIVER_VERSION 2": true,
+              "DCGM_FI_DRIVER_VERSION 3": true,
+              "DCGM_FI_DRIVER_VERSION 4": true,
+              "DCGM_FI_DRIVER_VERSION 5": true,
+              "DCGM_FI_DRIVER_VERSION 6": true,
+              "DCGM_FI_DRIVER_VERSION 7": true,
+              "DCGM_FI_DRIVER_VERSION 8": true,
+              "DCGM_FI_DRIVER_VERSION 9": true,
+              "Hostname": true,
+              "Hostname 1": true,
+              "Hostname 2": true,
+              "Hostname 3": true,
+              "Hostname 4": true,
+              "Hostname 5": true,
+              "Hostname 6": true,
+              "Hostname 7": true,
+              "Hostname 8": true,
+              "Hostname 9": true,
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Time 5": true,
+              "Time 6": true,
+              "Time 7": true,
+              "Time 8": true,
+              "Time 9": true,
+              "UUID": true,
+              "UUID 1": true,
+              "UUID 2": true,
+              "UUID 3": true,
+              "UUID 4": true,
+              "UUID 5": true,
+              "UUID 6": true,
+              "UUID 7": true,
+              "UUID 8": true,
+              "UUID 9": true,
+              "__name__": true,
+              "__name__ 1": true,
+              "__name__ 2": true,
+              "__name__ 3": true,
+              "__name__ 4": true,
+              "__name__ 5": true,
+              "__name__ 6": true,
+              "__name__ 7": true,
+              "__name__ 8": true,
+              "__name__ 9": true,
+              "cluster": true,
+              "cluster 1": true,
+              "cluster 2": true,
+              "cluster 3": true,
+              "cluster 4": true,
+              "cluster 5": true,
+              "cluster 6": true,
+              "cluster 7": true,
+              "cluster 8": true,
+              "cluster 9": true,
+              "collector": true,
+              "collector 1": true,
+              "collector 2": true,
+              "collector 3": true,
+              "collector 4": true,
+              "collector 5": true,
+              "collector 6": true,
+              "collector 7": true,
+              "collector 8": true,
+              "collector 9": true,
+              "container": true,
+              "container 1": true,
+              "container 2": true,
+              "container 3": true,
+              "container 4": true,
+              "container 5": true,
+              "container 6": true,
+              "container 7": true,
+              "container 8": true,
+              "container 9": true,
+              "device": true,
+              "device 1": true,
+              "device 2": true,
+              "device 3": true,
+              "device 4": true,
+              "device 5": true,
+              "device 6": true,
+              "device 7": true,
+              "device 8": true,
+              "device 9": true,
+              "dgx_flavor": true,
+              "dgx_flavor 1": true,
+              "dgx_flavor 2": true,
+              "dgx_flavor 3": true,
+              "dgx_flavor 4": true,
+              "dgx_flavor 5": true,
+              "dgx_flavor 6": true,
+              "dgx_flavor 7": true,
+              "dgx_flavor 8": true,
+              "dgx_flavor 9": true,
+              "endpoint": true,
+              "endpoint 1": true,
+              "endpoint 2": true,
+              "endpoint 3": true,
+              "endpoint 4": true,
+              "endpoint 5": true,
+              "endpoint 6": true,
+              "endpoint 7": true,
+              "endpoint 8": true,
+              "endpoint 9": true,
+              "exported_instance": true,
+              "exported_instance 1": true,
+              "exported_instance 2": true,
+              "exported_instance 3": true,
+              "exported_instance 4": true,
+              "exported_instance 5": true,
+              "exported_instance 6": true,
+              "exported_instance 7": true,
+              "exported_instance 8": true,
+              "exported_instance 9": true,
+              "exported_job": true,
+              "exported_job 1": true,
+              "exported_job 2": true,
+              "exported_job 3": true,
+              "exported_job 4": true,
+              "exported_job 5": true,
+              "exported_job 6": true,
+              "exported_job 7": true,
+              "exported_job 8": true,
+              "exported_job 9": true,
+              "instance": true,
+              "instance 1": true,
+              "instance 2": true,
+              "instance 3": true,
+              "instance 4": true,
+              "instance 5": true,
+              "instance 6": true,
+              "instance 7": true,
+              "instance 8": true,
+              "instance 9": true,
+              "job": true,
+              "job 1": true,
+              "job 2": true,
+              "job 3": true,
+              "job 4": true,
+              "job 5": true,
+              "job 6": true,
+              "job 7": true,
+              "job 8": true,
+              "job 9": true,
+              "modelName": true,
+              "modelName 1": true,
+              "modelName 2": true,
+              "modelName 3": true,
+              "modelName 4": true,
+              "modelName 5": true,
+              "modelName 6": true,
+              "modelName 7": true,
+              "modelName 8": true,
+              "modelName 9": true,
+              "namespace": true,
+              "namespace 1": true,
+              "namespace 2": true,
+              "namespace 3": true,
+              "namespace 4": true,
+              "namespace 5": true,
+              "namespace 6": true,
+              "namespace 7": true,
+              "namespace 8": true,
+              "namespace 9": true,
+              "plane": true,
+              "plane 1": true,
+              "plane 2": true,
+              "plane 3": true,
+              "plane 4": true,
+              "plane 5": true,
+              "plane 6": true,
+              "plane 7": true,
+              "plane 8": true,
+              "plane 9": true,
+              "pod": true,
+              "pod 1": true,
+              "pod 2": true,
+              "pod 3": true,
+              "pod 4": true,
+              "pod 5": true,
+              "pod 6": true,
+              "pod 7": true,
+              "pod 8": true,
+              "pod 9": true,
+              "racktype": true,
+              "racktype 1": true,
+              "racktype 2": true,
+              "racktype 3": true,
+              "racktype 4": true,
+              "racktype 5": true,
+              "racktype 6": true,
+              "racktype 7": true,
+              "racktype 8": true,
+              "racktype 9": true,
+              "service": true,
+              "service 1": true,
+              "service 2": true,
+              "service 3": true,
+              "service 4": true,
+              "service 5": true,
+              "service 6": true,
+              "service 7": true,
+              "service 8": true,
+              "service 9": true,
+              "su_letter": true,
+              "su_letter 1": true,
+              "su_letter 2": true,
+              "su_letter 3": true,
+              "su_letter 4": true,
+              "su_letter 5": true,
+              "su_letter 6": true,
+              "su_letter 7": true,
+              "su_letter 8": true,
+              "su_letter 9": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value": 8,
+              "datahall": 3,
+              "gpu": 6,
+              "node": 0,
+              "pci_bus_id": 7,
+              "rack": 1,
+              "rack_ordinal": 5,
+              "su": 2,
+              "tray_index": 4
+            },
+            "renameByName": {
+              "Value": "Throttle reasons (bitmask)",
+              "datahall": "Data hall",
+              "gpu": "GPU",
+              "node": "Tray",
+              "pci_bus_id": "PCI bus",
+              "rack": "Rack",
+              "rack_ordinal": "Rack ord",
+              "su": "SU",
+              "tray_index": "Tray idx"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "L2 for the stat 'Holding more than 1 GiB of HBM'. Row count equals count(DCGM_FI_DEV_FB_USED > 1024) under the same variables.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "None in scope \u2014 nothing matches this gate right now.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HBM in use (MiB)"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1024
+                    },
+                    {
+                      "color": "red",
+                      "value": 100000
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "id": 31,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "HBM in use (MiB)"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 1024",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs holding more than 1 GiB of HBM \u2014 the exact GPUs",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "DCGM_FI_DRIVER_VERSION 1": true,
+              "DCGM_FI_DRIVER_VERSION 2": true,
+              "DCGM_FI_DRIVER_VERSION 3": true,
+              "DCGM_FI_DRIVER_VERSION 4": true,
+              "DCGM_FI_DRIVER_VERSION 5": true,
+              "DCGM_FI_DRIVER_VERSION 6": true,
+              "DCGM_FI_DRIVER_VERSION 7": true,
+              "DCGM_FI_DRIVER_VERSION 8": true,
+              "DCGM_FI_DRIVER_VERSION 9": true,
+              "Hostname": true,
+              "Hostname 1": true,
+              "Hostname 2": true,
+              "Hostname 3": true,
+              "Hostname 4": true,
+              "Hostname 5": true,
+              "Hostname 6": true,
+              "Hostname 7": true,
+              "Hostname 8": true,
+              "Hostname 9": true,
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Time 5": true,
+              "Time 6": true,
+              "Time 7": true,
+              "Time 8": true,
+              "Time 9": true,
+              "UUID": true,
+              "UUID 1": true,
+              "UUID 2": true,
+              "UUID 3": true,
+              "UUID 4": true,
+              "UUID 5": true,
+              "UUID 6": true,
+              "UUID 7": true,
+              "UUID 8": true,
+              "UUID 9": true,
+              "__name__": true,
+              "__name__ 1": true,
+              "__name__ 2": true,
+              "__name__ 3": true,
+              "__name__ 4": true,
+              "__name__ 5": true,
+              "__name__ 6": true,
+              "__name__ 7": true,
+              "__name__ 8": true,
+              "__name__ 9": true,
+              "cluster": true,
+              "cluster 1": true,
+              "cluster 2": true,
+              "cluster 3": true,
+              "cluster 4": true,
+              "cluster 5": true,
+              "cluster 6": true,
+              "cluster 7": true,
+              "cluster 8": true,
+              "cluster 9": true,
+              "collector": true,
+              "collector 1": true,
+              "collector 2": true,
+              "collector 3": true,
+              "collector 4": true,
+              "collector 5": true,
+              "collector 6": true,
+              "collector 7": true,
+              "collector 8": true,
+              "collector 9": true,
+              "container": true,
+              "container 1": true,
+              "container 2": true,
+              "container 3": true,
+              "container 4": true,
+              "container 5": true,
+              "container 6": true,
+              "container 7": true,
+              "container 8": true,
+              "container 9": true,
+              "device": true,
+              "device 1": true,
+              "device 2": true,
+              "device 3": true,
+              "device 4": true,
+              "device 5": true,
+              "device 6": true,
+              "device 7": true,
+              "device 8": true,
+              "device 9": true,
+              "dgx_flavor": true,
+              "dgx_flavor 1": true,
+              "dgx_flavor 2": true,
+              "dgx_flavor 3": true,
+              "dgx_flavor 4": true,
+              "dgx_flavor 5": true,
+              "dgx_flavor 6": true,
+              "dgx_flavor 7": true,
+              "dgx_flavor 8": true,
+              "dgx_flavor 9": true,
+              "endpoint": true,
+              "endpoint 1": true,
+              "endpoint 2": true,
+              "endpoint 3": true,
+              "endpoint 4": true,
+              "endpoint 5": true,
+              "endpoint 6": true,
+              "endpoint 7": true,
+              "endpoint 8": true,
+              "endpoint 9": true,
+              "exported_instance": true,
+              "exported_instance 1": true,
+              "exported_instance 2": true,
+              "exported_instance 3": true,
+              "exported_instance 4": true,
+              "exported_instance 5": true,
+              "exported_instance 6": true,
+              "exported_instance 7": true,
+              "exported_instance 8": true,
+              "exported_instance 9": true,
+              "exported_job": true,
+              "exported_job 1": true,
+              "exported_job 2": true,
+              "exported_job 3": true,
+              "exported_job 4": true,
+              "exported_job 5": true,
+              "exported_job 6": true,
+              "exported_job 7": true,
+              "exported_job 8": true,
+              "exported_job 9": true,
+              "instance": true,
+              "instance 1": true,
+              "instance 2": true,
+              "instance 3": true,
+              "instance 4": true,
+              "instance 5": true,
+              "instance 6": true,
+              "instance 7": true,
+              "instance 8": true,
+              "instance 9": true,
+              "job": true,
+              "job 1": true,
+              "job 2": true,
+              "job 3": true,
+              "job 4": true,
+              "job 5": true,
+              "job 6": true,
+              "job 7": true,
+              "job 8": true,
+              "job 9": true,
+              "modelName": true,
+              "modelName 1": true,
+              "modelName 2": true,
+              "modelName 3": true,
+              "modelName 4": true,
+              "modelName 5": true,
+              "modelName 6": true,
+              "modelName 7": true,
+              "modelName 8": true,
+              "modelName 9": true,
+              "namespace": true,
+              "namespace 1": true,
+              "namespace 2": true,
+              "namespace 3": true,
+              "namespace 4": true,
+              "namespace 5": true,
+              "namespace 6": true,
+              "namespace 7": true,
+              "namespace 8": true,
+              "namespace 9": true,
+              "plane": true,
+              "plane 1": true,
+              "plane 2": true,
+              "plane 3": true,
+              "plane 4": true,
+              "plane 5": true,
+              "plane 6": true,
+              "plane 7": true,
+              "plane 8": true,
+              "plane 9": true,
+              "pod": true,
+              "pod 1": true,
+              "pod 2": true,
+              "pod 3": true,
+              "pod 4": true,
+              "pod 5": true,
+              "pod 6": true,
+              "pod 7": true,
+              "pod 8": true,
+              "pod 9": true,
+              "racktype": true,
+              "racktype 1": true,
+              "racktype 2": true,
+              "racktype 3": true,
+              "racktype 4": true,
+              "racktype 5": true,
+              "racktype 6": true,
+              "racktype 7": true,
+              "racktype 8": true,
+              "racktype 9": true,
+              "service": true,
+              "service 1": true,
+              "service 2": true,
+              "service 3": true,
+              "service 4": true,
+              "service 5": true,
+              "service 6": true,
+              "service 7": true,
+              "service 8": true,
+              "service 9": true,
+              "su_letter": true,
+              "su_letter 1": true,
+              "su_letter 2": true,
+              "su_letter 3": true,
+              "su_letter 4": true,
+              "su_letter 5": true,
+              "su_letter 6": true,
+              "su_letter 7": true,
+              "su_letter 8": true,
+              "su_letter 9": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value": 8,
+              "datahall": 3,
+              "gpu": 6,
+              "node": 0,
+              "pci_bus_id": 7,
+              "rack": 1,
+              "rack_ordinal": 5,
+              "su": 2,
+              "tray_index": 4
+            },
+            "renameByName": {
+              "Value": "HBM in use (MiB)",
+              "datahall": "Data hall",
+              "gpu": "GPU",
+              "node": "Tray",
+              "pci_bus_id": "PCI bus",
+              "rack": "Rack",
+              "rack_ordinal": "Rack ord",
+              "su": "SU",
+              "tray_index": "Tray idx"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "L2 for the stat 'Presenting reduced HBM'. Row count equals count((DCGM_FI_DEV_FB_FREE + DCGM_FI_DEV_FB_USED) < 282000) under the same variables \u2014 the same 282000 MiB threshold the stat uses.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "None in scope \u2014 nothing matches this gate right now.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HBM presented (MiB)"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 32,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "HBM presented (MiB)"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "(DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) < 282000",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs presenting reduced HBM \u2014 the exact GPUs",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "DCGM_FI_DRIVER_VERSION 1": true,
+              "DCGM_FI_DRIVER_VERSION 2": true,
+              "DCGM_FI_DRIVER_VERSION 3": true,
+              "DCGM_FI_DRIVER_VERSION 4": true,
+              "DCGM_FI_DRIVER_VERSION 5": true,
+              "DCGM_FI_DRIVER_VERSION 6": true,
+              "DCGM_FI_DRIVER_VERSION 7": true,
+              "DCGM_FI_DRIVER_VERSION 8": true,
+              "DCGM_FI_DRIVER_VERSION 9": true,
+              "Hostname": true,
+              "Hostname 1": true,
+              "Hostname 2": true,
+              "Hostname 3": true,
+              "Hostname 4": true,
+              "Hostname 5": true,
+              "Hostname 6": true,
+              "Hostname 7": true,
+              "Hostname 8": true,
+              "Hostname 9": true,
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Time 5": true,
+              "Time 6": true,
+              "Time 7": true,
+              "Time 8": true,
+              "Time 9": true,
+              "UUID": true,
+              "UUID 1": true,
+              "UUID 2": true,
+              "UUID 3": true,
+              "UUID 4": true,
+              "UUID 5": true,
+              "UUID 6": true,
+              "UUID 7": true,
+              "UUID 8": true,
+              "UUID 9": true,
+              "__name__": true,
+              "__name__ 1": true,
+              "__name__ 2": true,
+              "__name__ 3": true,
+              "__name__ 4": true,
+              "__name__ 5": true,
+              "__name__ 6": true,
+              "__name__ 7": true,
+              "__name__ 8": true,
+              "__name__ 9": true,
+              "cluster": true,
+              "cluster 1": true,
+              "cluster 2": true,
+              "cluster 3": true,
+              "cluster 4": true,
+              "cluster 5": true,
+              "cluster 6": true,
+              "cluster 7": true,
+              "cluster 8": true,
+              "cluster 9": true,
+              "collector": true,
+              "collector 1": true,
+              "collector 2": true,
+              "collector 3": true,
+              "collector 4": true,
+              "collector 5": true,
+              "collector 6": true,
+              "collector 7": true,
+              "collector 8": true,
+              "collector 9": true,
+              "container": true,
+              "container 1": true,
+              "container 2": true,
+              "container 3": true,
+              "container 4": true,
+              "container 5": true,
+              "container 6": true,
+              "container 7": true,
+              "container 8": true,
+              "container 9": true,
+              "device": true,
+              "device 1": true,
+              "device 2": true,
+              "device 3": true,
+              "device 4": true,
+              "device 5": true,
+              "device 6": true,
+              "device 7": true,
+              "device 8": true,
+              "device 9": true,
+              "dgx_flavor": true,
+              "dgx_flavor 1": true,
+              "dgx_flavor 2": true,
+              "dgx_flavor 3": true,
+              "dgx_flavor 4": true,
+              "dgx_flavor 5": true,
+              "dgx_flavor 6": true,
+              "dgx_flavor 7": true,
+              "dgx_flavor 8": true,
+              "dgx_flavor 9": true,
+              "endpoint": true,
+              "endpoint 1": true,
+              "endpoint 2": true,
+              "endpoint 3": true,
+              "endpoint 4": true,
+              "endpoint 5": true,
+              "endpoint 6": true,
+              "endpoint 7": true,
+              "endpoint 8": true,
+              "endpoint 9": true,
+              "exported_instance": true,
+              "exported_instance 1": true,
+              "exported_instance 2": true,
+              "exported_instance 3": true,
+              "exported_instance 4": true,
+              "exported_instance 5": true,
+              "exported_instance 6": true,
+              "exported_instance 7": true,
+              "exported_instance 8": true,
+              "exported_instance 9": true,
+              "exported_job": true,
+              "exported_job 1": true,
+              "exported_job 2": true,
+              "exported_job 3": true,
+              "exported_job 4": true,
+              "exported_job 5": true,
+              "exported_job 6": true,
+              "exported_job 7": true,
+              "exported_job 8": true,
+              "exported_job 9": true,
+              "instance": true,
+              "instance 1": true,
+              "instance 2": true,
+              "instance 3": true,
+              "instance 4": true,
+              "instance 5": true,
+              "instance 6": true,
+              "instance 7": true,
+              "instance 8": true,
+              "instance 9": true,
+              "job": true,
+              "job 1": true,
+              "job 2": true,
+              "job 3": true,
+              "job 4": true,
+              "job 5": true,
+              "job 6": true,
+              "job 7": true,
+              "job 8": true,
+              "job 9": true,
+              "modelName": true,
+              "modelName 1": true,
+              "modelName 2": true,
+              "modelName 3": true,
+              "modelName 4": true,
+              "modelName 5": true,
+              "modelName 6": true,
+              "modelName 7": true,
+              "modelName 8": true,
+              "modelName 9": true,
+              "namespace": true,
+              "namespace 1": true,
+              "namespace 2": true,
+              "namespace 3": true,
+              "namespace 4": true,
+              "namespace 5": true,
+              "namespace 6": true,
+              "namespace 7": true,
+              "namespace 8": true,
+              "namespace 9": true,
+              "plane": true,
+              "plane 1": true,
+              "plane 2": true,
+              "plane 3": true,
+              "plane 4": true,
+              "plane 5": true,
+              "plane 6": true,
+              "plane 7": true,
+              "plane 8": true,
+              "plane 9": true,
+              "pod": true,
+              "pod 1": true,
+              "pod 2": true,
+              "pod 3": true,
+              "pod 4": true,
+              "pod 5": true,
+              "pod 6": true,
+              "pod 7": true,
+              "pod 8": true,
+              "pod 9": true,
+              "racktype": true,
+              "racktype 1": true,
+              "racktype 2": true,
+              "racktype 3": true,
+              "racktype 4": true,
+              "racktype 5": true,
+              "racktype 6": true,
+              "racktype 7": true,
+              "racktype 8": true,
+              "racktype 9": true,
+              "service": true,
+              "service 1": true,
+              "service 2": true,
+              "service 3": true,
+              "service 4": true,
+              "service 5": true,
+              "service 6": true,
+              "service 7": true,
+              "service 8": true,
+              "service 9": true,
+              "su_letter": true,
+              "su_letter 1": true,
+              "su_letter 2": true,
+              "su_letter 3": true,
+              "su_letter 4": true,
+              "su_letter 5": true,
+              "su_letter 6": true,
+              "su_letter 7": true,
+              "su_letter 8": true,
+              "su_letter 9": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value": 8,
+              "datahall": 3,
+              "gpu": 6,
+              "node": 0,
+              "pci_bus_id": 7,
+              "rack": 1,
+              "rack_ordinal": 5,
+              "su": 2,
+              "tray_index": 4
+            },
+            "renameByName": {
+              "Value": "HBM presented (MiB)",
+              "datahall": "Data hall",
+              "gpu": "GPU",
+              "node": "Tray",
+              "pci_bus_id": "PCI bus",
+              "rack": "Rack",
+              "rack_ordinal": "Rack ord",
+              "su": "SU",
+              "tray_index": "Tray idx"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "L2 for the stat 'Power-cap viol. accruing'. Row count equals count(rate(DCGM_FI_DEV_POWER_VIOLATION[15m]) > 0) under the same variables.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "None in scope \u2014 nothing matches this gate right now.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Power-cap violation rate (us/s)"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "id": 33,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Power-cap violation rate (us/s)"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m]) > 0",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs accruing power-cap violations \u2014 the exact GPUs",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "DCGM_FI_DRIVER_VERSION 1": true,
+              "DCGM_FI_DRIVER_VERSION 2": true,
+              "DCGM_FI_DRIVER_VERSION 3": true,
+              "DCGM_FI_DRIVER_VERSION 4": true,
+              "DCGM_FI_DRIVER_VERSION 5": true,
+              "DCGM_FI_DRIVER_VERSION 6": true,
+              "DCGM_FI_DRIVER_VERSION 7": true,
+              "DCGM_FI_DRIVER_VERSION 8": true,
+              "DCGM_FI_DRIVER_VERSION 9": true,
+              "Hostname": true,
+              "Hostname 1": true,
+              "Hostname 2": true,
+              "Hostname 3": true,
+              "Hostname 4": true,
+              "Hostname 5": true,
+              "Hostname 6": true,
+              "Hostname 7": true,
+              "Hostname 8": true,
+              "Hostname 9": true,
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Time 5": true,
+              "Time 6": true,
+              "Time 7": true,
+              "Time 8": true,
+              "Time 9": true,
+              "UUID": true,
+              "UUID 1": true,
+              "UUID 2": true,
+              "UUID 3": true,
+              "UUID 4": true,
+              "UUID 5": true,
+              "UUID 6": true,
+              "UUID 7": true,
+              "UUID 8": true,
+              "UUID 9": true,
+              "__name__": true,
+              "__name__ 1": true,
+              "__name__ 2": true,
+              "__name__ 3": true,
+              "__name__ 4": true,
+              "__name__ 5": true,
+              "__name__ 6": true,
+              "__name__ 7": true,
+              "__name__ 8": true,
+              "__name__ 9": true,
+              "cluster": true,
+              "cluster 1": true,
+              "cluster 2": true,
+              "cluster 3": true,
+              "cluster 4": true,
+              "cluster 5": true,
+              "cluster 6": true,
+              "cluster 7": true,
+              "cluster 8": true,
+              "cluster 9": true,
+              "collector": true,
+              "collector 1": true,
+              "collector 2": true,
+              "collector 3": true,
+              "collector 4": true,
+              "collector 5": true,
+              "collector 6": true,
+              "collector 7": true,
+              "collector 8": true,
+              "collector 9": true,
+              "container": true,
+              "container 1": true,
+              "container 2": true,
+              "container 3": true,
+              "container 4": true,
+              "container 5": true,
+              "container 6": true,
+              "container 7": true,
+              "container 8": true,
+              "container 9": true,
+              "device": true,
+              "device 1": true,
+              "device 2": true,
+              "device 3": true,
+              "device 4": true,
+              "device 5": true,
+              "device 6": true,
+              "device 7": true,
+              "device 8": true,
+              "device 9": true,
+              "dgx_flavor": true,
+              "dgx_flavor 1": true,
+              "dgx_flavor 2": true,
+              "dgx_flavor 3": true,
+              "dgx_flavor 4": true,
+              "dgx_flavor 5": true,
+              "dgx_flavor 6": true,
+              "dgx_flavor 7": true,
+              "dgx_flavor 8": true,
+              "dgx_flavor 9": true,
+              "endpoint": true,
+              "endpoint 1": true,
+              "endpoint 2": true,
+              "endpoint 3": true,
+              "endpoint 4": true,
+              "endpoint 5": true,
+              "endpoint 6": true,
+              "endpoint 7": true,
+              "endpoint 8": true,
+              "endpoint 9": true,
+              "exported_instance": true,
+              "exported_instance 1": true,
+              "exported_instance 2": true,
+              "exported_instance 3": true,
+              "exported_instance 4": true,
+              "exported_instance 5": true,
+              "exported_instance 6": true,
+              "exported_instance 7": true,
+              "exported_instance 8": true,
+              "exported_instance 9": true,
+              "exported_job": true,
+              "exported_job 1": true,
+              "exported_job 2": true,
+              "exported_job 3": true,
+              "exported_job 4": true,
+              "exported_job 5": true,
+              "exported_job 6": true,
+              "exported_job 7": true,
+              "exported_job 8": true,
+              "exported_job 9": true,
+              "instance": true,
+              "instance 1": true,
+              "instance 2": true,
+              "instance 3": true,
+              "instance 4": true,
+              "instance 5": true,
+              "instance 6": true,
+              "instance 7": true,
+              "instance 8": true,
+              "instance 9": true,
+              "job": true,
+              "job 1": true,
+              "job 2": true,
+              "job 3": true,
+              "job 4": true,
+              "job 5": true,
+              "job 6": true,
+              "job 7": true,
+              "job 8": true,
+              "job 9": true,
+              "modelName": true,
+              "modelName 1": true,
+              "modelName 2": true,
+              "modelName 3": true,
+              "modelName 4": true,
+              "modelName 5": true,
+              "modelName 6": true,
+              "modelName 7": true,
+              "modelName 8": true,
+              "modelName 9": true,
+              "namespace": true,
+              "namespace 1": true,
+              "namespace 2": true,
+              "namespace 3": true,
+              "namespace 4": true,
+              "namespace 5": true,
+              "namespace 6": true,
+              "namespace 7": true,
+              "namespace 8": true,
+              "namespace 9": true,
+              "plane": true,
+              "plane 1": true,
+              "plane 2": true,
+              "plane 3": true,
+              "plane 4": true,
+              "plane 5": true,
+              "plane 6": true,
+              "plane 7": true,
+              "plane 8": true,
+              "plane 9": true,
+              "pod": true,
+              "pod 1": true,
+              "pod 2": true,
+              "pod 3": true,
+              "pod 4": true,
+              "pod 5": true,
+              "pod 6": true,
+              "pod 7": true,
+              "pod 8": true,
+              "pod 9": true,
+              "racktype": true,
+              "racktype 1": true,
+              "racktype 2": true,
+              "racktype 3": true,
+              "racktype 4": true,
+              "racktype 5": true,
+              "racktype 6": true,
+              "racktype 7": true,
+              "racktype 8": true,
+              "racktype 9": true,
+              "service": true,
+              "service 1": true,
+              "service 2": true,
+              "service 3": true,
+              "service 4": true,
+              "service 5": true,
+              "service 6": true,
+              "service 7": true,
+              "service 8": true,
+              "service 9": true,
+              "su_letter": true,
+              "su_letter 1": true,
+              "su_letter 2": true,
+              "su_letter 3": true,
+              "su_letter 4": true,
+              "su_letter 5": true,
+              "su_letter 6": true,
+              "su_letter 7": true,
+              "su_letter 8": true,
+              "su_letter 9": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value": 8,
+              "datahall": 3,
+              "gpu": 6,
+              "node": 0,
+              "pci_bus_id": 7,
+              "rack": 1,
+              "rack_ordinal": 5,
+              "su": 2,
+              "tray_index": 4
+            },
+            "renameByName": {
+              "Value": "Power-cap violation rate (us/s)",
+              "datahall": "Data hall",
+              "gpu": "GPU",
+              "node": "Tray",
+              "pci_bus_id": "PCI bus",
+              "rack": "Rack",
+              "rack_ordinal": "Rack ord",
+              "su": "SU",
+              "tray_index": "Tray idx"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "L2 for the stat 'Reliability viol. accruing'. Row count equals count(rate(DCGM_FI_DEV_RELIABILITY_VIOLATION[15m]) > 0) under the same variables.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "None in scope \u2014 nothing matches this gate right now.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reliability violation rate (us/s)"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 44
+      },
+      "id": 34,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Reliability violation rate (us/s)"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m]) > 0",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs accruing reliability violations \u2014 the exact GPUs",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "DCGM_FI_DRIVER_VERSION 1": true,
+              "DCGM_FI_DRIVER_VERSION 2": true,
+              "DCGM_FI_DRIVER_VERSION 3": true,
+              "DCGM_FI_DRIVER_VERSION 4": true,
+              "DCGM_FI_DRIVER_VERSION 5": true,
+              "DCGM_FI_DRIVER_VERSION 6": true,
+              "DCGM_FI_DRIVER_VERSION 7": true,
+              "DCGM_FI_DRIVER_VERSION 8": true,
+              "DCGM_FI_DRIVER_VERSION 9": true,
+              "Hostname": true,
+              "Hostname 1": true,
+              "Hostname 2": true,
+              "Hostname 3": true,
+              "Hostname 4": true,
+              "Hostname 5": true,
+              "Hostname 6": true,
+              "Hostname 7": true,
+              "Hostname 8": true,
+              "Hostname 9": true,
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Time 5": true,
+              "Time 6": true,
+              "Time 7": true,
+              "Time 8": true,
+              "Time 9": true,
+              "UUID": true,
+              "UUID 1": true,
+              "UUID 2": true,
+              "UUID 3": true,
+              "UUID 4": true,
+              "UUID 5": true,
+              "UUID 6": true,
+              "UUID 7": true,
+              "UUID 8": true,
+              "UUID 9": true,
+              "__name__": true,
+              "__name__ 1": true,
+              "__name__ 2": true,
+              "__name__ 3": true,
+              "__name__ 4": true,
+              "__name__ 5": true,
+              "__name__ 6": true,
+              "__name__ 7": true,
+              "__name__ 8": true,
+              "__name__ 9": true,
+              "cluster": true,
+              "cluster 1": true,
+              "cluster 2": true,
+              "cluster 3": true,
+              "cluster 4": true,
+              "cluster 5": true,
+              "cluster 6": true,
+              "cluster 7": true,
+              "cluster 8": true,
+              "cluster 9": true,
+              "collector": true,
+              "collector 1": true,
+              "collector 2": true,
+              "collector 3": true,
+              "collector 4": true,
+              "collector 5": true,
+              "collector 6": true,
+              "collector 7": true,
+              "collector 8": true,
+              "collector 9": true,
+              "container": true,
+              "container 1": true,
+              "container 2": true,
+              "container 3": true,
+              "container 4": true,
+              "container 5": true,
+              "container 6": true,
+              "container 7": true,
+              "container 8": true,
+              "container 9": true,
+              "device": true,
+              "device 1": true,
+              "device 2": true,
+              "device 3": true,
+              "device 4": true,
+              "device 5": true,
+              "device 6": true,
+              "device 7": true,
+              "device 8": true,
+              "device 9": true,
+              "dgx_flavor": true,
+              "dgx_flavor 1": true,
+              "dgx_flavor 2": true,
+              "dgx_flavor 3": true,
+              "dgx_flavor 4": true,
+              "dgx_flavor 5": true,
+              "dgx_flavor 6": true,
+              "dgx_flavor 7": true,
+              "dgx_flavor 8": true,
+              "dgx_flavor 9": true,
+              "endpoint": true,
+              "endpoint 1": true,
+              "endpoint 2": true,
+              "endpoint 3": true,
+              "endpoint 4": true,
+              "endpoint 5": true,
+              "endpoint 6": true,
+              "endpoint 7": true,
+              "endpoint 8": true,
+              "endpoint 9": true,
+              "exported_instance": true,
+              "exported_instance 1": true,
+              "exported_instance 2": true,
+              "exported_instance 3": true,
+              "exported_instance 4": true,
+              "exported_instance 5": true,
+              "exported_instance 6": true,
+              "exported_instance 7": true,
+              "exported_instance 8": true,
+              "exported_instance 9": true,
+              "exported_job": true,
+              "exported_job 1": true,
+              "exported_job 2": true,
+              "exported_job 3": true,
+              "exported_job 4": true,
+              "exported_job 5": true,
+              "exported_job 6": true,
+              "exported_job 7": true,
+              "exported_job 8": true,
+              "exported_job 9": true,
+              "instance": true,
+              "instance 1": true,
+              "instance 2": true,
+              "instance 3": true,
+              "instance 4": true,
+              "instance 5": true,
+              "instance 6": true,
+              "instance 7": true,
+              "instance 8": true,
+              "instance 9": true,
+              "job": true,
+              "job 1": true,
+              "job 2": true,
+              "job 3": true,
+              "job 4": true,
+              "job 5": true,
+              "job 6": true,
+              "job 7": true,
+              "job 8": true,
+              "job 9": true,
+              "modelName": true,
+              "modelName 1": true,
+              "modelName 2": true,
+              "modelName 3": true,
+              "modelName 4": true,
+              "modelName 5": true,
+              "modelName 6": true,
+              "modelName 7": true,
+              "modelName 8": true,
+              "modelName 9": true,
+              "namespace": true,
+              "namespace 1": true,
+              "namespace 2": true,
+              "namespace 3": true,
+              "namespace 4": true,
+              "namespace 5": true,
+              "namespace 6": true,
+              "namespace 7": true,
+              "namespace 8": true,
+              "namespace 9": true,
+              "plane": true,
+              "plane 1": true,
+              "plane 2": true,
+              "plane 3": true,
+              "plane 4": true,
+              "plane 5": true,
+              "plane 6": true,
+              "plane 7": true,
+              "plane 8": true,
+              "plane 9": true,
+              "pod": true,
+              "pod 1": true,
+              "pod 2": true,
+              "pod 3": true,
+              "pod 4": true,
+              "pod 5": true,
+              "pod 6": true,
+              "pod 7": true,
+              "pod 8": true,
+              "pod 9": true,
+              "racktype": true,
+              "racktype 1": true,
+              "racktype 2": true,
+              "racktype 3": true,
+              "racktype 4": true,
+              "racktype 5": true,
+              "racktype 6": true,
+              "racktype 7": true,
+              "racktype 8": true,
+              "racktype 9": true,
+              "service": true,
+              "service 1": true,
+              "service 2": true,
+              "service 3": true,
+              "service 4": true,
+              "service 5": true,
+              "service 6": true,
+              "service 7": true,
+              "service 8": true,
+              "service 9": true,
+              "su_letter": true,
+              "su_letter 1": true,
+              "su_letter 2": true,
+              "su_letter 3": true,
+              "su_letter 4": true,
+              "su_letter 5": true,
+              "su_letter 6": true,
+              "su_letter 7": true,
+              "su_letter 8": true,
+              "su_letter 9": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value": 8,
+              "datahall": 3,
+              "gpu": 6,
+              "node": 0,
+              "pci_bus_id": 7,
+              "rack": 1,
+              "rack_ordinal": 5,
+              "su": 2,
+              "tray_index": 4
+            },
+            "renameByName": {
+              "Value": "Reliability violation rate (us/s)",
+              "datahall": "Data hall",
+              "gpu": "GPU",
+              "node": "Tray",
+              "pci_bus_id": "PCI bus",
+              "rack": "Rack",
+              "rack_ordinal": "Rack ord",
+              "su": "SU",
+              "tray_index": "Tray idx"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "id": 10,
+      "panels": [],
+      "title": "HBM capacity and occupancy",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Sum of free + used framebuffer over every GPU reporting DCGM in scope. Decomposed per rack in the table below \u2014 the 'HBM presented' column sums to this number.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "No HBM telemetry in scope",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 52
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum((DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) * 1048576)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "HBM presented by the fleet",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Sum of used framebuffer over the same GPUs. Decomposed per rack in the table below \u2014 the 'HBM in use' column sums to this number.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "No HBM telemetry in scope",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 52
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} * 1048576)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "HBM currently in use",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Decomposition of the two tiles above, same selector and same variables. Every column is additive and the footer prints the totals: HBM presented sums to \"HBM presented by the fleet\", HBM in use sums to \"HBM currently in use\".",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "No HBM telemetry in scope.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HBM presented"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HBM in use"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1073741824
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 56
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "HBM in use"
+          }
+        ]
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by(rack, su) ((DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} + DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) * 1048576)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by(rack, su) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} * 1048576)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(rack, su) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"})",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        }
+      ],
+      "title": "HBM by rack \u2014 the exact racks in scope",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "gate": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value #A": 3,
+              "Value #B": 4,
+              "Value #C": 2,
+              "rack": 0,
+              "su": 1
+            },
+            "renameByName": {
+              "Value #A": "HBM presented",
+              "Value #B": "HBM in use",
+              "Value #C": "GPUs",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Per-SU decomposition of the 'HBM currently in use' tile; the series sum to it.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 6,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 56
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by(su) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} * 1048576)",
+          "instant": false,
+          "legendFormat": "{{su}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "HBM in use by SU",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "id": 15,
+      "panels": [],
+      "title": "Violation counters \u2014 what the GPUs are still accruing",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPUs whose DCGM_FI_DEV_LOW_UTIL_VIOLATION counter is still increasing over the last 15 minutes. On an idle estate this is expected to be nearly every GPU; it is the control that proves the violation counters are live, which is what makes the two zero-valued gates above meaningful. Decomposed per rack directly below \u2014 the GPUs column sums to this number.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 67
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(rate(DCGM_FI_DEV_LOW_UTIL_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m]) > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs accruing idle-throttle time",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Fleet counts over time for the four gates that are derived from counters: power-cap, reliability and low-utilisation accrual, plus the non-idle throttle gate. Each series is the same expression as the matching tile above, so a step here is the tile changing. The counters' unit is left unconverted: DCGM documents these fields as microseconds but this fleet accrues them at roughly 1e9 per second, so only the direction (accruing / not accruing) is stated as fact.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 4,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 18,
+        "x": 6,
+        "y": 67
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m]) > 0) or vector(0)",
+          "instant": false,
+          "legendFormat": "Power-cap violation accruing",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m]) > 0) or vector(0)",
+          "instant": false,
+          "legendFormat": "Reliability violation accruing",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(rate(DCGM_FI_DEV_LOW_UTIL_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m]) > 0) or vector(0)",
+          "instant": false,
+          "legendFormat": "Idle-throttle accruing",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 1) or vector(0)",
+          "instant": false,
+          "legendFormat": "Throttled for a non-idle reason",
+          "range": true,
+          "refId": "D"
+        }
+      ],
+      "title": "GPUs accruing each violation, and GPUs throttled for a non-idle reason",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Decomposition of the tile above, same selector and same variables: the GPUs column sums to it exactly.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "No GPU in scope is accruing idle-throttle time.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 6,
+        "x": 0,
+        "y": 71
+      },
+      "id": 17,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "GPUs"
+          }
+        ]
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(rack, su) (rate(DCGM_FI_DEV_LOW_UTIL_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[15m]) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Idle-throttle accrual by rack \u2014 the exact racks",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "gate": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value": 2,
+              "rack": 0,
+              "su": 1
+            },
+            "renameByName": {
+              "Value": "GPUs",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "gpu",
+    "dcgm",
+    "readiness",
+    "diagnostics",
+    "health",
+    "iren_mkz",
+    "gb300",
+    "superpod",
+    "area-gpu-health"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "nvis-victoriametrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "label": "Data source",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "clusterQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\"}, datahall)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Data hall",
+        "multi": true,
+        "name": "datahall",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\"}, datahall)",
+          "refId": "datahallQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\"}, su)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Scalable unit",
+        "multi": true,
+        "name": "su",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\"}, su)",
+          "refId": "suQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\"}, rack)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rack",
+        "multi": true,
+        "name": "rack",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\"}, rack)",
+          "refId": "rackQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tray",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\"}, node)",
+          "refId": "nodeQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}, gpu)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "GPU",
+        "multi": true,
+        "name": "gpu",
+        "options": [],
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}, gpu)",
+          "refId": "gpuQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "GPU Readiness Checks \u2014 Throttle \u00b7 HBM \u00b7 Violation Counters",
+  "uid": "nvis-dcgm-diag",
+  "version": 1,
+  "weekStart": ""
+}

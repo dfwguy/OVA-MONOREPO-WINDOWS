@@ -1,0 +1,1449 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Host NIC link, carrier, throughput, drops, errors, TCP and softnet reliability without claiming unavailable switch telemetry.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "home",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "\u2302 IREN_MKZ Home",
+      "tooltip": "Back to IREN_MKZ Home",
+      "type": "link",
+      "url": "/d/iren_mkz-home?${__url_time_range}"
+    },
+    {
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "iren_mkz"
+      ],
+      "title": "IREN_MKZ Dashboards",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "description": "Purpose, evidence semantics, and routes to adjacent IREN_MKZ dashboards.",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "# IREN_MKZ \u2014 Ethernet & Host Network\n\n**Live host-NIC truth from node exporter.** This does not claim switch-port, optic, PFC or fabric-path observability while dedicated Ethernet collectors are down.\n\n[Home](/d/iren_mkz-home?${__url_time_range}) \u00b7 [Command Center](/d/iren_mkz-command-center?${__url_time_range}) \u00b7 [Live Topology](/d/iren_mkz-topology?${__url_time_range}) \u00b7 [Infrastructure](/d/iren_mkz-infrastructure?${__url_time_range}) \u00b7 [GPU & NVLink](/d/iren_mkz-accelerators?${__url_time_range}) \u00b7 [Fabric, CVT & Cabling](/d/iren_mkz-fabric?${__url_time_range}) \u00b7 [Workloads, Slurm & Validation](/d/iren_mkz-workloads?${__url_time_range})",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "description": "Host network decisions",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Host network decisions",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Host interfaces whose node-exporter link state or carrier is currently down.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 5
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count((node_network_up{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"} == 0) or (node_network_carrier{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"} == 0)) or on() (count(node_network_up{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Link / carrier DOWN",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Carrier-down transition counter increases in the selected range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 5
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(node_network_carrier_down_changes_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Carrier-down changes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Receive-error counter increases across scoped host interfaces.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 5
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(node_network_receive_errs_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "RX errors \u0394",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Receive-drop counter increases across scoped host interfaces.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 5
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(node_network_receive_drop_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "RX drops \u0394",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "TCP retransmitted segments on scoped trays in the selected range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 5
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(node_netstat_Tcp_RetransSegs{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "TCP retransmits \u0394",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Cumulative kernel softnet packets dropped since tray boot; use the exact worklist below for current node ownership.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 5
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(node_softnet_dropped_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Softnet drops cumulative",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "description": "Exact interfaces and tray offenders",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 9,
+      "panels": [],
+      "title": "Exact interfaces and tray offenders",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Every current bond0 or enP* interface link/carrier down state, joined on node/interface. Administratively unused eno1, ibo*, loopback and management devices are excluded.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Link up"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "text": "DOWN"
+                      },
+                      "1": {
+                        "color": "green",
+                        "text": "UP"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Carrier"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "text": "DOWN"
+                      },
+                      "1": {
+                        "color": "green",
+                        "text": "UP"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open tray root cause",
+                    "url": "/d/iren_mkz-tray-root-cause?var-node=${__data.fields.node}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 0,
+        "y": 10
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(node_network_up{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"} == 0, \"entity\", \"/\", \"node\", \"device\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(node_network_carrier{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"} == 0, \"entity\", \"/\", \"node\", \"device\")",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Operational interfaces currently down",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "entity",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "entity": true,
+              "instance": true,
+              "job": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "renameByName": {
+              "Value #A": "Link up",
+              "Value #B": "Carrier"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Top host interfaces by combined selected-range RX/TX errors, drops, frame errors and carrier errors.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open tray root cause",
+                    "url": "/d/iren_mkz-tray-root-cause?var-node=${__data.fields.node}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 8,
+        "y": 10
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Errors + drops"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(100, sum by(node,rack,su,device)(increase(node_network_receive_errs_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[$__range]) + increase(node_network_transmit_errs_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[$__range]) + increase(node_network_receive_drop_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[$__range]) + increase(node_network_transmit_drop_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[$__range]) + increase(node_network_receive_frame_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[$__range]) + increase(node_network_transmit_carrier_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[$__range]))) > 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Error and drop offenders",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true
+            },
+            "renameByName": {
+              "Value": "Errors + drops"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "Errors + drops"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Interfaces with carrier-down transitions plus current speed and MTU, joined on node/interface.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Speed"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MTU"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decbytes"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open tray root cause",
+                    "url": "/d/iren_mkz-tray-root-cause?var-node=${__data.fields.node}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 10
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(topk(100, sum by(node,rack,su,device)(increase(node_network_carrier_down_changes_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[$__range]))) > 0, \"entity\", \"/\", \"node\", \"device\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(max by(node,device)(node_network_speed_bytes{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}), \"entity\", \"/\", \"node\", \"device\")",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(max by(node,device)(node_network_mtu_bytes{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}), \"entity\", \"/\", \"node\", \"device\")",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Carrier flaps, speed and MTU",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "entity",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "entity": true,
+              "instance": true,
+              "job": true
+            },
+            "renameByName": {
+              "Value #A": "Carrier downs",
+              "Value #B": "Speed",
+              "Value #C": "MTU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "Throughput, drops and protocol pressure",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 13,
+      "panels": [],
+      "title": "Throughput, drops and protocol pressure",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Host Ethernet receive and transmit throughput by Super Unit.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(su)(rate(node_network_receive_bytes_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[5m]))",
+          "legendFormat": "{{su}} receive",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(su)(rate(node_network_transmit_bytes_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[5m]))",
+          "legendFormat": "{{su}} transmit",
+          "refId": "B"
+        }
+      ],
+      "title": "Ethernet throughput by SU",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Error, drop, frame and carrier-error counter rates by Super Unit.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(su)(rate(node_network_receive_errs_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[5m]))",
+          "legendFormat": "{{su}} RX errors",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(su)(rate(node_network_transmit_errs_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[5m]))",
+          "legendFormat": "{{su}} TX errors",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(su)(rate(node_network_receive_drop_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[5m]))",
+          "legendFormat": "{{su}} RX drops",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(su)(rate(node_network_transmit_drop_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[5m]))",
+          "legendFormat": "{{su}} TX drops",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(su)(rate(node_network_receive_frame_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[5m]))",
+          "legendFormat": "{{su}} RX frame",
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(su)(rate(node_network_transmit_carrier_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",device=~\"bond0|enP.*\"}[5m]))",
+          "legendFormat": "{{su}} TX carrier",
+          "refId": "F"
+        }
+      ],
+      "title": "Interface errors and drops by SU",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Fleet/scoped TCP reliability and connection pressure.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 29
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(node_netstat_Tcp_RetransSegs{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[5m]))",
+          "legendFormat": "retransmits/s",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(node_netstat_Tcp_ActiveOpens{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[5m]))",
+          "legendFormat": "active opens/s",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(node_netstat_Tcp_CurrEstab{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})",
+          "legendFormat": "established",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(node_netstat_TcpExt_ListenDrops{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[5m]))",
+          "legendFormat": "listen drops/s",
+          "refId": "D"
+        }
+      ],
+      "title": "TCP connection and retransmission pressure",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Exact trays with cumulative softnet drops/squeezes or current backlog. Instant counters avoid an unbounded 233k-series range scan.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open tray root cause",
+                    "url": "/d/iren_mkz-tray-root-cause?var-node=${__data.fields.node}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 29
+      },
+      "id": 17,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(100, sum by(node,rack,su)(node_softnet_dropped_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} + node_softnet_times_squeezed_total{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})) > 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(100, sum by(node)(node_softnet_backlog_len{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})) > 0",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Kernel softnet pressure by tray",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "node",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "instance": true,
+              "job": true
+            },
+            "renameByName": {
+              "Value #A": "Drops + squeezed",
+              "Value #B": "Backlog"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "Selected-node network logs",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "id": 18,
+      "panels": [],
+      "title": "Selected-node network logs",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Raw selected-node kernel and syslog evidence for host Ethernet failures.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 19,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "{cluster=\"IREN_MKZ\",node=~\"$node\",job=~\"kernel|dmesg|journal|syslog\"} |~ \"(?i)(netdev|carrier|link.*down|renamed.*interface|tx timeout|watchdog|tcp|bond|ethernet|nic)\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "NIC, carrier, TCP and network-driver evidence",
+      "type": "logs"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "specialist",
+    "observability"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "label": "Metrics",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 2,
+        "label": "Logs",
+        "name": "loki_datasource",
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(node_network_up{cluster=\"IREN_MKZ\"},su)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Super Unit",
+        "multi": false,
+        "name": "su",
+        "options": [],
+        "query": {
+          "query": "label_values(node_network_up{cluster=\"IREN_MKZ\"},su)",
+          "refId": "suQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(node_network_up{cluster=\"IREN_MKZ\",su=~\"$su\"},rack)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rack",
+        "multi": false,
+        "name": "rack",
+        "options": [],
+        "query": {
+          "query": "label_values(node_network_up{cluster=\"IREN_MKZ\",su=~\"$su\"},rack)",
+          "refId": "rackQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(node_network_up{cluster=\"IREN_MKZ\",rack=~\"$rack\"},node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tray",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(node_network_up{cluster=\"IREN_MKZ\",rack=~\"$rack\"},node)",
+          "refId": "nodeQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "30m",
+      "1h"
+    ]
+  },
+  "timezone": "utc",
+  "title": "IREN_MKZ \u2014 Ethernet & Host Network",
+  "uid": "iren_mkz-ethernet-host-network",
+  "version": 3
+}

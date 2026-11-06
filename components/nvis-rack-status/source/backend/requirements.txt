@@ -1,0 +1,82 @@
+# Floors below that carry a CVE note were raised on 2026-10-25 for the nSpect open-source report
+# (NSPECT-S57Q-EI19). A floor is what a scanner reads and what an offline wheelhouse may satisfy,
+# so a vulnerable floor is a vulnerable install even when today's resolver picks the latest.
+# Flask 3.1.3: CVE-2026-27205, the session not adding `Vary: Cookie`.
+flask>=3.1.3,<4
+openpyxl>=3.1,<4
+requests>=2.33,<3
+pyyaml>=6.0,<7
+# TOML parsing. `tomllib` is stdlib from Python 3.11, but the runtime image is ubuntu:22.04 whose
+# `python3` is 3.10.12 -- verified by running the image -- while all three CI jobs are
+# python:3.12-slim. So a bare `import tomllib` passes the whole suite and fails only in the
+# container. `tomli` is the upstream backport of that same stdlib module: pure Python, no
+# transitive dependencies, so it installs on an air-gapped site. backend/toml_compat.py is the one
+# place that chooses between them; a marker here would hide the choice from the reader.
+tomli>=2.0,<3
+StrEnum>=0.4.15,<0.5
+# Four call sites: HKDF signing-key derivation (identity/tokens.py), the Fernet vault
+# (token_vault.py), x509 generation (bin/gen-tls-cert.py), and transitively paramiko + PyJWT.
+#
+# Bumped off 48.0.1 on 2026-08-31: it carried PYSEC-2026-3552/3553/3554 (fixed in 49.0.0 and
+# 50.0.0), and it is the library that generates our TLS certificates, so it is load-bearing for
+# the security posture rather than incidental. Verified by running the whole suite against 50.0.1
+# — 2545 passed — with the shadow confirmed to reach the gunicorn child processes, not just the
+# test interpreter.
+#
+# Worth knowing what that green run does and does not prove: the same tests also pass on 44.0.0,
+# so they verify *our usage* of a stable public API across versions. They would catch an API
+# removal or a behaviour change; they cannot tell you whether a CVE is patched. Only the version
+# can, which is why the floor is raised rather than just the ceiling.
+cryptography>=50.0,<51
+paramiko>=5.0,<6
+flask-sock>=0.7,<1
+tinydb>=4.8,<5
+flask-compress>=1.14,<2
+# 1.2.1: CVE-2026-111497, an out-of-bounds write in the decoder ("Node2Shell"); 1.2.0 for CVE-2025-6176.
+brotli>=1.2.1,<2
+gunicorn>=22.0,<24
+jsonschema>=4.23,<5
+# PDF rendering for the Rack Status report. Its own chart primitives (VerticalBarChart /
+# HorizontalLineChart) cover the rack-level graphs, which is why this is here instead of
+# matplotlib + numpy — a fraction of the image size for the charts we actually draw.
+# Pulls in pillow transitively; reportlab imports PIL unconditionally.
+reportlab>=5.0,<6
+# Optional: MCP server facade (agent/mcp_server.py) for external agents (Cursor/Claude).
+# Only needed to run `python -m agent.mcp_server`; the in-app agent loop does not require it.
+# 1.30.0 clears six advisories, including CVE-2026-52869 (HTTP transports serve a session without
+# checking it belongs to the authenticated caller), CVE-2026-59950 (no Host/Origin check on the
+# WebSocket transport) and CVE-2026-59951 (unbounded session accumulation in StreamableHTTP).
+mcp>=1.30.0,<2
+# --- Identity (auth programme Phase 2) -------------------------------------------------------
+# SRP-6a for local password authentication: the password never reaches the server, so it cannot
+# appear in a proxy, a memory dump or a debug log. Chosen over an argon2id verifier deliberately
+# (brief FR-4); both were on the table and TLS covers a different threat.
+#
+# Ships as `py3-none-any` — no compiler — which is what makes it installable at an air-gapped site
+# (FR-4a).
+#
+# ⚠️ ITS DEFAULTS ARE NOT SAFE. `hash_alg=0` is SHA-1 and `salt_len=4` is a 32-bit salt, so a
+# reasonable-looking `create_salted_verification_key(user, pw)` enrols a SHA-1 credential. Always
+# pass hash_alg/ng_type/salt_len explicitly — brief FR-4e, enforced by AC-4c and AC-4d.
+#
+# ⚠️ AND ITS WIRE FORMAT DEFAULTS OFF-STANDARD. RFC 5054 padding is disabled unless
+# `srp.rfc5054_enable(True)` is called, and a mismatch with the client does not error — it fails
+# every login looking exactly like a wrong password. `identity/srp.py` pins it at import; do not
+# call `rfc5054_enable` anywhere else. Brief FR-4f.
+#
+# ⚠️ THE BACKEND IS CHOSEN BY dlopen, NOT BY THE PACKAGE. `srp/__init__.py` prefers the OpenSSL
+# ctypes backend `_ctsrp` and falls back to pure-Python `_pysrp`; each keeps its *own* padding flag.
+# We get `_pysrp` today only because `_ctsrp` asks for `libssl.so`/`libssl.so.1.1.0` while both
+# macOS and `python:3.12-slim` ship `libssl.so.3`. Installing `libssl-dev` creates that symlink and
+# flips the backend — which is why the pin asserts against the *active* module rather than `_pysrp`.
+srp>=1.0.22,<2
+# JWT id/access tokens (FR-5). Also validates a federated provider's ID token, which is why OIDC
+# needs no `authlib` — an ID token is a JWT and PyJWT plus a JWKS fetch covers it.
+# Verification must pin `algorithms=[...]`: PyJWT otherwise trusts the token's own `alg` header,
+# which is the alg:none and RS256->HS256 confusion attack (FR-4c).
+#
+# 2.15: 2.13 carries fifteen advisories, several of them verification bypasses -- DER and JWK public
+# keys accepted as HMAC secrets, empty HMAC keys, `decode()` mutating a reused options dict so claim
+# checks silently switch off (CVE-2026-103001, affects through 2.13.0), and non-canonical signature
+# segments evading raw-token revocation.
+PyJWT>=2.15,<3

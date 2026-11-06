@@ -1,0 +1,92 @@
+# Large binary copied from aihpc_val/tools/nvlmapper/dist_amd64 (NVLMAPPER / run_nvlmapper.sh)
+bin/scripts/nvlmapper
+
+# ---- Python / tooling ----
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.eggs/
+dist/
+build/*
+!build/README.md
+.local/
+.env
+
+# ---- App runtime (regenerated; cluster-specific) ----
+var/cache/
+var/workflows/runs/
+# Build identity, written into the image by the Dockerfile (app_version.py reads it). Committing
+# one would pin every later checkout to a stale build string.
+backend/build-info.json
+# Catalog store (platforms/tools/projects; seeded on boot, cluster-specific)
+var/store/
+# Durable run/metric history (SQLite + WAL; created on boot by results_history.py)
+var/history/
+# Generated report archive (durable runtime data, never source).
+var/reports/
+
+# Generated reports kept for later download (report_store.py); operator artifacts, not source
+var/reports/
+
+# ---- Token vault (NEVER commit — encrypted NVFTP tokens + master key material) ----
+var/secrets/
+**/*.vault.json
+**/*.vault.flock
+**/.vault_master_key
+**/.rack_web_secret_key
+
+# ---- Demo report logs (extracted from reports.tar.gz) ----
+demo-reports/
+
+# Default rack / multirack comment store (override with RACK_COMMENTS_FILE)
+rack_comments.json
+
+# ---- Local export bundles (see README / handoff zips) ----
+nvis-rack-status-cluster-export-*.zip
+rack-web-cluster-export-*.zip
+
+# ---- Saved Docker image bundles (build-docker.sh save) ----
+nvis-rack-status-*.tar
+nvis-rack-status-*.tar.gz
+nvis-rack-status-*.tar.sha256
+nvis-rack-status-*.tar.gz.sha256
+
+# ---- Frontend (React SPA) ----
+frontend/node_modules/
+frontend/dist/
+static/spa/
+
+# ---- Manual snapshots taken before edits (foo.py.bak.<tag>) ----
+*.bak
+*.bak.*
+*.bak-*
+*.prebak.*
+
+# ---- Deployment overrides and key material (plaintext credentials: keep local) ----
+# docker-compose.override.yml carries RACK_WEB_AUTH_TOKEN / RACK_GRAFANA_PASSWORD
+# and deploy-secrets/ holds an ssh key, so neither belongs in history.
+docker-compose.override.yml
+deploy-secrets/
+
+# ---- OS / editor ----
+.DS_Store
+._*
+*.zip
+Thumbs.db
+.idea/
+*.swp
+*.swo
+*~
+.coverage
+frontend/coverage/
+
+# Third-party vendor manuals (Dell/NVIDIA PDFs etc). Keep them in Drive, not here: they are
+# multi-MB, redistribution-restricted, and git history is permanent — a manual committed once
+# is carried by every clone forever. Our own docs are markdown and tracked normally.
+docs/*.pdf

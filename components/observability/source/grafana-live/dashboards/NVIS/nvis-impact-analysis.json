@@ -1,0 +1,2476 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Where faults concentrate across GPU, host and telemetry domains. Canonical owner of the cross-domain rack and tray scorecards. Holds no single-domain copies by design: GPU Health, Executive, Node Deep Dive and Business Insights own those datasets.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Jobs & Cluster home",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/nvis-l2-job-cluster"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Job Stats \u2014 one job",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/iren_mkz-single-job-stats"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Job Health \u2014 fault triage",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/iren_mkz-job-health"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Cross-domain impact",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/nvis-impact-analysis"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "<style>\n.nvh{font-family:Inter,Roboto,sans-serif;color:#c7d0d9;line-height:1.5;padding:2px 2px}\n.nvh h4{font-size:15px;font-weight:600;color:#e6edf3;margin:0 0 4px 0}\n.nvh code{color:#9fb4c7}\n.nvn{margin-top:8px}\n.nvn a{display:inline-block;padding:4px 11px;margin-right:8px;border:1px solid #2b3138;\n border-radius:4px;background:#181b1f;color:#c7d0d9;text-decoration:none;font-size:12px}\n.nvn a:hover{border-color:#3d7a4e;color:#e6edf3}\n.nvn a.on{border-color:#3d7a4e;color:#e6edf3;background:#1c2026}\n</style><div class=\"nvh\"><h4>Cross-Domain Impact &mdash; blast radius by rack and tray</h4>This page answers one question: <b>where do the faults concentrate?</b> It deliberately holds no single-domain copies &mdash; GPU health lives on <i>GPU&nbsp;Health</i>, tray availability on <i>Executive</i>, host pressure on <i>Node&nbsp;Deep&nbsp;Dive</i>, power on <i>Business&nbsp;Insights</i>. What is here instead are the <b>scorecards that put every domain in one row</b>, so a fault cluster in one rack is visible as a rack problem rather than a GPU problem. A <b>GPU hardware fault</b> means a latched XID, a volatile ECC error or an uncorrectable row remap. All data is tray-side telemetry: node exporter and DCGM on ~1&nbsp;900 GB300 trays. A tray is counted as <b>silent</b> when its newest sample in the window is over five minutes old &mdash; not when <code>up==0</code>. On this stack a tray that stops answering has its scrape target withdrawn rather than reporting zero, so an <code>up==0</code> tile reads 0 while whole racks are dark.<div class=\"nvn\"><a class=\"\" href=\"/d/nvis-l2-job-cluster\">Jobs &amp; Cluster home</a><a class=\"\" href=\"/d/iren_mkz-single-job-stats\">Job Stats \u2014 one job</a><a class=\"\" href=\"/d/iren_mkz-job-health\">Job Health \u2014 fault triage</a><a class=\"on\" href=\"/d/nvis-impact-analysis\">Cross-domain impact</a></div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 10,
+      "panels": [],
+      "title": "Fault concentration \u2014 the exact entities are in the table under each tile",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Racks with at least one GPU carrying a latched XID, a volatile ECC error or an uncorrectable row remap. Equals the row count of the table below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 5
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(rack)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Racks carrying a GPU hardware fault",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Racks holding at least one tray whose newest node-exporter sample in the window is over 5 minutes old. Measured as sample staleness, not up==0: on this stack a tray that dies has its scrape target withdrawn, so up==0 never fires \u2014 an up-based tile reads 0 while entire racks are dark. Equals the row count below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 5
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(rack)(min by(node,rack,su)(time() - tlast_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])) > 300)) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Racks with a tray that went silent",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Trays whose newest node-exporter sample inside the window is over 5 minutes old. Staleness-based for the reason given on the tile to the left. Equals the row count of the table below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 5
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(min by(node,rack,su)(time() - tlast_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])) > 300) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Trays that went silent",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Same selector as the tile above, worst first.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "None \u2014 no GPU in scope is carrying a latched fault",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Faulty GPUs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trays"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "XID GPUs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 0,
+        "y": 9
+      },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(rack,su)(count by(rack,su,node)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(count by(rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) or (0 * count by(rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        }
+      ],
+      "title": "L2 \u00b7 Racks carrying a GPU hardware fault \u2014 rows = the tile above",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "rack": 0,
+              "su": 1
+            },
+            "renameByName": {
+              "Value #A": "Faulty GPUs",
+              "Value #B": "Trays",
+              "Value #C": "XID GPUs",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Faulty GPUs"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Same selector and same 5-minute threshold as the tile above. Longest silence is the worst tray in that rack.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "None \u2014 every tray in scope answered within the last 5 minutes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Silent trays"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#B77D34",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 18
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Longest"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 8,
+        "y": 9
+      },
+      "id": 15,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(rack,su)(min by(node,rack,su)(time() - tlast_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])) > 300)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(rack,su)(min by(node,rack,su)(time() - tlast_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])) > 300)",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        }
+      ],
+      "title": "L2 \u00b7 Racks with a tray that went silent \u2014 rows = the tile above",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #A": 2,
+              "Value #B": 3,
+              "rack": 0,
+              "su": 1
+            },
+            "renameByName": {
+              "Value #A": "Silent trays",
+              "Value #B": "Longest",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Silent trays"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "The exact trays and how long each has been silent. Same selector and threshold as the tile above.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "None \u2014 every tray in scope answered within the last 5 minutes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Silent for"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#B77D34",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 900
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 9
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "min by(node,rack,su)(time() - tlast_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])) > 300",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "L2 \u00b7 Trays that went silent \u2014 rows = the tile above",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value": 3,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "Value": "Silent for",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Silent for"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 20,
+      "panels": [],
+      "title": "Tray scorecard \u2014 every tray carrying a GPU hardware fault, all domains in one row",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Equals the row count of the scorecard directly below \u2014 same selector, same range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 21,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {
+          "valueSize": 42
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(node)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Trays carrying a GPU hardware fault",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "One row per faulty tray, with what every other domain says about it. A tray that is hot AND loaded AND dropping telemetry is a tray problem; a tray with only an XID is a GPU problem.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Faulty GPUs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "XID"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ECC"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Remap"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hottest chip"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 80
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Max load"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 72
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 144
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OOM kills"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Silent for"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 300
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "id": 22,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) and count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)) or (0 * count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((count by(node,rack,su)(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) and count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)) or (0 * count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(count by(node,rack,su)(DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) or (0 * count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su)(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} < 150) and count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su)(node_load1{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) and count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((sum by(node,rack,su)(increase(node_vmstat_oom_kill{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])) and count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)) or (0 * count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)))",
+          "format": "table",
+          "instant": true,
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((min by(node,rack,su)(time() - tlast_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])) and count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)) or (0 * count by(node,rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0)))",
+          "format": "table",
+          "instant": true,
+          "refId": "H"
+        }
+      ],
+      "title": "L2 \u00b7 Tray scorecard \u2014 rows = \u201cTrays carrying a GPU hardware fault\u201d",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #A": 3,
+              "Value #B": 4,
+              "Value #C": 5,
+              "Value #D": 6,
+              "Value #E": 7,
+              "Value #F": 8,
+              "Value #G": 9,
+              "Value #H": 10,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "Value #A": "Faulty GPUs",
+              "Value #B": "XID",
+              "Value #C": "ECC",
+              "Value #D": "Remap",
+              "Value #E": "Hottest chip",
+              "Value #F": "Max load",
+              "Value #G": "OOM kills",
+              "Value #H": "Silent for",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Faulty GPUs"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
+      "id": 30,
+      "panels": [],
+      "title": "Rack scorecard \u2014 every rack in scope, all domains in one row",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Racks that reported node exporter at any point in the dashboard window. Equals the row count of the scorecard below, which is built from the same selector.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 31,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Racks in scope",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Every rack that reported node exporter at any point in the window, so a rack that has gone completely dark still has a row (Trays answering = 0) instead of silently disappearing. Row count equals the tile above. Worst silence is the longest time-since-last-sample among that rack's trays.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 65
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trays"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Answering"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-red",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    },
+                    {
+                      "color": "dark-green",
+                      "value": 18
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 115
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "XID"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 75
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ECC/remap"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hottest"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 75
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 87
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Power"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Max load"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OOM"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 75
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Worst silence"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 300
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 135
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "id": 32,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((count by(rack,su)(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} == 1) and count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))) or (0 * count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((count by(rack,su)(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) and count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))) or (0 * count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((count by(rack,su)(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) and count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))) or (0 * count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((count by(rack,su)(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0 or DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) and count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))) or (0 * count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))))",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(rack,su)(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} < 150)",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum by(rack,su)(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(rack,su)(node_load1{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "H"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((sum by(rack,su)(increase(node_vmstat_oom_kill{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])) and count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))) or (0 * count by(rack,su)(count by(node,rack,su)(last_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))))",
+          "format": "table",
+          "instant": true,
+          "refId": "I"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(rack,su)(min by(node,rack,su)(time() - tlast_over_time(up{job=~\"node|node-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "J"
+        }
+      ],
+      "title": "L2 \u00b7 Rack scorecard \u2014 rows = \u201cRacks in scope\u201d",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "Value #D": 5,
+              "Value #E": 6,
+              "Value #F": 7,
+              "Value #G": 8,
+              "Value #H": 9,
+              "Value #I": 10,
+              "Value #J": 11,
+              "rack": 0,
+              "su": 1
+            },
+            "renameByName": {
+              "Value #A": "Trays",
+              "Value #B": "Answering",
+              "Value #C": "GPUs",
+              "Value #D": "XID",
+              "Value #E": "ECC/remap",
+              "Value #F": "Hottest",
+              "Value #G": "Power",
+              "Value #H": "Max load",
+              "Value #I": "OOM",
+              "Value #J": "Worst silence",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Worst silence"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "impact",
+    "L2",
+    "executive"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "nvis-victoriametrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 2,
+        "label": "Datasource",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "clusterQuery"
+        },
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up{cluster=~\"$cluster\"}, datahall)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Data hall",
+        "multi": true,
+        "name": "datahall",
+        "options": [],
+        "query": {
+          "query": "label_values(up{cluster=~\"$cluster\"}, datahall)",
+          "refId": "datahallQuery"
+        },
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\"}, su)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "SU",
+        "multi": true,
+        "name": "su",
+        "options": [],
+        "query": {
+          "query": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\"}, su)",
+          "refId": "suQuery"
+        },
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\"}, rack)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rack",
+        "multi": true,
+        "name": "rack",
+        "options": [],
+        "query": {
+          "query": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\"}, rack)",
+          "refId": "rackQuery"
+        },
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tray",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\"}, node)",
+          "refId": "nodeQuery"
+        },
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": false,
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "30m",
+      "1h",
+      "2h"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Cross-Domain Impact \u2014 blast radius by rack and tray",
+  "uid": "nvis-impact-analysis",
+  "version": 1,
+  "weekStart": ""
+}

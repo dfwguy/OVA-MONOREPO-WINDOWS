@@ -1,0 +1,14 @@
+# Merge into an owner-managed TLS virtual host. Requires the customer's authenticated
+# auth_request endpoint and a server-private include that injects X-Evidence-Token.
+location /slurm-history/ {
+    auth_request /customer-auth-check;
+    proxy_pass http://127.0.0.1:4310/;
+    proxy_set_header Host $host;
+    # Never trust a token header supplied by the browser. This included file sets
+    # proxy_set_header X-Evidence-Token to the locally provisioned opaque token.
+    include /etc/nginx/private/slurm-evidence-token.conf;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 30s;
+}
+# Customer /customer-auth-check must verify identity AND authorization/group membership.
+# Ensure no public location proxies to 4310 without the same auth check.

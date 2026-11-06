@@ -1,0 +1,1237 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "Select a Job ID. Read top-down: scheduler outcome \u2192 application progress/errors \u2192 exact trays \u2192 GPU/HCA/host evidence \u2192 parsed benchmark result \u2192 raw logs. Missing source coverage is shown as missing, never as healthy zero.",
+        "mode": "markdown"
+      },
+      "title": "One job, one evidence chain",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "yellow",
+                  "text": "UNKNOWN"
+                },
+                "1": {
+                  "color": "yellow",
+                  "text": "PENDING"
+                },
+                "10": {
+                  "color": "red",
+                  "text": "OUT OF MEMORY"
+                },
+                "11": {
+                  "color": "orange",
+                  "text": "PREEMPTED"
+                },
+                "12": {
+                  "color": "orange",
+                  "text": "SUSPENDED"
+                },
+                "2": {
+                  "color": "blue",
+                  "text": "CONFIGURING"
+                },
+                "3": {
+                  "color": "green",
+                  "text": "RUNNING"
+                },
+                "4": {
+                  "color": "blue",
+                  "text": "COMPLETING"
+                },
+                "5": {
+                  "color": "green",
+                  "text": "COMPLETED"
+                },
+                "6": {
+                  "color": "orange",
+                  "text": "CANCELLED"
+                },
+                "7": {
+                  "color": "red",
+                  "text": "FAILED"
+                },
+                "8": {
+                  "color": "red",
+                  "text": "TIMEOUT"
+                },
+                "9": {
+                  "color": "red",
+                  "text": "NODE FAIL"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(nvis_slurm_job_state_code{cluster=\"IREN_MKZ\",job_id=\"$jobid\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Job outcome",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 3
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(nvis_slurm_job_allocated_nodes{cluster=\"IREN_MKZ\",job_id=\"$jobid\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Allocated nodes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 3
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "100 * max(nvis_slurm_job_progress_ratio{cluster=\"IREN_MKZ\",job_id=\"$jobid\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Progress",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 3
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(nvis_slurm_job_stuck{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}) or on() max(nvis_slurm_job_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}) * 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Stalled",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 7
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(nvis_slurm_job_log_tail_error_lines{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}) or on() max(nvis_slurm_job_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}) * 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Parsed error lines",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 7
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(nvis_slurm_job_log_tail_xid_lines{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}) or on() max(nvis_slurm_job_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}) * 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Parsed XID lines",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 7
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(node)(up{job=~\"dcgm-exporter-fleet-reliability|dcgm-exporter-active-validation\"} and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\")))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPU node coverage",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 7
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(node)(up{job=~\"node-exporter-fleet-health|node-exporter-active-validation\"} and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\")))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Host/HCA node coverage",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Owner, workload, state, reason, exit code, requested nodelist and output path.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "nvis_slurm_job_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Authoritative Slurm record",
+      "transformations": [],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "One row per allocated node: GPU temperature/ECC, bad HCA port count, and host telemetry reachability.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su,allocation)(label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node)(DCGM_FI_DEV_GPU_TEMP{job=~\"dcgm-exporter-fleet-reliability|dcgm-exporter-active-validation\"} and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node)(DCGM_FI_DEV_MEMORY_TEMP{job=~\"dcgm-exporter-fleet-reliability|dcgm-exporter-active-validation\"} and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node)(DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{job=~\"dcgm-exporter-fleet-reliability|dcgm-exporter-active-validation\"} and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum by(node)((ib_hca_port_state{job=~\"node-exporter-fleet-health|node-exporter-active-validation\"} != bool 4) and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "min by(node)(up{job=~\"node-exporter-fleet-health|node-exporter-active-validation\"} and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        }
+      ],
+      "title": "Exact job nodes \u2014 immediate evidence",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "node",
+            "mode": "outer"
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 27
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_GPU_UTIL{job=~\"dcgm-exporter-fleet-reliability|dcgm-exporter-active-validation\"} and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "legendFormat": "GPU util %",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE{job=~\"dcgm-exporter-fleet-reliability|dcgm-exporter-active-validation\"} and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "legendFormat": "GPU power W",
+          "refId": "B"
+        }
+      ],
+      "title": "Job-node GPU utilisation and power",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 27
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rate(ib_hca_port_xmit_wait{job=~\"node-exporter-fleet-health|node-exporter-active-validation\"}[$__rate_interval]) and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "legendFormat": "TX wait",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rate(ib_hca_port_xmit_discards{job=~\"node-exporter-fleet-health|node-exporter-active-validation\"}[$__rate_interval]) and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "legendFormat": "TX discards",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rate(ib_hca_symbol_error{job=~\"node-exporter-fleet-health|node-exporter-active-validation\"}[$__rate_interval]) and on(node) label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=\"IREN_MKZ\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "legendFormat": "symbol errors",
+          "refId": "C"
+        }
+      ],
+      "title": "Job-node HCA counter rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Only values actually parsed from this job's output.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 35
+      },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(job_id)(nvis_slurm_job_nccl_avg_bus_bandwidth_gbps{cluster=\"IREN_MKZ\",job_id=\"$jobid\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(job_id)(nvis_slurm_job_latest_tflops_per_gpu{cluster=\"IREN_MKZ\",job_id=\"$jobid\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(job_id)(nvis_slurm_job_latest_step_time_seconds{cluster=\"IREN_MKZ\",job_id=\"$jobid\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(job_id)(nvis_slurm_job_latest_loss{cluster=\"IREN_MKZ\",job_id=\"$jobid\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(job_id)(nvis_slurm_job_nccl_completed_tests{cluster=\"IREN_MKZ\",job_id=\"$jobid\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        }
+      ],
+      "title": "Parsed final benchmark numbers",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "job_id",
+            "mode": "outer"
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 0,
+        "y": 41
+      },
+      "id": 15,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "expr": "{cluster=\"IREN_MKZ\",job=\"benchmark\",filename=~\".*[-_]$jobid\\\\.(txt|out|log)$\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Raw application output",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 12,
+        "y": 41
+      },
+      "id": 16,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "expr": "{cluster=\"IREN_MKZ\",job=\"benchmark\",filename=~\".*[-_]$jobid\\\\.(txt|out|log)$\"} |~ \"(?i)(iteration|Step Time|TFLOP|lm loss|NCCL|collective|bus bandwidth|error|exception|traceback|failed|Xid|CUDA|NVML)\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Progress, NCCL and application errors",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 52
+      },
+      "id": 17,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "expr": "{cluster=\"IREN_MKZ\",job=\"kernel\",node=~\"$job_nodes\"} |= \"NVRM: Xid\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Kernel XIDs on exact job nodes",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 52
+      },
+      "id": 18,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "expr": "{cluster=\"IREN_MKZ\",job=~\"slurm|slurmctld\"} |= \"$jobid\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Slurm controller/runtime for Job $jobid",
+      "type": "logs"
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 41,
+  "tags": [
+    "IREN_MKZ",
+    "16kAIC-OVA",
+    "operator"
+  ],
+  "templating": {
+    "list": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "includeAll": false,
+        "label": "Job ID",
+        "multi": false,
+        "name": "jobid",
+        "query": {
+          "query": "label_values(nvis_slurm_job_info, job_id)",
+          "refId": "jobid"
+        },
+        "refresh": 1,
+        "sort": 3,
+        "type": "query",
+        "options": [],
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        }
+      },
+      {
+        "allValue": ".*",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "hide": 2,
+        "includeAll": true,
+        "label": "Job nodes",
+        "multi": true,
+        "name": "job_nodes",
+        "query": {
+          "query": "label_values(nvis_slurm_job_node_info{job_id=\"$jobid\"}, exported_node)",
+          "refId": "job_nodes"
+        },
+        "refresh": 1,
+        "type": "query",
+        "options": [],
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        }
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "IREN 16kAIC-OVA \u2014 Job Flight Recorder",
+  "uid": "iren16k-ova-job-flight-recorder",
+  "version": 7
+}

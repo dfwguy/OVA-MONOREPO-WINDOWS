@@ -1,0 +1,256 @@
+---
+description: NVIS Rack Status project architecture, UI framework, and key conventions
+alwaysApply: true
+---
+
+# NVIS Rack Status
+
+## Licensing: every source file starts with the NVIDIA SPDX header
+
+Applied across the tree for the v3 → main merge. **A new source file must carry it**, before any
+other comment and before the module docstring:
+
+```python
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+```
+
+- `#` form for `.py` / `.sh` / `.sbatch` / `Dockerfile`; the `/* … */` form for
+  `.ts` / `.tsx` / `.js` / `.jsx` / `.css`.
+- **A shebang stays on line 1** — the header goes immediately after it, or the script stops being
+  executable.
+- The author line (`Author: Rafael M. Koike & Cursor Agent ("Ada")`) sits *after* the header.
+- **Excluded, deliberately:** `frontend/src/styles/kaizen/` is vendored from the NVIDIA CDN and is
+  re-vendored wholesale on every bump, so an edit there is lost by design. Config and docs
+  (`.yaml`, `.json`, `.md`, `.toml`) carry no header today.
+- `version.py` has one too. If the ci-toolkit release job ever regenerates that file rather than
+  editing the `VERSION` line, check the header survived.
+
+Flask backend + React 19 SPA (Vite + NVIDIA Kaizen UI + MUI), Dockerized with SSH-back host execution for BCM/MAAS clusters.
+
+## UI Framework
+
+- **Primary**: NVIDIA Kaizen UI (`@nvidia/foundations-react-core`) — **always prefer KUI over MUI** for new code. See `kui-components.mdc` for the full component catalog and migration table.
+- **KUI Reference**: https://webassets.nvidia.com/kaizen-ui-foundations/docs/llms.txt — full component list, guidelines, CSS variables. Per-component docs: `https://webassets.nvidia.com/kaizen-ui-foundations/docs/components/<Component>.txt`
+- **Secondary**: MUI — retained only for complex existing widgets with no easy KUI migration (RackTable, sidebar Drawer, AppBar/Toolbar shell). New features should use KUI equivalents.
+- **Icons**: Lucide React (`lucide-react`) exclusively. No `@mui/icons-material`.
+- **Theming**: KUI `ThemeProvider` is outer wrapper (`global`); MUI `ThemeProvider` synced via `ThemeBridge` in `src/context/ThemeContext.tsx`. Use `useThemeMode()` for dark/light toggle.
+- **KUI CSS**: `base.css` + `components.css` (`1.0.0`) plus their 16 `fonts/*.woff2` are **vendored** at `frontend/src/styles/kaizen/` and imported by `src/main.tsx` (before `index.css`/`kaizen-oss.css`) so Vite bundles and hashes them. Without these, KUI components have no styles. Do **not** re-add the `webassets.nvidia.com` CDN `<link>` tags to `index.html` — operators browse over an SSH tunnel and air-gapped hosts cannot reach the CDN. The npm package does not ship the CSS. When bumping, keep the vendored version in lockstep with `@nvidia/foundations-react-core` **and** re-apply the `@font-face` rewrite from `brand-assets.cne.ngc.nvidia.com` to relative `./fonts/` (easy to miss — the CSS looks fine while fonts silently fall back). Procedure + a "no external requests" build check: `frontend/src/styles/kaizen/README.md`.
+- **Charts**: Chart.js via `react-chartjs-2` (`Bar`, `Line` components).
+
+## KUI Component API
+
+- **Text**: Use `kind` prop (`body/regular/sm`, `body/bold/md`, `title/lg`, `display/sm`, `mono/sm`, etc.). Use `style` for color/spacing — **not** `sx`.
+- **Tag**: `color` (green/red/yellow/blue/teal/purple/gray), `kind` (solid/outline), `readOnly`, `density` (compact/standard/spacious). Children are the label.
+- **Button**: `kind` (primary/secondary/tertiary), `size` (small/tiny/medium/large), `color` (brand/neutral/danger). **No** `density` prop on Button — use `size`.
+- **Banner**: `status` (error/warning/success/info), `kind` (inline/header/global). Children are the message. **Not** `kind="error"` — use `status="error"`.
+- **Combobox**: `items`, `multiple`, `value`, `onValueChange`, `size` (small/medium/large).
+- **Card, Flex, Skeleton**: Use `style` prop for inline styles, not MUI `sx`.
+- **Divider**: Use KUI Divider in content areas. Keep MUI Divider inside MUI shell components (Sidebar/Drawer, AppBar/Toolbar) — KUI Divider renders differently in MUI layout contexts.
+- Full docs: `https://webassets.nvidia.com/kaizen-ui-foundations/docs/components/<Component>.txt`
+
+## Architecture
+
+**First-class citizens.** A small set of components own a concern for the whole product and are
+meant to be built **on**, not beside: **connection/transport** (`host_exec` + `transport/`),
+**catalog/Tools**, **Project/Cluster**, the **workflow state machine**, **configuration
+resolution**, **platform/scheduler providers**, the **results pipeline**, the **durable run
+registry + locks**, **naming templates**, **artifacts/reports**, **auth**, and the **frontend
+contexts**. Extend the citizen that owns your concern instead of adding a parallel structure; a
+genuinely new capability may need one, and then it gets documented as a citizen too. Full
+prescriptive detail — and the cost of each wrong choice — in **`core-designs.mdc`**.
+
+- **catalog/ (multi-generation support)**: `backend/catalog/` makes the app hardware-generation-agnostic via three TinyDB-backed schemas behind a swappable `Repo` interface (`store.py`, JSON at `var/store/catalog.json`, atomic writes + `threading.RLock`/`fcntl`):
+  - **Platform** (`models.Platform`) — hardware/system SKU (GPU model, CPU vendor, system vendor, form factor, per-rack `geometry`, `capabilities` like nvlink/nvswitch/imex/mnnvl/roce, `tool_param_defaults`). NOT the same as `backend/platforms/` (that is the cluster *manager*, BCM/MAAS, now a per-cluster field `cluster_manager`).
+  - **Tool** (`models.Tool`) — each `bin/scripts` script as a document: `script` basename, `env_key`, `compatible` (all / by capability / by platform id), `surfaces`, `execution` (mode/target). Replaces the hard-wired `RACK_*_SCRIPT` registry.
+  - **Project/Cluster** (`models.Project`/`Cluster`) — customer + site definition: naming convention, geometry, connection (local/ssh). Supports multiple projects/clusters per running instance.
+  - **Seeding/migration** (`seed.py`): idempotent on every boot; seeds built-in platforms/tools (tagged `source="seed"`, never clobbers edits) and, on first run, creates a default project from the current env+overrides and sets it active.
+  - **Active context** (`context.py`): resolves the active project/cluster and produces a **high overlay** (cluster identity/naming/connection — wins over `job_env_overrides` and env) and a **low overlay** (platform geometry defaults + `tool_param_defaults` — lowest precedence). `app._eget`/`_eget_int`/`_subprocess_env` consult these; `_apply_catalog_active_to_environ()` also materializes them into `os.environ` (save/restore baseline on switch) so `os.environ`-direct readers (`nvis_id_templates`, `host_exec` SSH forwarding, `native_status`, workflow steps) stay consistent. `host_exec._FORWARD_ENV_NAMES` forwards non-prefixed platform knobs (CUDA_MAJ, GPU_MODEL_FLAG, MNNVL_TOPOLOGY) over SSH.
+  - **API** (`api.py`, blueprint `/api/catalog`): CRUD for platforms/tools/projects, `GET/PUT /active`, `GET /tools?cluster=&surface=`, `/vocab`, `/overview`.
+ - **This is where new tools, tests and presets go — not into a module constant.** A new
+ `bin/scripts` script becomes launchable by adding a Tool document; its image, version pins and
+ step counts are `tool_param_defaults` on the Platform; per-cluster identity, rosters and
+ acceptance **campaigns** (a pinned, versioned list of exact nodes with an id) belong on the
+ Project/Cluster record, which is what lets one container serve Mayo, Firmus, Boston and Nscale.
+ A frozen list of presets in Python is the hard-wired registry the catalog replaced. See
+ `core-designs.mdc` §2–3.
+- **workflow_engine.py — the reusable long-job runner, not just the workflow editor's engine.**
+ `start_workflow_run()` returns a uuid4 immediately and runs on a background thread;
+ `get_run_state()` polls; runs persist under `var/` and survive a container restart; steps keep
+ their own output; `_execute_fanout_step` fans out across N nodes with bounded concurrency over
+ the multi-hop connection chain. Use it for anything long-running instead of adding another
+ in-memory job dict (`core-designs.mdc` §1).
+  - **AI context**: `context.build_ai_context_block()` is injected first in `ai_chat.build_system_prompt` (authoritative platform+cluster+customer envelope) and exposed via `GET /api/catalog/active`.
+- **host_exec.py**: All host commands route through `run_on_host()` / `popen_on_host()`. The composed connection picks the mechanism — a direct subprocess when the app sits on the target host, otherwise an SSH tunnel to the head node (SSH is the default). Env vars prefixed `RACK_*`, `NEMO_*`, `VALIDATION_*`, `SQUEUE_*` are auto-forwarded to remote SSH sessions. SSH **ControlMaster multiplexing** is on by default and load-bearing: a *stale* master makes the whole UI slow/stale while logging `Session open refused by peer` + `disabling multiplexing` (a per-attempt fallback, not a config change), and it never self-heals — clear `<mux dir>/nvis-mux-*` or restart the container. `Master running` is not health; only a second attached session proves it. See `docs/EXECUTION_ARCHITECTURE.md` §6.1.
+- **platforms/**: `PlatformProvider` base class; `BCMProvider` (cmsh, module load slurm, pdsh) and `MAASProvider` (maas-cli). Selected by `RACK_PLATFORM=bcm|maas`.
+- **RACK_REMOTE_BASE_PATH**: Single env var resolves all script paths and default log dir to head node filesystem. `SCRIPTS_DIR` and `DEFAULT_LOG_DIR` derive from it.
+- **_script_exists()**: All script `is_file()` checks skip in SSH mode (scripts live on remote host).
+- **Auth**: Token mode for Docker (`RACK_WEB_AUTH_MODE=token`), PAM for local. `api_login` endpoint must be in the auth bypass list.
+- **Demo mode**: `RACK_STATUS_DEMO=1` returns synthetic data. `/api/parser-results` also returns mock chart data.
+- **Docker**: Multi-stage Dockerfile. `config/rackstatus.toml` (mounted read-only from the host's `config/`) holds deployment settings; HTTPS only. `build-docker.sh` for dev/prod/build/stop/logs.
+- **Command contexts**: `RackCommandContext` and `RackCommandsStoreContext` track async job state across views.
+- **Workflow editor**: Mermaid source text is the single source of truth. React Flow canvas reads from and writes back to mermaid via `mermaidToReactFlow.ts` parser and `handleCodeAction` in `WorkflowDesigner.tsx`. Node types: automated (green rect), manual/event (blue stadium), decision (yellow diamond). The parser infers `stepType` from mermaid shape — this must be preserved during save (`handleSave`) so nodes retain their visual style on reload. Edge deletion must preserve inline node definitions (e.g., `step1 --> done(["Done"])` — removing the edge must re-insert `done(["Done"])` as a standalone line). Connections use React Flow handles: Top=target, Bottom=source, Left=target, Right=source. Edge delete buttons appear on node hover (not on the edge line).
+- **Script resolution**: a Tool's `script` is a **basename**, resolved most-specific-first through
+ `project-<id>/` -> `custom/` -> `<platform-id>/` -> `multi-platform/` by `backend/script_tree.py`
+ (an env-key override beats all four). The first two are writable, the shipped two are not; a
+ Tool's platform compatibility decides which clusters are *offered* it and never which folder
+ runs. Decision record: `docs/explanation/how-a-script-path-is-chosen.md`.
+- **Remote cluster deployment**: The repo's `bin/scripts/` is the source of truth; sync it to the head node at `RACK_REMOTE_BASE_PATH/bin/scripts/` with `bin/deploy-scripts.sh` (checksum-based `rsync`, not per-file `scp` — see `local-dev.mdc`). Re-run it after editing any script (over SSH the app executes the head's copy). Run it locally against a remote head by pointing the SSH env vars (`RACK_SSH_HOST`/`RACK_SSH_USER`/`RACK_SSH_KEY`) at the head node — SSH is the default transport.
+
+## Testing
+
+**Run the suites in the CI images with `bin/ci-local.sh`, never on the Mac.** It runs the
+`python-test` job in `python:3.12-slim`, the `typescript-check` and `frontend-test` jobs in
+`node:24-slim`, and `integration-test` against the bundle the frontend job built, with the same pins as `.gitlab-ci.yml` (checked by `test_ci_job_tooling.py`). A
+macOS run is not evidence either way: `/bin/bash` 3.2 has no `mapfile`, `declare -A` or `${var,,}`,
+drops `exec > >(tee ...)` output and ignores a failing bare `[[ ]]` under `set -e`, and BSD `stat`
+has no `-c`. So script tests fail on the Mac for reasons that exist on no node, app server or
+runner. Do not discount such a failure as "just macOS" and move on: rerun it in the image, where
+the answer is real. `ci-local.sh` has existed since 2026-10-08 and was still being relearned, because this
+section used to say `python -m pytest`.
+
+```bash
+bin/ci-local.sh                         # every job, in CI's order
+bin/ci-local.sh python|frontend|integration   # one of them (integration needs frontend's bundle)
+t=$(mktemp -d) && git archive HEAD | tar -x -C "$t" && bin/ci-local.sh all "$t"   # the commit alone
+```
+
+The last form tests the commit rather than the working tree. It has no uncommitted edits (yours,
+or another session's sharing the checkout) and no built `static/spa/`, which is CI's tree
+(`local-vs-ci-tree.mdc`).
+
+- **Backend**: pytest (`backend/tests/`). A host venv (`python -m pytest backend/tests/<file>`) is
+  fine for a quick loop on pure-Python code; confirm in the image before pushing.
+- **Frontend**: Vitest + Testing Library (`src/**/*.test.{ts,tsx}`); `bin/ci-local.sh frontend`.
+- **CI/CD**: `.gitlab-ci.yml` — lint (**sources-of-truth**, ruff + tsc), test (pytest + vitest),
+  build (Docker). `sources-of-truth` runs FIRST and rebuilds the generated documents
+  (`docs/action-vocabulary.json`, `backend/tests/action_snapshot.json`,
+  `docs/reference/configuration/settings.md`), then fails if the tracked copies differ — so adding or renaming
+  an API route surfaces as a reviewed diff instead of drifting. See `core-designs.mdc` §14.
+- **Lint**: the `python-lint` job runs **two** commands, and this line used to name only the
+ first — `ruff check backend/` (tests included; the `--exclude tests` it once had is gone) **and**
+ `pylint --recursive=y backend`. Lint is not platform-sensitive, so a venv with
+ `backend/requirements-dev.txt` gives CI's answer. A green
+ ruff shipped a red pipeline on 2026-09-15: hoisting an import to module scope left the original
+ local one in place, which ruff does not flag and pylint does (`W0404 reimported`). The two rule
+ sets genuinely differ, so running one is not evidence about the other — exactly the mistake
+ this file already records for `tsc` versus `eslint` below. `pylint==4.0.7`, the same pin as
+ `backend/requirements-dev.txt`. For TypeScript the CI job is called
+  `typescript-check` and runs **two** commands — `npx tsc -b --noEmit` *and* `npm run lint`
+  (eslint). Run both; this line used to name only `tsc`, and a green `tsc` shipped four eslint
+  errors to CI. The rule that caught them is `react-refresh/only-export-components`: a file
+  exporting a component may not also export an object, function or hook, because Vite cannot then
+  hot-replace it (a `const` holding a literal is allowed, which is why `WIDGET_DRAG_HANDLE` passes
+  and `CATEGORY_COLORS` does not). `eslint.config.js` states the policy for the whole config —
+  every rule except `react-hooks/set-state-in-effect` is at zero, so **any** error fails the gate,
+  and the fix is the code rather than a second downgraded rule.
+
+## Key Files
+
+**Generated documents — never hand-edit, and read these rather than guessing a name:**
+`docs/ACTION_VOCABULARY.md` and `docs/action-vocabulary.json` are the source of truth for which
+services and actions exist (173 actions across 50 services), generated from the live registry by
+`bin/gen-action-vocabulary.py`. A policy's `actions` field may name only what is in there, and a
+test should read it rather than typing an action string — see `core-designs.mdc` §14.
+
+The Python backend lives under `backend/`; runtime assets (`bin/`, `static/`, `var/`, `help_content.json`) stay at the repo root. Backend modules resolve those via `REPO_ROOT = APP_DIR.parent` (parent of `backend/`); keep `APP_DIR` only for `sys.path` and the `rack_web/` helper. **`version.py` must stay at the repo root** — it is release metadata read by the ci-toolkit release jobs (`grep VERSION = version.py`) and the JFrog image build, and it is the only place the version actually lives (everything else derives from it).
+
+Routine bumps belong to the ci-toolkit release job, which derives the next version from conventional commits and regenerates `CHANGELOG.md`. **Do not hand-edit `CHANGELOG.md`** — it is generated, and the entries carry MR links the job produces. A deliberate re-alignment of `VERSION` is a human decision and is fine (0.1.5 → 0.3.0 for the v3 → main merge), but expect the automation to have its own opinion of what comes next: `origin/release` already carries a computed `release 0.2.0`, so a hand-set version can be recomputed or overwritten on the next release run. If a jump needs to stick, make the release job agree with it rather than only editing the file.
+
+**"What build is this?" has exactly one answer: `backend/app_version.py`.** It reads
+`backend/build-info.json`, falling back to *parsing* — never importing — root `version.py` as
+`<version>-dev`, then `"unknown"`. It reads **no environment variable**: the previous implementation
+used only `RACK_WEB_VERSION`, which is set nowhere in this repo, so every deployment reported `dev`
+while `version.py` said 0.1.5. `Dockerfile` must keep `COPY version.py ./` or a container reports
+`unknown`.
+
+**`bin/write-build-info.sh` writes that file, into the TREE, before the image is built.** Not
+generated by the `Dockerfile`, and this is the non-obvious part — two different mounts would hide a
+build-time copy:
+
+- deployments bind-mount the backend directory over the image's, so anything generated under
+  `/app/backend` during the build is shadowed at runtime;
+- `/app/var` is worse: it is masked by the `rack-data` **named volume**, and Docker seeds a named
+  volume from the image *only while the volume is empty*. On any deployment that has ever run, a
+  file written to `var/` at build time is simply invisible. The first version of this shipped there
+  and could never have been read.
+
+Writing it into the tree and letting `COPY backend/` carry it in means the bind-mounted deployment
+and a bare `docker run` read the same file. `build-docker.sh` and both Kaniko jobs call the writer;
+do it by hand before a Compose build:
+
+```bash
+bin/write-build-info.sh && docker compose build && docker compose up -d
+```
+
+**Compose builds a different image than `build-docker.sh`.** `build-docker.sh` tags
+`nvis-rack-status:local`; the OVA container runs `nvis-rack-status-v3-rack-status:latest`, which
+Compose builds from `build: .` (project + service name). Running `build-docker.sh build` and then
+restarting the container therefore deploys nothing — the restart reuses the old image and
+`build-docker.sh`'s output is never referenced. On the OVA, rebuild with `docker compose build` and
+replace the container with `docker compose up -d`; `docker restart` cannot adopt a new image.
+
+- `backend/api/` — **where every endpoint lives.** 38 modules, one per domain, auto-discovered:
+  expose `bp` (a Blueprint) or `install(app)` and it registers itself. Never edit `app.py` to add a
+  route, and never `from app import ...` here — see `core-designs.mdc` §0.
+- `backend/core.py` — helpers importing neither Flask nor `app`; this is what keeps the
+  dependency one-directional (`app.py → api/<domain>.py → core.py`)
+- `backend/app.py` — **the composition root, ~2,000 lines.** The Flask object, the startup
+  bootstraps, the auth gate, the middleware pairs and the SPA catch-alls. All 199 routes have moved
+  out. Editing this file to add an endpoint means something has gone wrong.
+
+The mechanism modules the routes were built on, in dependency order — extend the one that owns your
+concern rather than adding a helper beside a route:
+
+- `paths.py` — every per-tool script path (19 of them) and log-dir resolution
+- `grafana_embed.py` + `log_time_window.py` — panel/dashboard/host/timezone mechanics, and deriving
+  a run's real time window from its log (NOT from the Slurm allocation)
+- `rack_status_engine.py` — the canonical fleet dataset: cross-process snapshot lease, per-log-dir
+  cache, cmsh rack list, physical RF0 map. `/api/status`, `/api/cluster-overview` and the exports
+  are three renderings of it
+- `results_ingest.py` — `parser.sh` invocation plus the predicates that decide whether its output is
+  a real measurement
+- `validation_launch.py` + `activity_hydration.py` — building/vetting a launch, and reconciling a
+  stored activity against Slurm and its result log
+- `job_registry.py` — the in-process registries, their locks, and `reset_job_progress`, the phase
+  state machine every background worker shares
+- `node_targets.py` + `naming.py` — rack id → real hostnames, and log-basename classification
+- `stream_exec.py`, `slurm_query.py`, `slurm_admin.py`, `comments_store.py`, `cluster_metadata.py`,
+  `analytics_cache.py`, `logscan_cache.py`, `app_clients.py`, `web_auth.py`
+- `backend/catalog/` — multi-generation Platform/Tool/Project schemas: `store.py` (Repo + TinyDB), `models.py`, `seed.py`, `context.py` (active-context overlays + AI envelope), `api.py` (`/api/catalog`)
+- `frontend/src/context/ActiveClusterContext.tsx` — active project/cluster + switcher state
+- `frontend/src/services/catalogService.ts` + `frontend/src/types/catalog.ts` — catalog API client + types
+- `frontend/src/views/ProjectsView.tsx` / `PlatformCatalogView.tsx` / `ToolRegistryView.tsx` — Platform-domain admin UIs
+- `frontend/src/components/ProjectSwitcher.tsx` — top-bar active-cluster switcher
+- `backend/native_status.py` — Native Python rack-status builder (cmsh + sinfo + log probes)
+- `backend/host_exec.py` — SSH/local command execution with env forwarding
+- `backend/nvis_id_templates.py` — NVIS naming conventions (Firmus/CBR/Bright templates, uses `lru_cache`)
+- `backend/workflow_engine.py` — Workflow state machine, CRUD, execution engine. **Also the
+ reusable runner for any long-running job** — see the Architecture note above and
+ `core-designs.mdc` §1 before building a new async-job mechanism.
+- `backend/cluster_report.py` + `cluster_report_pdf.py` — Rack Status report: one dataset,
+ rendered as CSV / JSON / PDF. Add a renderer, never a second generator (`core-designs.mdc` §5)
+- `backend/validation_activities.py` — Durable validation-family activity registry (`activity_id` + `tasks[]`); `multirack_jobs.py` is a compat shim
+- `backend/rack_locks.py` — Advisory rack lock claims, persistence, TTL, heartbeat-based release
+- `backend/platforms/` — BCM and MAAS platform providers
+- `backend/requirements.txt` — Python dependencies
+- `config/rackstatus.toml` — operator configuration (gitignored; `cli.py init-config` writes the minimal one, `config/rackstatus.toml.example` lists every setting)
+- `frontend/src/components/RackTable.tsx` — Main dashboard table with filters, menus, charts
+- `frontend/src/components/rack/ValidationActivitiesTable.tsx` — Per-rack / multirack validation activity table (polls `/api/validation-activities`)
+- `frontend/src/components/ParserResultsDialog.tsx` — NCCL/NEMO chart dialog + Grafana embeds
+- `frontend/src/components/workflow/WorkflowDesigner.tsx` — Workflow editor: code panel + canvas + save
+- `frontend/src/components/workflow/editor/FlowDiagram.tsx` — React Flow canvas wrapper (node/edge types, connection handling, toolbar)
+- `frontend/src/components/workflow/editor/mermaidToReactFlow.ts` — Mermaid parser → React Flow nodes/edges (dagre layout)
+- `frontend/src/components/workflow/editor/CustomNode.tsx` — Node renderers (Standard + Diamond) with edge delete buttons
+- `frontend/src/components/workflow/editor/CustomEdge.tsx` — Custom edge renderer (smoothstep + label)
+- `frontend/src/views/ToolsView.tsx` — NVLoom, Clusterkit, workspace tools
+- `frontend/src/views/AnalyticsView.tsx` — Rack analytics and aggregate analysis
+- `frontend/src/context/RackCommandsStoreContext.tsx` — Centralized async command tracking
+- `frontend/src/context/ThemeContext.tsx` — KUI + MUI theme bridge

@@ -1,0 +1,12 @@
+# /etc/systemd/system/nvis-lake-compact-daily.timer
+# Install: systemctl enable --now nvis-lake-compact-daily.timer
+[Unit]
+Description=Daily NVIS data-lake roll-up + retention
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+Unit=nvis-lake-compact@daily.service
+
+[Install]
+WantedBy=timers.target

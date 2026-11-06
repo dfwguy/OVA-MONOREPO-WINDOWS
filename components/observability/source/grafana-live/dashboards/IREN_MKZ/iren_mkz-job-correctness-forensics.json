@@ -1,0 +1,1785 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "JobID-scoped ECC, XID, thermal, W/kW power, NVLink and InfiniBand correctness evidence pinned to scheduler start/end timestamps.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "home",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "\u2302 IREN_MKZ Home",
+      "tooltip": "Back to IREN_MKZ Home",
+      "type": "link",
+      "url": "/d/iren_mkz-home?${__url_time_range}"
+    },
+    {
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "iren_mkz"
+      ],
+      "title": "IREN_MKZ Dashboards",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "description": "Operator orientation and direct routes to every IREN_MKZ evidence domain.",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "# IREN_MKZ \u2014 Job Correctness Forensics\n\n**Operator view for Slurm Job `$jobid`.** Start with the exception strip, correlate timing in the thermal/power graphs, then use the exception tables for the exact GPU or port. Temperature lines mark **85\u00b0C warning** and **90\u00b0C critical**; GPU power uses native DCGM **W/kW**. Counter evidence is calculated strictly inside the scheduler start/end window. Coverage is shown at the bottom so missing telemetry can never masquerade as a clean run.\n\n[Home](/d/iren_mkz-home?${__url_time_range}) \u00b7 [Command Center](/d/iren_mkz-command-center?${__url_time_range}) \u00b7 [Live Topology](/d/iren_mkz-topology?${__url_time_range}) \u00b7 [Infrastructure](/d/iren_mkz-infrastructure?${__url_time_range}) \u00b7 [GPU & NVLink](/d/iren_mkz-accelerators?${__url_time_range}) \u00b7 [Fabric, CVT & Cabling](/d/iren_mkz-fabric?${__url_time_range}) \u00b7 [Workloads, Slurm & Validation](/d/iren_mkz-workloads?${__url_time_range})",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "description": "Run overview \u2014 green means no exception rows: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Run overview \u2014 green means no exception rows",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Scheduler-reported allocation size.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 5
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(nvis_slurm_job_allocated_nodes{cluster=~\"$cluster\",job_id=\"$jobid\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Allocated nodes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "UP only when emitted JobID membership equals Slurm's allocated-node count.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "text": "DOWN"
+                },
+                "1": {
+                  "color": "green",
+                  "text": "UP"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 5
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(nvis_slurm_job_node_mapping_complete{cluster=~\"$cluster\",job_id=\"$jobid\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Job roster complete",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "ECC, XID, remap, thermal, or power exception rows in the exact job interval.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 5
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(label_replace((((max by(node,gpu,UUID,rack,su,err_code,err_msg)(max_over_time(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) unless on(node,gpu,err_code) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\"} @ (max(nvis_slurm_job_start_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) - 1))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"New XID code/series\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"ECC SBE volatile delta\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"ECC DBE volatile delta\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"ECC SBE aggregate delta\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"ECC DBE aggregate delta\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Uncorrectable row-remap delta\", \"\", \"\") or label_replace(((max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Row-remap failure\", \"\", \"\") or label_replace(((max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) >= 85) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"GPU core >=85C warning/critical\", \"\", \"\") or label_replace(((max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_MEMORY_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) >= 85) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"GPU memory >=85C warning/critical\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_THERMAL_VIOLATION{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Thermal throttle delta\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Power throttle delta\", \"\", \"\")) or on() ((count(count by(node)(max_over_time(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time())) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")))) == count(label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))) * 0",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPU exceptions",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Non-zero NVLink error/recovery rows. Interpret only with complete coverage below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 5
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_malformed_packet_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Malformed packets delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_buffer_overrun_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Buffer overruns delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_rx_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"RX errors delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_rx_remote_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Remote RX errors delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_rx_general_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"General RX errors delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_local_link_integrity_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Local integrity errors delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_tx_discards_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"TX discards delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_recovery_events_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Link recovery/retrain events delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_effective_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Effective errors delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_symbol_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Symbol errors delta\", \"\", \"\")) or on() ((count(count by(node)(max_over_time(nvis_nvlink_collector_up{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time())) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")))) == count(label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))) * 0",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "NVLink exceptions",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Non-zero IB port error/recovery rows in the exact job interval.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 5
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_link_downed_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Link-down delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_link_error_recovery_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Link recovery/retrain delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_symbol_error_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Symbol errors delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_port_errors_received_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Port RX errors delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_local_link_integrity_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Local integrity errors delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_excessive_buffer_overrun_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Buffer overruns delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_port_receive_remote_physical_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Remote physical RX errors delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_port_receive_switch_relay_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Switch relay RX errors delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_port_discards_transmitted_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"TX discards delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_vl15_dropped_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"VL15 drops delta\", \"\", \"\")) or on() ((count(count by(node)(max_over_time(node_infiniband_info{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time())) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")))) == count(label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))) * 0",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "InfiniBand exceptions",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Highest per-GPU DCGM reading in native W/kW.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 5
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Peak GPU power",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "description": "Thermal and power timeline \u2014 exact Slurm window: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 9,
+      "panels": [],
+      "title": "Thermal and power timeline \u2014 exact Slurm window",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Job-wide peak and average GPU/HBM temperature. Warning is 85\u00b0C; critical is 90\u00b0C.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 85
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 14,
+        "x": 0,
+        "y": 10
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"} and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()), \"node\", \"$1\", \"exported_node\", \"(.+)\")) and on() ((vector(time()) >= scalar(max(nvis_slurm_job_start_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) and ((vector(time()) <= scalar(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) or on() absent(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))))",
+          "legendFormat": "Core peak",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(DCGM_FI_DEV_MEMORY_TEMP{cluster=~\"$cluster\"} and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()), \"node\", \"$1\", \"exported_node\", \"(.+)\")) and on() ((vector(time()) >= scalar(max(nvis_slurm_job_start_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) and ((vector(time()) <= scalar(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) or on() absent(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))))",
+          "legendFormat": "HBM peak",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"} and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()), \"node\", \"$1\", \"exported_node\", \"(.+)\")) and on() ((vector(time()) >= scalar(max(nvis_slurm_job_start_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) and ((vector(time()) <= scalar(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) or on() absent(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))))",
+          "legendFormat": "Core average",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_MEMORY_TEMP{cluster=~\"$cluster\"} and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()), \"node\", \"$1\", \"exported_node\", \"(.+)\")) and on() ((vector(time()) >= scalar(max(nvis_slurm_job_start_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) and ((vector(time()) <= scalar(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) or on() absent(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))))",
+          "legendFormat": "HBM average",
+          "refId": "D"
+        }
+      ],
+      "title": "GPU temperature envelope",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Per-GPU power in native DCGM watts; Grafana formats thousands of watts as kW.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "watt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 10,
+        "x": 14,
+        "y": 10
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\"} and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()), \"node\", \"$1\", \"exported_node\", \"(.+)\")) and on() ((vector(time()) >= scalar(max(nvis_slurm_job_start_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) and ((vector(time()) <= scalar(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) or on() absent(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))))",
+          "legendFormat": "Per-GPU peak",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\"} and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()), \"node\", \"$1\", \"exported_node\", \"(.+)\")) and on() ((vector(time()) >= scalar(max(nvis_slurm_job_start_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) and ((vector(time()) <= scalar(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))) or on() absent(max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"} @ end()))))",
+          "legendFormat": "Per-GPU average",
+          "refId": "B"
+        }
+      ],
+      "title": "GPU power envelope",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "description": "GPU exception evidence: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 12,
+      "panels": [],
+      "title": "GPU exception evidence",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "One row per non-zero signal/GPU in the exact job window. Sticky XIDs already present before Slurm start are excluded; ECC and violation counters are before\u2192after increases.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Observed value / delta"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "node"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_replace((((max by(node,gpu,UUID,rack,su,err_code,err_msg)(max_over_time(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) unless on(node,gpu,err_code) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\"} @ (max(nvis_slurm_job_start_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) - 1))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"New XID code/series\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"ECC SBE volatile delta\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"ECC DBE volatile delta\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"ECC SBE aggregate delta\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"ECC DBE aggregate delta\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Uncorrectable row-remap delta\", \"\", \"\") or label_replace(((max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Row-remap failure\", \"\", \"\") or label_replace(((max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) >= 85) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"GPU core >=85C warning/critical\", \"\", \"\") or label_replace(((max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_MEMORY_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) >= 85) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"GPU memory >=85C warning/critical\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_THERMAL_VIOLATION{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Thermal throttle delta\", \"\", \"\") or label_replace(((sum by(node,gpu,UUID,rack,su)(increase(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Power throttle delta\", \"\", \"\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPU exceptions \u2014 exact node/GPU and signal",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uuid": true
+            },
+            "renameByName": {
+              "Value": "Observed value / delta"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": false,
+                "field": "node"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Exact node/GPU labels behind the graph envelopes. Union of top-100 core temperature, HBM temperature, and power values.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Core max C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 85
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HBM max C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 85
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Power max W"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Power max W"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\") and on(node,gpu) (topk(100, max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")) or topk(100, max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_MEMORY_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")) or topk(100, max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))), \"entity\", \"/\", \"node\", \"gpu\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_MEMORY_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\") and on(node,gpu) (topk(100, max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")) or topk(100, max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_MEMORY_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")) or topk(100, max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))), \"entity\", \"/\", \"node\", \"gpu\")",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\") and on(node,gpu) (topk(100, max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")) or topk(100, max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_MEMORY_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")) or topk(100, max by(node,gpu,UUID,rack,su)(max_over_time(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))), \"entity\", \"/\", \"node\", \"gpu\")",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Hottest / highest-power GPUs \u2014 drill-down",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "entity",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uuid": true
+            },
+            "renameByName": {
+              "Value #A": "Core max C",
+              "Value #B": "HBM max C",
+              "Value #C": "Power max W"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "Power max W"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "Network exception evidence: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 15,
+      "panels": [],
+      "title": "Network exception evidence",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "One row per non-zero NVLink signal/GPU. Collection is bounded to per-GPU sums; run nvidia-smi nvlink -e on an offender to resolve its exact link.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Job-window delta"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "node"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_malformed_packet_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Malformed packets delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_buffer_overrun_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Buffer overruns delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_rx_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"RX errors delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_rx_remote_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Remote RX errors delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_rx_general_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"General RX errors delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_local_link_integrity_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Local integrity errors delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_tx_discards_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"TX discards delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_recovery_events_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Link recovery/retrain events delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_effective_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Effective errors delta\", \"\", \"\") or label_replace(((sum by(node,gpu,uuid,rack,su)(increase(nvis_nvlink_symbol_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Symbol errors delta\", \"\", \"\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "NVLink exceptions \u2014 exact node/GPU",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uuid": true
+            },
+            "renameByName": {
+              "Value": "Job-window delta"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": false,
+                "field": "node"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "One row per non-zero error/recovery signal and exact node/HCA/port allocated to the JobID.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Job-window delta"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 17,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "node"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_link_downed_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Link-down delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_link_error_recovery_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Link recovery/retrain delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_symbol_error_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Symbol errors delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_port_errors_received_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Port RX errors delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_local_link_integrity_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Local integrity errors delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_excessive_buffer_overrun_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Buffer overruns delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_port_receive_remote_physical_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Remote physical RX errors delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_port_receive_switch_relay_errors_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"Switch relay RX errors delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_port_discards_transmitted_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"TX discards delta\", \"\", \"\") or label_replace(((sum by(node,device,port,rack,su)(increase(node_infiniband_vl15_dropped_total{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()))) > 0) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")), \"signal\", \"VL15 drops delta\", \"\", \"\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "InfiniBand exceptions \u2014 exact node/HCA/port",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "renameByName": {
+              "Value": "Job-window delta"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": false,
+                "field": "node"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "Evidence completeness \u2014 verify before accepting a clean result: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "id": 18,
+      "panels": [],
+      "title": "Evidence completeness \u2014 verify before accepting a clean result",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Percent of allocated nodes with GPU telemetry inside the selected job window.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 95
+              },
+              {
+                "color": "yellow",
+                "value": 99
+              },
+              {
+                "color": "green",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 44
+      },
+      "id": 19,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * (count(count by(node)(max_over_time(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time())) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))) or on() (count(label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")) * 0)) / count(label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "DCGM coverage",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Percent of allocated nodes with InfiniBand telemetry inside the selected job window.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 95
+              },
+              {
+                "color": "yellow",
+                "value": 99
+              },
+              {
+                "color": "green",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 44
+      },
+      "id": 20,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * (count(count by(node)(max_over_time(node_infiniband_info{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time())) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))) or on() (count(label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")) * 0)) / count(label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "IB coverage",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Percent of allocated nodes with parsed NVLink telemetry inside the selected job window. Less than 100% is an evidence gap.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 95
+              },
+              {
+                "color": "yellow",
+                "value": 99
+              },
+              {
+                "color": "green",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 44
+      },
+      "id": 21,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * (count(count by(node)(max_over_time(nvis_nvlink_collector_up{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time())) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))) or on() (count(label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")) * 0)) / count(label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "NVLink coverage",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "One row per allocated node. Use this only when a coverage percentage is below 100% or when drilling into a specific tray.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 22,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "node"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_replace(max by(exported_node,rack,su,allocation)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(node)(max_over_time(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time())) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(node)(max_over_time(node_infiniband_info{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time())) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(node)(max_over_time(nvis_nvlink_collector_up{cluster=~\"$cluster\"}[${job_window_seconds}s] @ (max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time())) and on(node) label_replace(max by(exported_node,rack,su)(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}), \"node\", \"$1\", \"exported_node\", \"(.+)\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        }
+      ],
+      "title": "Exact JobID node roster and collector coverage",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "node",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uuid": true
+            },
+            "renameByName": {
+              "Value #A": "Membership",
+              "Value #B": "DCGM evidence in window",
+              "Value #C": "IB evidence in window",
+              "Value #D": "NVLink evidence in window"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": false,
+                "field": "node"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "curated",
+    "observability",
+    "jobid",
+    "correctness",
+    "nvlink",
+    "infiniband"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "label": "Metrics source",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 2,
+        "label": "Logs source",
+        "name": "loki_datasource",
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(nvis_slurm_job_info, cluster)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(nvis_slurm_job_info, cluster)",
+          "refId": "clusterQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(nvis_slurm_job_info{cluster=~\"$cluster\"}, job_id)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Slurm Job ID",
+        "multi": false,
+        "name": "jobid",
+        "options": [],
+        "query": {
+          "query": "label_values(nvis_slurm_job_info{cluster=~\"$cluster\"}, job_id)",
+          "refId": "jobidQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 4,
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "query_result(clamp_min((max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()) - max(nvis_slurm_job_start_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}), 60))",
+        "hide": 2,
+        "includeAll": false,
+        "label": "Exact job window seconds",
+        "multi": false,
+        "name": "job_window_seconds",
+        "options": [],
+        "query": {
+          "query": "query_result(clamp_min((max(nvis_slurm_job_end_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}) or on() time()) - max(nvis_slurm_job_start_timestamp_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}), 60))",
+          "refId": "jobWindowQuery"
+        },
+        "refresh": 1,
+        "regex": "/.* ([0-9.]+)$/",
+        "skipUrlSync": true,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "30m",
+      "1h"
+    ]
+  },
+  "timezone": "utc",
+  "title": "IREN_MKZ \u2014 Job Correctness Forensics",
+  "uid": "iren_mkz-job-correctness-forensics",
+  "version": 4
+}

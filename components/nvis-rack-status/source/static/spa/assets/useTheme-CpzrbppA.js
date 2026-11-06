@@ -1,0 +1,1 @@
+import"./rolldown-runtime-COiEfhsA.js";import{B as e,f as t}from"./createTheme-BiNRG8NI.js";import{o as n}from"./memoTheme-BvU_Zcp_.js";e();function r(){let e=t(n);return e.$$material||e}export{r as t};

@@ -1,0 +1,504 @@
+---
+description: First-class citizens of Rack Status — the load-bearing components you build ON, not beside
+alwaysApply: true
+---
+
+# First-class citizens of Rack Status
+
+Rack Status is not a collection of scripts behind a web page. It has a small number of
+**first-class citizens**: load-bearing abstractions that own a concern for the whole product.
+Everything else is built on them.
+
+**The rule.** If your feature needs something one of these citizens owns, extend that citizen.
+Do not add a parallel structure beside it. A second structure doing the same job always drifts
+from the first, and the drift is discovered by a customer, not by us.
+
+**The exception, and it is a real one.** A genuinely new capability that no citizen covers should
+get a new structure — that is how each of these came to exist. Two obligations come with it:
+say in the commit message why no existing citizen fits, and if the thing turns out to be
+reusable, **add it to this file** so the next person inherits it instead of rediscovering it.
+
+**Why this file exists.** The other rules described the architecture accurately but never said
+what to build on, so faithful readers built beside it. `backend-api.mdc` went further and
+prescribed an in-memory job dict for long-running work, which is why the repo now has four of
+them — two of which I added myself this week before being told the state machine existed. This
+file is the prescriptive half of the architecture.
+
+---
+
+## Adding a component: start here
+
+Find what you are adding. Do the thing in the middle column. The point of this table is that the
+default answer is almost never "a new module beside the others" — it is "extend the citizen that
+already owns this concern".
+
+| You are adding | Where it goes | Not this |
+|---|---|---|
+| An **endpoint** | A module in `backend/api/`: the existing domain module if it shares helpers with one, otherwise a new file | Editing `app.py`, or `api/__init__.py` |
+| A **helper used by one domain** | Beside its routes, private to that api module | A "utils" module |
+| A **helper a second domain now needs** | Move it to the module that owns the *concern* (`rack_status_engine`, `results_ingest`, `node_targets`, `naming`, `paths`, `job_registry`, `grafana_embed`, `slurm_query`) and import it from both | Importing one api module from another |
+| A **new tool, test or preset** | A `Tool` document in the catalog, with pins and step counts as `tool_param_defaults` on the `Platform` (citizen 2) | A constant, dict or frozen list in Python |
+| A **script path** | `paths.py`, via `_script("name.sh", "ENV_KEY")` like its nineteen siblings | A literal path, or a second `SCRIPTS_DIR` |
+| A **per-project or per-platform script** | A file in that project's or platform's layer of the script tree (citizen 2b) | An `if` on cluster name inside a shared script |
+| Anything **cluster-, site- or customer-specific** | The `Project`/`Cluster` record (citizen 3) | An `if` on cluster name; a new env var |
+| A **long-running job** | `workflow_engine` — and if it lacks progress, artifacts or idempotency, add those *to the engine* (citizen 4) | A fifth in-memory job dict |
+| A **background worker's phase reporting** | `job_registry.reset_job_progress` | A hand-rolled `_patch` closure |
+| A **config knob** | The settings registry, read via `_eget` / `_eget_int` / `config_env` accessors (citizen 5) | `os.environ.get(...)` in new code |
+| **Persistent state** | Apply the join test and pick an engine (citizen 15): a document goes behind the `Repo` interface, a genuine relation goes in the database that owns that concern | A new `.sqlite3` file; a SQL table for a record nothing joins |
+| A **launch flag** | `backend/cli.py`, whose flags write `os.environ` and let the config ladder resolve precedence | Resolving precedence in the CLI, or a new `click` option with `envvar=` |
+| A **prerequisite the app must not serve without** | `backend/startup_gate.py`, as a `Fault` with a `fix` (citizen 13) | A check at `import app`, which breaks every tool that inspects the app without running it |
+| A **cluster manager or scheduler** | A provider under `platforms/` or `schedulers/` (citizen 6) | A branch in a caller |
+| A **parser for new tool output** | The results pipeline: prefer structured output, then the single-pass scanner (citizen 7) | A multi-pass shell scan, or head/tail sampling |
+| An **export or report format** | A renderer over the existing dataset (citizen 10) | A second generator |
+| A **frontend view** | Consume the shared contexts; KUI components first (citizen 12) | Local state duplicating a context |
+
+Two obligations regardless of which row you land on. **Read a setting through the accessors**, because
+a bare `os.environ.get` opts out of the per-cluster overlay and produces a feature that works on one
+cluster and not another. And **never resolve a name off `app` at call time** — `import app` inside a
+function, then `app.<name>`, defers the check to runtime and breaks silently when that name moves;
+`test_no_deferred_app_lookups.py` fails the build if you do.
+
+If genuinely nothing above fits, you may be looking at a new citizen. That is allowed — every entry in
+this file started that way — but it comes with two duties: say in the commit message why no existing
+citizen fits, and **add it to this file** so the next person inherits it instead of rediscovering it.
+
+---
+
+## The citizens
+
+### 0. API modules — where an endpoint lives
+
+`backend/api/`. A new endpoint is **a new file in that package**. Nothing else is edited: not
+`app.py`, not `backend/api/__init__.py`. The loader walks the directory at startup and registers
+whatever it finds.
+
+A module qualifies by exposing `bp` (a `Blueprint`) or `install(app)` — the latter for things
+Flask routing cannot express, such as the WebSocket terminal, which is WSGI middleware wrapping
+`app.wsgi_app` below the router. Exposing neither raises at startup. Underscore-prefixed modules
+are skipped, so `api/_common.py` can hold Flask-dependent shared helpers.
+
+Prefixes: omit `url_prefix` and it is derived from the filename (`rack_locks.py` →
+`/api/rack-locks`); declare one when the URL cannot be spelled as a Python module name;
+`url_prefix=""` means the routes carry full paths and is reserved for migrating existing routes,
+where prefix arithmetic would be a way to change a URL by accident.
+
+**Never `from app import ...` in an `api/` module.** That recreates the cycle the package exists
+to remove: the dependency runs `app.py → api/<domain>.py → core.py`, one direction only. If you
+need something from `app.py`, move it to `core.py` (Flask-free) or `api/_common.py` (if it builds
+a response).
+
+**One module still does it: `agent/registrations.py`** (`import app as _app_mod`, inside a function,
+to dodge the cycle). That is debt to unwind, not a pattern to copy. This line used to name
+`workflow_engine.py` and `bcm_query.py`; both are now clean, and nobody updated the note — so for a
+while the rule pointed at two innocent modules and missed the guilty one. Verified 2026-08-24 by a
+word-boundary search across all 130 non-test backend modules, which returns exactly one hit.
+
+Worth knowing why the meta-test did not catch the drift: `test_no_deferred_app_lookups.py` bans
+deferred *attribute* lookups (`app.<name>` resolved at call time), not the function-level `import app`
+that enables them. The import form is still only caught by reading.
+
+**Two conventions that exist because of specific failures.** Imports are not wrapped in `try` — a
+module that cannot import must take startup down and name itself, because a swallowed import
+means the feature is simply absent with no error anywhere, which cost an afternoon. And
+`backend/tests/test_route_parity.py` snapshots all 199 URL paths: run it after every extraction,
+because moving routes between modules is exactly the change that silently renames one, and the
+SPA calls these paths by hand.
+
+**The migration is done.** `app.py` reached 20,000 lines holding 135 of the 199 routes, every feature
+touching it, so parallel work collided by construction — that is how a whole feature ended up
+uncommitted on a customer deployment. It is now **~2,000 lines and 3 routes**: the Flask object, the
+startup bootstraps, the auth gate, the two middleware pairs, and the SPA catch-alls. A composition
+root. **Add a route by adding a file to `backend/api/`; there is no longer a reason to edit `app.py`.**
+
+The 38 modules under `api/` are one domain each. Where a domain was too big for one file it was split
+on measured helper-sharing rather than by taste — rack actions became `rack_power` / `fabric_ops` /
+`diagnostics` because those three share *zero* helpers with each other.
+
+Three lessons from doing it, all of which cost real time:
+
+- **Extract the substrate before the routes.** Every domain that looked expensive was really a
+  consumer of shared machinery: exports shared 41 helpers with `api_status` until
+  `rack_status_engine` came out, and analytics could not move until the `parser.sh` helpers went to
+  `results_ingest`. Once the substrate landed, several domains needed no test changes at all.
+- **Patch the module that owns the call site.** `from x import f` binds at import time, so patching
+  `x.f` leaves an importer calling the real `f`. A stub silently ignored is worse than a missing one:
+  one test looked like a behaviour regression (`assert 'fresh' == 'failed'`) when the truth was that
+  the real fleet scan had run.
+- **A name read off `app` at call time is a live grenade.** See `test_no_deferred_app_lookups.py`;
+  it broke three modules during this migration and is now banned outright.
+
+### 1. Connection / transport — how anything runs on a host
+
+`backend/host_exec.py` + `backend/transport/`. Every command that leaves this process goes
+through it: `run_on_host()`, `popen_on_host()`, `connection(profile)` for a composed chain,
+`.hop()` to reach a node through the head, `transport.fanout()` for per-node work with bounded
+concurrency, retries on transient SSH failures, and per-node progress via `on_result`.
+
+**Own it, don't bypass it.** A direct `ssh` call gets none of the env forwarding, the local/ssh
+executor split, the multi-hop chain, the sudo escalation or the ControlMaster semantics — and
+multiplexing is load-bearing, not an optimisation (`docs/EXECUTION_ARCHITECTURE.md` §6.1).
+
+Concurrency ceilings come from the target, not from impatience: the head's `sshd MaxSessions`
+(unset = OpenSSH default 10) bounds a fan-out, and exceeding it fails nodes silently with
+"Session open refused by peer". This is not theoretical — it is the "no more sessions" x215 and
+the fleet sweep that silently lost **655 of 2,013 nodes**.
+
+**On Nscale TX that ceiling is now escapable: `RACK_DIRECT_NODE_SSH=1`.** `.hop()` relays through
+the head because there was historically no direct app→node route; that stopped being true on
+2026-08-06 when the Align team wired the high-speed links, and the ObsVM now reaches every tray
+directly. Every relayed hop spends one of the head's 10 session slots, so a ~2,000-node sweep
+queues 2,000 channels through a 10-slot gate; a direct hop spends none and measured ~20% faster.
+Opt-in, with `RACK_NODE_SSH_KEY` / `RACK_NODE_SSH_USER`, and the relay stays the default for any
+target the app genuinely cannot reach itself. Before optimising a slow or lossy fan-out, check
+whether you are paying the relay tax needlessly — do not re-derive this from the symptoms.
+
+### 2. Catalog / Tools — what the product can run
+
+`backend/catalog/` (`models.py`, `store.py`, `context.py`, `api.py`). A `Tool` document is how a
+`bin/scripts` script becomes launchable: `script`, `env_key`, `compatible` (all / by capability /
+by platform id), `surfaces`, `execution`. A `Platform` carries the hardware SKU plus
+`tool_param_defaults`.
+
+**New tests, tools and presets are catalog documents.** Container images, version pins, step
+counts and thresholds are `tool_param_defaults` — not constants in a new module. A frozen list of
+presets in Python is precisely the hard-wired `RACK_*_SCRIPT` registry the catalog replaced: no
+operator can edit it, it ships one site's absolute paths to every other site, and adding a test
+needs a code change and a deploy.
+
+**One split this rule does not cover, and `validation_presets.py` is the exception that proves
+it.** A validated *recipe* — the image digest, the size gate, the CUDA and NCCL pins, the fixed
+step count — stays code-owned, and the reason is a security boundary rather than convenience:
+those fields decide **which container runs as root on every node in a rack**, so an
+operator-editable image path is arbitrary remote code execution wearing a config field.
+`normalize_options` refuses client overrides of them for the same reason.
+
+What *is* a catalog document is everything the UI was otherwise hard-coding: that the button
+exists, its label and subtitle, which surface it belongs on, its scopes and node bounds. That is
+the `_preset_tool()` half of `seed.py`, and the drift it fixed is instructive —
+`run-validation-preset.sh` moved to NCCL 2.31.2 while three frontend components still read
+2.30.7 out of their own source.
+
+So the test is **who may change it**: a knob a site should tune is a catalog field, and a pin a
+merge request should review is code. Do not "fix" `validation_presets.py` into the catalog to
+satisfy the paragraph above; the two registries staying in step is asserted by
+`test_catalog_tool_widgets.py`.
+
+### 2b. The script tree — which *copy* of a script runs
+
+`backend/script_tree.py`. One server runs several customers' projects, so "which script" and
+"whose copy of it" are different questions. A script resolves through layers, most specific
+first:
+
+```
+{base}/scripts/project-<id>/     one project's copy, plus its own edits   (app may write)
+{base}/scripts/custom/           scripts operators added, shared          (app may write)
+{base}/scripts/<platform>/       platform-specific overrides, shipped     (read-only)
+{base}/scripts/multi-platform/   the shared default set, shipped          (read-only)
+```
+
+**`custom/` is where a script somebody registers goes**, and it exists to resolve a real
+conflict: the shipped layers must not be edited in place (they are shared by every project), but
+registering a Tool records only a *basename*, so the file has to live somewhere writable — and
+the only such place was a project directory, which would make a cross-platform script the
+property of whichever project happened to be active. Changing what *ships* is a merge request.
+
+**Immutability is a property of the layer, never a flag on a record.** `is_writable()` answers
+from the path; a `protected` field on a Platform document could be cleared, and then the shared
+platform scripts would be editable for every project on the box. Platform *records* stay
+editable — tuning `tool_param_defaults` per site is routine. And the rule is that *the app*
+never writes a shipped layer: `bin/deploy-scripts.sh` writes them deliberately, which is what a
+deploy is. Full decision record: `docs/explanation/how-a-script-path-is-chosen.md`.
+
+**Ask this module, never `RACK_REMOTE_BASE_PATH` yourself.** That is not advice, it is the bug
+this replaced: `paths._scripts_dir()` honoured the topology `scripts` role while
+`workflow_engine._scripts_dir()` read the environment variable directly, so on a deployment that
+declared a scripts role the API and a workflow step ran *different copies of the same script*.
+Two resolvers that agree today diverge the first time one of them learns something.
+
+The active project arrives as environment (`NVIS_PROJECT_ID` / `NVIS_PLATFORM_ID`, written by
+`catalog.context.high_overlay`) rather than by importing the catalog, which would put a store
+read under every script-path resolution.
+
+**Layering applies only where the tree exists.** Without it every answer is the flat
+`{base}/bin/scripts` of before, so migrating a deployment is "create the tree on the head node"
+rather than "upgrade and hope"; `bin/deploy-scripts.sh` detects which layout the head has.
+
+Two things to preserve. `bin/bootstrap-project-scripts.sh` composes the layers **in a staging
+directory** because the two rules fight each other otherwise: the platform layer must overwrite
+a default, and an operator's edit in the project directory must survive — copying
+defaults-then-platform straight into the project protects the edit *and* skips the override it
+should have installed. And **`NVIS_VAR_DIR`, never `../..`**: deriving `var/` relative to a
+script's own directory is correct for exactly one layout and fails by reading the wrong file.
+
+### 3. Project / Cluster — which site, which nodes
+
+`models.Project` / `models.Cluster`, resolved by `catalog/context.py` into a **high overlay**
+(cluster identity, naming, connection — beats `job_env_overrides` and the environment) and a
+**low overlay** (platform defaults). One running instance serves several projects and clusters.
+
+**Anything answering "which cluster, which nodes, which customer" belongs on that record.** That
+includes an acceptance **campaign**: a pinned, versioned roster of exact nodes with an id, so
+expanding a rack name can never silently reintroduce an excluded tray, and a stale browser cannot
+launch against last week's roster. A roster passed as an env var pointing at a file on one host is
+not portable, is invisible to the cluster switcher, and cannot be edited from the UI.
+Every multi-rack launch binds to it through **one** resolver, `validation_launch.campaign_rack_groups`
+(id + roster-version check, then the campaign's exact nodes per rack while one is active); a launcher
+keeps only its own fallback for when none is. Four prepares once carried their own copy and the NeMo
+one had none, so a 128-node campaign planned NeMo on all 144 placed hosts (NC, 2026-10-25).
+
+### 4. Workflow / state machine — how long work runs
+
+`backend/workflow_engine.py`. `start_workflow_run()` mints a uuid4, runs on a background thread
+and returns immediately. `get_run_state()` polls. Runs persist under `var/` and survive a
+container restart. Steps keep their own output. `_execute_fanout_step` fans out across N nodes
+with bounded concurrency over the multi-hop chain. The HTTP surface exists:
+`POST /api/workflows/<id>/run`, `GET /api/workflow-runs/<run_id>`, `.../output/<step_id>`,
+`.../cancel`.
+
+**This is the runner for any long-running job, not just the workflow editor's engine.** Do not
+add another in-memory job dict. An in-memory job loses its state on every deploy, and a
+2000-node sweep whose progress nobody can see is indistinguishable from a hang. If the engine
+lacks something — numeric progress, an artifact slot for a produced document, an idempotency key
+so a second button press joins the run in flight — **add it to the engine**. All three are
+cheaper than a fifth job table.
+
+### 5. Configuration resolution — where a knob comes from
+
+The settings registry in `app.py` plus `_eget` / `_eget_int` / `_subprocess_env`, layered with
+the catalog overlays and `var/cache/job_env_overrides.json`. Precedence is defined: cluster high
+overlay → job env overrides → process env → platform low overlay.
+
+**Add knobs to the registry; read them through the accessors.** A bare `os.environ.get()` in new
+code silently opts out of per-cluster overlays, which is how a setting works on one cluster and
+not on another. `host_exec._FORWARD_ENV_NAMES` is what carries non-prefixed knobs over SSH.
+
+**This now lives in `backend/config_env.py`**, extracted reader-first: the readers (`_eget` and the
+overrides store) need nothing from `app`, while the writer stays behind because it invalidates the
+rack-status cache. The one remaining coupling is explicit —
+`config_env.set_materialize_hook(_apply_catalog_active_to_environ)`, registered by `app.py`,
+replacing a `globals()` lookup that only worked while both lived in one file.
+
+Two things to preserve through any further change. The store recurses if its file is absent unless
+the empty state is treated as terminal (`test_job_env_missing_file.py`). And the hook must stay
+registered: if it is dropped nothing raises, the overlay simply stops being re-applied — wrong
+values on some clusters, an error on none. `test_config_materialize_hook.py` exists only to assert
+that wire; `test_config_precedence.py` pins the ladder itself.
+
+### 6. Platform and scheduler providers — which cluster manager, which queue
+
+`backend/platforms/` (`base.py`, `bcm.py`, `maas.py`) and `backend/schedulers/` (slurm, pythoncm and
+local, plus runai/slinky/maas stubs). The accepted kinds are `catalog.models.SCHEDULERS`, chosen per
+cluster by its `scheduler` field (default `slurm`).
+
+**A new cluster manager or scheduler is a provider, not an `if` branch.** These exist so that
+BCM-specific `cmsh` behaviour and Slurm-specific command shapes stay behind an interface; adding
+a conditional in a caller puts site knowledge where the abstraction was meant to hide it.
+
+### 7. Results pipeline — how raw output becomes metrics
+
+`bin/scripts/nvis_logscan.py` (single pass, bounded memory, `--paths-from`, NDJSON),
+`backend/universal_parser.py`, and the tiered `nvis_nccl_ingest.py` (structured JSON → experiment
+directory → scrape, each able to decline). `docs/PARSING_RESULTS_ARCHITECTURE.md` has the detail.
+
+**A new test's output flows through the pipeline.** Do not add a multi-pass shell scan or a
+head/tail sample: validation logs reach hundreds of MB, the sampling approach silently missed
+results in the middle of files, and the single-pass scanner replaced ~16 full-file passes. Any
+probe that might not find its answer needs a read cap (`head -c`) so a file without the answer
+costs no more than one with it. Prefer structured output from the tool over scraping its text.
+
+### 8. Durable run registry and locks — the system of record
+
+`backend/validation_activities.py` (`activity_id`, tasks, phases, adopted external logs), its
+append-preserving `var/history/validation_activities.sqlite3` archive, and
+`backend/rack_locks.py` (advisory rack claims with TTL and heartbeat release).
+
+**Every launch registers; every exclusive operation claims.** The registry is the audit trail
+that answers "what ran on this rack, when, and what came of it" after the process that started it
+is gone — which is the question every handover asks. A launch also records the environment it
+handed its job (`launch_env`, secrets withheld by `logging_config`'s rule): pass `prep["env_updates"]`
+from every launch path, because nothing else keeps the settings a run was given. The locks are what stop two operators, or
+two agents, from running on the same rack at once.
+
+`var/cache/validation_activities.json` is only a capped live working set. Never compute acceptance
+completion from that cache alone: pruning, dismissal, cache replacement, and a later failed retry
+must not erase an earlier successful run. Completion rollups read the activity archive and
+`results_history`; open activities are retained until the scheduler/log reconciler makes them
+terminal.
+
+### 9. Naming — rack id is not a hostname
+
+`backend/nvis_id_templates.py`. Rack/dashboard ids (`cmsh rack list`) and real compute hostnames
+(Slurm/DNS) are different namespaces; see `cluster-naming-conventions.mdc`.
+
+**Never derive node names ad hoc.** A naive `<rack>-[01-NN]` produces targets that do not
+resolve, and the failure looks like a network problem.
+
+### 10. Artifacts and reports — one dataset, many renderers
+
+`backend/cluster_report.py` (+ `cluster_report_pdf.py`), `backend/node_report.py` and
+`backend/handover_report.py` (+ `handover_report_pdf.py`, the NVIDIA-letterhead PDF). The dataset
+is built once; CSV, JSON and PDF are renderings of it.
+
+**Add a renderer, never a second generator.** Parallel generators drift on the first added
+column, and a report that contradicts itself is worse than a missing one. Where a format cannot
+represent the truth — a schema with no field for an InfiniBand port GUID, a page that cannot
+hold 25 columns — reshape it in the renderer and **publish the deviation**, never silently.
+
+### 11. Auth — one gate
+
+`rack_web/pam_*`, `token_vault.py`, `_require_dashboard_auth`, and the auth bypass list.
+
+**New routes inherit the gate.** Do not invent a second check or add a bypass without saying why;
+`api_login` is in the bypass list for a reason and it is the only kind of entry that belongs there.
+
+### 12. Frontend contexts — shared state has an owner
+
+`ActiveClusterContext` (active project/cluster + switcher), `RackCommandsStoreContext`
+(centralised async command tracking across views), `ThemeContext` + `ThemeBridge` (KUI outer,
+MUI synced).
+
+**A new view uses the contexts.** Local state that duplicates command tracking or active-cluster
+resolution is how two panes come to disagree about what is running. KUI first for new UI
+(`kui-components.mdc`); MUI only where an existing complex widget has no KUI equivalent.
+
+---
+
+### 14. Generated sources of truth — derived documents, never hand-edited
+
+Some facts live in code and are *needed* outside it: by a test, by an operator writing a policy, by
+a document. Those are **generated and tracked**, by a script under `bin/`, and rebuilt by the
+`sources-of-truth` job in CI's `lint` stage before anything consumes them.
+
+| Document | Generated from | By |
+|---|---|---|
+| `docs/action-vocabulary.json`, `docs/ACTION_VOCABULARY.md`, `docs/reference/identity/action-vocabulary.md` | the live action registry | `bin/gen-action-vocabulary.py` |
+| `backend/tests/action_snapshot.json` | the same registry, as endpoint/method pairs | `bin/gen-action-snapshot.py` |
+| `docs/reference/configuration/settings.md` | every setting the code reads, plus `docs/settings-hints.toml` | `bin/gen-settings-reference.py` |
+| `config/rackstatus.toml.example` | `config_registry` | `bin/gen-config-example.py` |
+
+**Run all of them, not the one you think you touched.** The CI job gates three —
+vocabulary, snapshot and settings — and they answer to different changes, so the set you need
+is rarely the set you predict. Adding a scheduler provider looks like pure backend work and
+staled the *settings* reference, because two new knobs read through `_eget` join the inventory
+the moment they exist. This line used to omit `gen-settings-reference.py` entirely, which is
+how that came to be discovered by a red pipeline rather than locally:
+
+```bash
+for g in action-vocabulary action-snapshot settings-reference; do bin/gen-$g.py; done
+```
+
+**A new setting wants a line in `docs/settings-hints.toml`**, not just a regeneration. Without
+one it lands in the page's *Undescribed settings* to-do list — which is the honest state the
+generator is right to publish, and still a to-do somebody has to come back for.
+
+**The rule: if a test needs to know a name the code defines, it reads the generated document.** Not
+a literal, and not by importing the app. A test asserting `rack:read` reached review and failed —
+the action is `rack:list` — because nothing checks a hand-typed string against the vocabulary, and
+the vocabulary was not written down anywhere a test could read. `conftest` exposes `vocabulary`,
+`an_allowed_read` and `a_mutation` for exactly this.
+
+**Build *and* gate, and both halves matter.** Building in `lint` means a stale document fails before
+the suite spends four minutes, and publishes an artifact. Gating (`git diff --exit-code`, so the
+diff is printed) is what preserves the point of tracking the file: adding or renaming an API route
+is a routine change made by someone with no reason to know these documents exist, and the rename
+must appear as a **reviewed diff in the merge request** rather than being silently regenerated
+inside CI where nobody sees that `rack:power` became `rack.power:on`.
+
+**A new generator goes in that job**, not into `python-test`. Checking the same thing in two places
+is two places to forget when a third generator arrives — which is why the vocabulary check was
+removed from `python-test` when this job landed.
+
+### 15. Storage engines — one interface, chosen backends
+
+`backend/catalog/store.py` (the `Repo` protocol and its TinyDB backend), `backend/json_db.py`
+(atomic whole-file documents), and the SQLite databases owned by `results_history`,
+`validation_activities`, `cluster_snapshot` and `cluster_overview_live`.
+
+**Pick the engine with the join test, not by habit.** It is relational — SQLite — if something
+actually relates one row to another: a one-to-many with a parent, a join, an aggregate across rows.
+It is a document — behind `Repo` — if the record is read and written whole by its own id and
+nothing joins it. Both shapes exist here and the answers are opposite: `results_history` has a real
+`ON DELETE CASCADE` parent-child with three joins and nine indexes, while the validation-activity
+archive is a primary key, six denormalised index columns and the whole record in `payload TEXT`
+with zero joins — a document stored relationally.
+
+**`Repo` is the reason this matters.** Its docstring is explicit that a DynamoDB backend can
+implement the same eight methods "without touching callers". A document behind the interface
+inherits that path; a document in a bespoke `.sqlite3` file does not, and we already have four such
+files for a product whose only storage dependency is `tinydb`.
+
+**The failure direction is always the same** — SQL as the default for data with no relations in
+it, because that is what everyone learned first. So this is the one citizen that exists partly to
+overrule a request: if a prompt asks for a table and the data fails the join test, use the document
+store and say why. Anti-patterns, measurements and the two traps (a whole-file store used for
+unbounded append; a read path that writes and defeats its own cache) are in
+**`storage-engines.mdc`**, with the reasoning in `docs/explanation/which-storage-engine.md`.
+
+## Planned citizens
+
+- **Terminals integrated with AI.** The WebSocket PTY (`flask-sock`, xterm.js) and `ai_chat.py`
+  exist separately today. The intent is one first-class citizen: an operator console where the
+  terminal, the AI context (`catalog/context.build_ai_context_block()`) and the product's own
+  knowledge of the cluster are the same surface. Build toward that rather than adding another
+  one-off chat or shell path.
+
+---
+
+### 13. The startup gate — what the app refuses to serve without
+
+`backend/startup_gate.py`. An administrator, an authorization policy, and TLS. `prepare()` creates
+what a first boot is entitled to create and *then* `require()` refuses anything still missing,
+reporting **every** fault at once with the action that fixes each — the same rule
+`config_preflight` follows, and for the same reason: bringing up a deployment should take one
+attempt rather than one restart per missing prerequisite.
+
+**It gates serving, not importing**, and that scoping is the design. `check-tracked-tree.sh`,
+`verify-deploy.sh` and the route/action snapshots all import `app` without accepting a request, so
+refusing them buys no safety. The three serving entry points each call `prepare()` and none trusts
+another to have done it.
+
+**A new prerequisite goes here as a `Fault`, not as a check at import time**, and it needs a `fix`
+string — a gate that says what is wrong without saying what to do is a gate operators learn to
+disable. Full reasoning and the two ordering mistakes this shipped with first:
+`identity-auth-traps.mdc` §11.
+
+Related: **first boot is now an enforcing deployment.** `identity.bootstrap.ensure_admin_policy`
+writes the `administrators` policy beside the administrator it creates, so a fresh install lands on
+default-deny rather than `AllowAllEngine`. It is deliberately *not* called from `ensure_admin` —
+dozens of fixtures call that for a realistic store, and seeding inside it would flip them all to
+default-deny as a side effect of creating a user.
+
+## Deployment invariants
+
+Not citizens — operational truths. Each of these has caused an outage in this repo.
+
+- **A new `backend/*.py` module needs a bind mount** in the deployment's
+  `docker-compose.override.yml` or it does not exist in the container. `app.py` is mounted, so
+  importing an unmounted module is an instant crash loop.
+- **A new mount needs `docker compose up -d` (recreate), not `docker restart`** — restart reuses
+  the old container's mount set.
+- **The SPA's `index.html` and its `assets/` must come from the same build.** Vite content-hashes
+  every chunk; a pinned `index.html` from another build 404s all of them and renders a black
+  screen that reads as "slow".
+- **A deploy is not verified by `GET /login` returning 200.** Run **`bin/verify-deploy.sh`**; it
+  exits non-zero unless every check passes, so it can gate the deploy. `build-docker.sh` runs it
+  automatically after starting a container. For a remote deployment:
+  `NVIS_DEPLOY_SSH=host bin/verify-deploy.sh`.
+- **Run `bin/prod-drift.sh` before deploying.** People fix things in place, in the deployment tree
+  and in the head's `bin/scripts`. A deploy overwrites both. Harvest first.
+
+### The deploy sequence
+
+Each step exists because skipping it broke something:
+
+1. **`bin/prod-drift.sh`** — clean, or harvest what it finds. A `git reset --hard` over someone
+   else's uncommitted work destroys it silently.
+2. **Reset the tree to a committed ref**, never to a working copy.
+3. **Mount any new `backend/*.py`** in `docker-compose.override.yml`.
+4. **Rebuild the image** when the frontend changed or a dependency was added.
+5. **`docker compose up -d`** — a recreate. `docker restart` reuses the old mount set, so a
+   module added in step 3 will not exist and `app.py` will crash-loop importing it.
+6. **`bin/verify-deploy.sh`** — and read it. "Up" is not "working".
+
+Tell open sessions to hard-reload afterwards: a rebuild changes every Vite content hash, so a tab
+loaded before the deploy asks for chunks that no longer exist.

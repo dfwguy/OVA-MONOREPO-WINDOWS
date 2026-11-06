@@ -1,0 +1,1136 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>The parametric platform &#8212; NVIS Greenlight</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/local-fonts.css?v=64a3f04a" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f6167d25" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=1657e09f"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'explanation/the-parametric-platform';</script>
+
+    <link rel="icon" href="../_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Why authorization is default-deny" href="why-authorization-is-default-deny.html" />
+    <link rel="prev" title="Collective settings by job size" href="../reference/collective-settings-by-job-size.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.1" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials — learning by doing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/distribute-your-first-image.html">Distribute your first image with NVIS-P2P</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides — getting something done</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../how-to/configure-a-deployment.html">How to configure a deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/authenticate-to-the-api.html">How to authenticate to the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/grant-a-team-access.html">How to grant a team access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/diagnose-a-refused-request.html">How to diagnose a refused request</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/add-your-own-script.html">How to add your own script and register it as a tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/use-the-terminal.html">How to use the terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/stage-observability-agents.html">How to stage the observability node-agents to a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/connect-a-pythoncm-cluster.html">How to connect a PythonCM (BCM) cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/distribute-a-catalog-image.html">How to distribute a catalog image to the fleet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/recover-p2p-peers-after-a-reimage.html">How to bring P2P peers up on new or reimaged nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/publish-the-deployment-tracker.html">How to publish the deployment tracker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/forecast-cluster-completion.html">How to forecast when the cluster finishes validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/write-a-rack-handover-report.html">How to write a rack handover report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/place-a-multirack-job.html">How to place a multi-rack job for best collective performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/list-bcm-racks-without-templates.html">How to list saved BCM racks without naming templates</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference — the machinery, described</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/configuration/settings.html">Configuration settings — every setting, generated</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/projects-and-clusters.html">Projects and clusters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/tools.html">Tool documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/actions-by-scope.html">Actions by scope — node, rack, multirack</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/identity/index.html">Identity and authorization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/actions-and-resources.html">Actions and resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/policy-schema.html">Policy schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/evaluation.html">How a decision is made</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/action-vocabulary.html">Action vocabulary — every service and action</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/p2p-catalog-distribution.html">P2P catalog distribution — components, parameters, scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/collective-settings-by-job-size.html">Collective settings by job size</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation — why it is like this</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">The parametric platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-authorization-is-default-deny.html">Why authorization is default-deny</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-a-script-path-is-chosen.html">How a script path is chosen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="the-cluster-home-directory.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-cluster-paths-reach-scripts.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry-and-hostnames.html">Geometry and hostnames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="which-storage-engine.html">Which storage engine, and why</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-no-pythoncm-broker.html">Why there is no PythonCM broker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="porting-the-pythoncm-fork.html">Porting the PythonCM fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="p2p-module-integration.html">NVIS-P2P as a per-cluster capability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="active-passive-and-blue-green.html">Active/passive and blue/green (roadmap)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="p2p-catalog-distribution.html">How catalog images reach every node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rack-placement-and-collective-performance.html">Rack placement and collective performance</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">The parametric platform</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="the-parametric-platform">
+<h1>The parametric platform<a class="headerlink" href="#the-parametric-platform" title="Link to this heading">#</a></h1>
+<div class="nvis-diataxis nvis-diataxis-explanation docutils">
+<p>Explanation — background and reasoning. No instructions.</p>
+</div>
+<p>Rack Status runs the same code and the same scripts against clusters that share almost nothing:
+GB200 and GB300, InfiniBand and Spectrum-X RoCE over IPv4 or IPv6, BCM-placed racks and fleets with
+no placement at all, Slurm and pythoncm, hostnames that encode the rack and hostnames that do not.
+Nothing in the product is allowed to know which of those it is talking to. Every difference is a
+<strong>parameter</strong>, stated once on a record and carried from there to the page that draws it and the
+script that acts on it.</p>
+<p>This page is the map of that design: the small set of foundation components everything else is
+built from, how a site’s facts travel through them, and what to do when a new difference appears.
+The detail of each piece lives in its own page; this one shows how they fit.</p>
+<section id="why-it-is-built-this-way">
+<h2>Why it is built this way<a class="headerlink" href="#why-it-is-built-this-way" title="Link to this heading">#</a></h2>
+<p>Each site that adopted Rack Status arrived with a fact the code had quietly assumed was universal,
+and each assumption failed the same way: correct on the cluster it was written on, silently wrong on
+the next one.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>The assumption</p></th>
+<th class="head"><p>Where it broke</p></th>
+<th class="head"><p>What it did</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>A rack is the hostname minus its last <code class="docutils literal notranslate"><span class="pre">-</span></code> part</p></td>
+<td><p>Nscale NC (<code class="docutils literal notranslate"><span class="pre">…-gpu100-su20</span></code>)</p></td>
+<td><p>Grouped the same node number across 37 SUs as one “rack”</p></td>
+</tr>
+<tr class="row-odd"><td><p>Compute rails are the fastest RDMA devices</p></td>
+<td><p>Nscale NC</p></td>
+<td><p>Picked the 400G management NICs instead of the 200G <code class="docutils literal notranslate"><span class="pre">roce_vf_r*</span></code> rails</p></td>
+</tr>
+<tr class="row-even"><td><p>Every rail runs at 800 Gb/s</p></td>
+<td><p>Nscale NC</p></td>
+<td><p>Failed every healthy node’s network audit and drained one</p></td>
+</tr>
+<tr class="row-odd"><td><p>The fabric is InfiniBand</p></td>
+<td><p>Nscale NC</p></td>
+<td><p>Found no rails; NCCL opened 26 devices and failed with <code class="docutils literal notranslate"><span class="pre">GID</span> <span class="pre">index</span> <span class="pre">-1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Logs, toolchains and images live at fixed paths</p></td>
+<td><p>Every new site</p></td>
+<td><p>A bring-up drained on <code class="docutils literal notranslate"><span class="pre">mkdir:</span> <span class="pre">cannot</span> <span class="pre">create</span> <span class="pre">directory</span> <span class="pre">'/cluster'</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Every node has a rack</p></td>
+<td><p>Reno (RTX 6000 pool)</p></td>
+<td><p>Drew empty rack rows for a cluster with no placement data</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The fix in every case was not a better default. It was moving the fact out of the code and onto the
+record of the cluster it belongs to, so the next site states its own answer instead of inheriting
+the last one’s.</p>
+</section>
+<section id="the-foundation">
+<h2>The foundation<a class="headerlink" href="#the-foundation" title="Link to this heading">#</a></h2>
+<p>Eight components are the foundation. They are not features; they are what features are made of.
+A feature that needs a site fact, a host, a hostname, a script or a scheduler asks one of these,
+never works it out for itself.</p>
+<pre  class="mermaid">
+        flowchart TB
+    subgraph REC[&quot;Records — what is true about a site&quot;]
+        direction LR
+        PLAT[&quot;Platform&lt;br/&gt;&lt;i&gt;what the hardware is&lt;/i&gt;&lt;br/&gt;geometry · fabric shape · SU size&lt;br/&gt;tool_param_defaults&quot;]
+        PROJ[&quot;Project&lt;br/&gt;&lt;i&gt;a customer engagement&lt;/i&gt;&quot;]
+        CLU[&quot;Cluster&lt;br/&gt;&lt;i&gt;one deployment&lt;/i&gt;&lt;br/&gt;connection &amp; paths · naming templates&lt;br/&gt;rack_mapping_mode · scalable_units&lt;br/&gt;fabric · nccl_env · scheduler · campaigns&quot;]
+        PROJ --&gt; CLU
+        PLAT -. &quot;defaults a cluster may override&quot; .-&gt; CLU
+    end
+
+    subgraph RES[&quot;Resolution — one answer per question&quot;]
+        direction LR
+        CFG[&quot;Configuration resolution&lt;br/&gt;high overlay › Settings › env › low overlay&lt;br/&gt;&lt;code&gt;_eget&lt;/code&gt; · &lt;code&gt;_subprocess_env&lt;/code&gt;&quot;]
+        NAME[&quot;Naming&lt;br/&gt;rack id ≠ hostname&lt;br/&gt;&lt;code&gt;nvis_id_templates&lt;/code&gt;&quot;]
+        TREE[&quot;Script tree&lt;br/&gt;project › custom › platform › default&quot;]
+    end
+
+    subgraph RUN[&quot;Reach — how anything touches a cluster&quot;]
+        direction LR
+        TRANS[&quot;Transport&lt;br/&gt;&lt;code&gt;host_exec&lt;/code&gt; · hops · fan-out&lt;br/&gt;env forwarded by prefix&quot;]
+        PROV[&quot;Providers&lt;br/&gt;cluster manager: BCM · MAAS · pythoncm&lt;br/&gt;scheduler: Slurm · pythoncm · local&quot;]
+    end
+
+    REC --&gt; RES
+    RES --&gt; RUN
+    </pre><p><strong>Records.</strong> Three catalog documents, edited in the UI and over the API
+(<a class="reference internal" href="../reference/catalog/projects-and-clusters.html"><span class="std std-doc">projects and clusters</span></a>):</p>
+<ul class="simple">
+<li><p>A <strong>Platform</strong> says what the hardware <em>is</em>: GPUs per node, trays per rack, the NVLink domain, the
+scale-out fabric it was designed for (protocol, rails per GPU, rail rate), how many racks make an
+SU, and <code class="docutils literal notranslate"><span class="pre">tool_param_defaults</span></code> for its tests. It describes a <em>family</em> of sites.</p></li>
+<li><p>A <strong>Project</strong> is a customer engagement; it groups clusters.</p></li>
+<li><p>A <strong>Cluster</strong> is one deployment, and holds everything that is true of that site alone: how to
+reach it and where its files live, its naming templates, how its nodes map to racks
+(<code class="docutils literal notranslate"><span class="pre">direct</span></code>, <code class="docutils literal notranslate"><span class="pre">translate</span></code> or <code class="docutils literal notranslate"><span class="pre">pool</span></code>), its Scalable Units, its fabric where it differs from the
+platform, the NCCL variables its launches need, its scheduler, and its acceptance campaigns.</p></li>
+</ul>
+<p><strong>Resolution.</strong> Three components turn records into one answer:</p>
+<ul class="simple">
+<li><p><strong>Configuration resolution</strong> merges the active cluster (the <em>high overlay</em>), the Settings page,
+the process environment and the platform (the <em>low overlay</em>), in that order of precedence.
+Every knob is read through <code class="docutils literal notranslate"><span class="pre">_eget</span></code> and its siblings, never <code class="docutils literal notranslate"><span class="pre">os.environ</span></code>, or it silently stops
+being per-cluster.</p></li>
+<li><p><strong>Naming</strong> turns a rack the operator clicked into hostnames that resolve, from the cluster’s
+templates and the provider’s placement, never by string surgery
+(<a class="reference internal" href="geometry-and-hostnames.html"><span class="std std-doc">geometry and hostnames</span></a>).</p></li>
+<li><p><strong>The script tree</strong> decides which copy of a script runs, so a project can carry its own edits
+without touching the shipped set (<a class="reference internal" href="how-a-script-path-is-chosen.html"><span class="std std-doc">how a script path is chosen</span></a>).</p></li>
+</ul>
+<p><strong>Reach.</strong> Two components touch the cluster:</p>
+<ul class="simple">
+<li><p><strong>Transport</strong> runs every command, locally or over SSH, through the head or directly to a node,
+with bounded fan-out, and forwards <code class="docutils literal notranslate"><span class="pre">NVIS_*</span></code> / <code class="docutils literal notranslate"><span class="pre">RACK_*</span></code> variables so the resolved configuration
+arrives on the far side (<code class="docutils literal notranslate"><span class="pre">docs/EXECUTION_ARCHITECTURE.md</span></code> has the detail).</p></li>
+<li><p><strong>Providers</strong> hide which cluster manager and which scheduler a site runs, behind one interface
+each. A new one is a provider, never an <code class="docutils literal notranslate"><span class="pre">if</span></code> in a caller.</p></li>
+</ul>
+</section>
+<section id="what-is-built-on-it">
+<h2>What is built on it<a class="headerlink" href="#what-is-built-on-it" title="Link to this heading">#</a></h2>
+<p>Everything a user sees is a composition of the foundation. None of these components holds a site
+fact of its own.</p>
+<pre  class="mermaid">
+        flowchart TB
+    subgraph F[&quot;Foundation&quot;]
+        direction LR
+        R[&quot;Records&lt;br/&gt;Platform · Project · Cluster&quot;]
+        C[&quot;Configuration&lt;br/&gt;resolution&quot;]
+        N[&quot;Naming&quot;]
+        S[&quot;Script tree&quot;]
+        T[&quot;Transport&quot;]
+        P[&quot;Providers&quot;]
+    end
+
+    INV[&quot;Inventory &amp; placement&lt;br/&gt;&lt;i&gt;which nodes, in which rack or pool&lt;/i&gt;&quot;]
+    SNAP[&quot;Cluster snapshot&lt;br/&gt;&lt;i&gt;one cached answer, shared by every worker&lt;/i&gt;&quot;]
+    LAUNCH[&quot;Launchers&lt;br/&gt;&lt;code&gt;bin/scripts&lt;/code&gt; + &lt;code&gt;lib/*.inc.sh&lt;/code&gt;&lt;br/&gt;&lt;i&gt;read NVIS_* — never a literal&lt;/i&gt;&quot;]
+    WF[&quot;Workflows &amp; fan-out&lt;br/&gt;&lt;i&gt;durable runs, audits, sweeps&lt;/i&gt;&quot;]
+    PIPE[&quot;Results pipeline&lt;br/&gt;&lt;i&gt;log scan → verdicts → metrics&lt;/i&gt;&quot;]
+    STAGE[&quot;Stages&lt;br/&gt;&lt;i&gt;node &amp; rack Stage 1 / Stage 2&lt;/i&gt;&quot;]
+
+    UI[&quot;Pages&lt;br/&gt;Racks · Nodes · Post-run report&lt;br/&gt;Analytics · Deployment tracker&quot;]
+    API[&quot;API &amp; CLI&lt;br/&gt;&lt;code&gt;/api/*&lt;/code&gt; · &lt;code&gt;nvrs&lt;/code&gt;&quot;]
+    ROUT[&quot;Fleet routines&lt;br/&gt;&lt;i&gt;hourly validation, doctors&lt;/i&gt;&quot;]
+
+    P --&gt; INV
+    N --&gt; INV
+    R --&gt; INV
+    INV --&gt; SNAP
+    C --&gt; LAUNCH
+    S --&gt; LAUNCH
+    T --&gt; LAUNCH
+    LAUNCH --&gt; WF
+    WF --&gt; PIPE
+    PIPE --&gt; STAGE
+    SNAP --&gt; STAGE
+    SNAP --&gt; UI
+    STAGE --&gt; UI
+    R --&gt; UI
+    STAGE --&gt; API
+    SNAP --&gt; API
+    API --&gt; ROUT
+    </pre><p>Two things to notice. The <strong>pages</strong> read placement from the snapshot and geometry from the records
+rather than parsing hostnames, so the Post-run report groups nodes exactly as the Racks page does,
+and a pool cluster gets one pool card in both. And the <strong>launchers</strong> never name a site: a
+launcher that needs the fabric, a path or an image directory reads a variable the configuration
+resolution put in its environment, through a shared shell library.</p>
+</section>
+<section id="how-a-site-s-fact-reaches-a-script">
+<h2>How a site’s fact reaches a script<a class="headerlink" href="#how-a-site-s-fact-reaches-a-script" title="Link to this heading">#</a></h2>
+<p>One value, end to end. Nscale NC runs Spectrum-X RoCE on GB300, while its platform record describes
+the InfiniBand family.</p>
+<pre  class="mermaid">
+        flowchart LR
+    A[&quot;Cluster record&lt;br/&gt;fabric.scaleout = roce&lt;br/&gt;fabric.rail_rate_gbps = 0&quot;] --&gt; B[&quot;High overlay&lt;br/&gt;NVIS_FABRIC_NETWORK=RoCE&quot;]
+    P2[&quot;Platform record&lt;br/&gt;fabric.scaleout = ib&lt;br/&gt;rail_rate_gbps = 800&quot;] --&gt; L[&quot;Low overlay&lt;br/&gt;platform rate dropped:&lt;br/&gt;cluster runs another protocol&quot;]
+    B --&gt; E[&quot;Launch environment&lt;br/&gt;&lt;code&gt;_subprocess_env&lt;/code&gt;&quot;]
+    L --&gt; E
+    E --&gt; X[&quot;Transport&lt;br/&gt;NVIS_* forwarded over SSH&quot;]
+    X --&gt; SH[&quot;&lt;code&gt;lib/fabric.inc.sh&lt;/code&gt;&lt;br/&gt;nvis_fabric_network → RoCE&lt;br/&gt;scan: rails = roce_vf_r1..4&quot;]
+    SH --&gt; J[&quot;NCCL_IB_HCA=roce_vf_r&lt;br/&gt;NCCL_IB_ADDR_FAMILY=AF_INET6&lt;br/&gt;audit expects 200 Gb/s&quot;]
+    </pre><p>The same path carries every other site fact: <code class="docutils literal notranslate"><span class="pre">connection.log_dir</span></code> becomes <code class="docutils literal notranslate"><span class="pre">NVIS_LOG_DIR</span></code>,
+<code class="docutils literal notranslate"><span class="pre">workspace_dir</span></code> becomes <code class="docutils literal notranslate"><span class="pre">NVIS_WORKSPACE_DIR</span></code>, the image directories become
+<code class="docutils literal notranslate"><span class="pre">RACK_VALIDATION_CONTAINER_ROOT</span></code> and <code class="docutils literal notranslate"><span class="pre">NVIS_NODE_CONTAINER_DIR</span></code>, <code class="docutils literal notranslate"><span class="pre">rack_mapping_mode</span></code> becomes
+<code class="docutils literal notranslate"><span class="pre">NVIS_RACK_MAPPING_MODE</span></code>, and a launch receives the cluster’s <code class="docutils literal notranslate"><span class="pre">nccl_env</span></code> list for the span it runs
+over (node, rack or multirack) with its own options winning. The detail of each root is in
+<a class="reference internal" href="how-cluster-paths-reach-scripts.html"><span class="std std-doc">how cluster paths reach scripts</span></a>.</p>
+<section id="a-platform-default-is-an-expectation-not-a-fact">
+<h3>A platform default is an expectation, not a fact<a class="headerlink" href="#a-platform-default-is-an-expectation-not-a-fact" title="Link to this heading">#</a></h3>
+<p>A platform describes a family of sites, so its values are what a site <em>should</em> have, and the node
+gets the last word on what it <em>does</em> have. Two rules follow, and both were learned on NC:</p>
+<ul class="simple">
+<li><p>When a cluster states a different fabric protocol from its platform, the platform’s rail count
+and rail rate are not projected: an 800 Gb/s InfiniBand expectation means nothing to 200 Gb/s
+RoCE rails. The cluster states its own with <code class="docutils literal notranslate"><span class="pre">fabric.rail_rate_gbps</span></code>.</p></li>
+<li><p>When the stated protocol and what the node exposes disagree, the scripts use what the node has
+and say so, rather than failing to find any rail.</p></li>
+</ul>
+</section>
+</section>
+<section id="adding-to-it">
+<h2>Adding to it<a class="headerlink" href="#adding-to-it" title="Link to this heading">#</a></h2>
+<p>When a new site exposes a difference, the question is never “how do I handle this site” but “which
+foundation component owns this fact”.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>The new thing</p></th>
+<th class="head"><p>Where it goes</p></th>
+<th class="head"><p>Not</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>A fact about one site (a path, a template, a fabric override, a roster)</p></td>
+<td><p>A <strong>Cluster</strong> field, wired through the API and an editable control in the UI</p></td>
+<td><p>An environment variable, a branch on the cluster name</p></td>
+</tr>
+<tr class="row-odd"><td><p>A fact about a hardware family (GPUs per node, SU size, a test’s default)</p></td>
+<td><p>A <strong>Platform</strong> field or <code class="docutils literal notranslate"><span class="pre">tool_param_defaults</span></code></p></td>
+<td><p>A constant in a module</p></td>
+</tr>
+<tr class="row-even"><td><p>A deployment-wide knob (a timeout, a cache TTL)</p></td>
+<td><p>The <strong>Settings registry</strong>, read through <code class="docutils literal notranslate"><span class="pre">_eget</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">os.environ.get</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>A new cluster manager or scheduler</p></td>
+<td><p>A <strong>provider</strong></p></td>
+<td><p>An <code class="docutils literal notranslate"><span class="pre">if</span></code> in a caller</p></td>
+</tr>
+<tr class="row-even"><td><p>A path a script needs</p></td>
+<td><p>Derived from a cluster root by the shared shell library</p></td>
+<td><p>A literal in the script</p></td>
+</tr>
+<tr class="row-odd"><td><p>A new page or report</p></td>
+<td><p>Composed from the <strong>snapshot</strong>, the <strong>records</strong> and the <strong>stages</strong></p></td>
+<td><p>Re-deriving placement or hostnames in the browser</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A feature built this way works on the next cluster with no code change, because the next cluster
+brings its own record. A feature that reaches past the foundation works on exactly one.</p>
+</section>
+<section id="related">
+<h2>Related<a class="headerlink" href="#related" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/catalog/projects-and-clusters.html"><span class="std std-doc">Projects and clusters</span></a> — every field on the records.</p></li>
+<li><p><a class="reference internal" href="how-cluster-paths-reach-scripts.html"><span class="std std-doc">How cluster paths reach scripts</span></a> — the path roots and their journey.</p></li>
+<li><p><a class="reference internal" href="the-cluster-home-directory.html"><span class="std std-doc">The cluster home directory</span></a> — consolidating the roots under one home.</p></li>
+<li><p><a class="reference internal" href="geometry-and-hostnames.html"><span class="std std-doc">Geometry and hostnames</span></a> — naming templates, geometry and the SU.</p></li>
+<li><p><a class="reference internal" href="how-a-script-path-is-chosen.html"><span class="std std-doc">How a script path is chosen</span></a> — the layered script tree.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/EXECUTION_ARCHITECTURE.md</span></code> (in the repository) — transport, hops and environment forwarding.</p></li>
+<li><p><a class="reference internal" href="../reference/configuration/settings.html"><span class="std std-doc">Settings reference</span></a> — every deployment-wide knob.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../reference/collective-settings-by-job-size.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Collective settings by job size</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="why-authorization-is-default-deny.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Why authorization is default-deny</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-it-is-built-this-way">Why it is built this way</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-foundation">The foundation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-built-on-it">What is built on it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-a-site-s-fact-reaches-a-script">How a site’s fact reaches a script</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-platform-default-is-an-expectation-not-a-fact">A platform default is an expectation, not a fact</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-to-it">Adding to it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related">Related</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

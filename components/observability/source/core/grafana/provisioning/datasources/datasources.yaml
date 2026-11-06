@@ -1,0 +1,62 @@
+apiVersion: 1
+
+datasources:
+  - name: VictoriaMetrics
+    uid: nvis-victoriametrics
+    type: prometheus
+    access: proxy
+    url: http://host.docker.internal:8428
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      prometheusType: Prometheus
+      timeInterval: 15s
+      manageAlerts: false
+
+  - name: Prometheus
+    uid: nvis-prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: false
+    editable: false
+    jsonData:
+      httpMethod: POST
+      prometheusType: Prometheus
+      timeInterval: 15s
+      manageAlerts: false
+
+  - name: OTEL VictoriaMetrics
+    uid: nvis-otel-victoriametrics
+    type: prometheus
+    access: proxy
+    url: http://host.docker.internal:8428
+    isDefault: false
+    editable: false
+    jsonData:
+      httpMethod: POST
+      prometheusType: Prometheus
+      timeInterval: 15s
+      manageAlerts: false
+
+  - name: Loki
+    uid: nvis-loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    editable: false
+    jsonData:
+      maxLines: 2000
+
+  - name: Data Lake (Parquet)
+    uid: nvis-datalake
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    url: http://nvis-16k-duckdb-browser:4300
+    isDefault: false
+    editable: true
+    jsonData:
+      allowedHosts:
+        - http://nvis-16k-duckdb-browser:4300

@@ -1,0 +1,662 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>How a script path is chosen &#8212; NVIS Greenlight</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/local-fonts.css?v=64a3f04a" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f6167d25" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=1657e09f"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'explanation/how-a-script-path-is-chosen';</script>
+
+    <link rel="icon" href="../_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The cluster home directory" href="the-cluster-home-directory.html" />
+    <link rel="prev" title="Why authorization is default-deny" href="why-authorization-is-default-deny.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.1" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials — learning by doing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/distribute-your-first-image.html">Distribute your first image with NVIS-P2P</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides — getting something done</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../how-to/configure-a-deployment.html">How to configure a deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/authenticate-to-the-api.html">How to authenticate to the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/grant-a-team-access.html">How to grant a team access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/diagnose-a-refused-request.html">How to diagnose a refused request</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/add-your-own-script.html">How to add your own script and register it as a tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/use-the-terminal.html">How to use the terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/stage-observability-agents.html">How to stage the observability node-agents to a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/connect-a-pythoncm-cluster.html">How to connect a PythonCM (BCM) cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/distribute-a-catalog-image.html">How to distribute a catalog image to the fleet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/recover-p2p-peers-after-a-reimage.html">How to bring P2P peers up on new or reimaged nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/publish-the-deployment-tracker.html">How to publish the deployment tracker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/forecast-cluster-completion.html">How to forecast when the cluster finishes validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/write-a-rack-handover-report.html">How to write a rack handover report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/place-a-multirack-job.html">How to place a multi-rack job for best collective performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/list-bcm-racks-without-templates.html">How to list saved BCM racks without naming templates</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference — the machinery, described</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/configuration/settings.html">Configuration settings — every setting, generated</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/projects-and-clusters.html">Projects and clusters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/tools.html">Tool documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/actions-by-scope.html">Actions by scope — node, rack, multirack</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/identity/index.html">Identity and authorization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/actions-and-resources.html">Actions and resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/policy-schema.html">Policy schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/evaluation.html">How a decision is made</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/action-vocabulary.html">Action vocabulary — every service and action</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/p2p-catalog-distribution.html">P2P catalog distribution — components, parameters, scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/collective-settings-by-job-size.html">Collective settings by job size</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation — why it is like this</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="the-parametric-platform.html">The parametric platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-authorization-is-default-deny.html">Why authorization is default-deny</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">How a script path is chosen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="the-cluster-home-directory.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-cluster-paths-reach-scripts.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry-and-hostnames.html">Geometry and hostnames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="which-storage-engine.html">Which storage engine, and why</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-no-pythoncm-broker.html">Why there is no PythonCM broker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="porting-the-pythoncm-fork.html">Porting the PythonCM fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="p2p-module-integration.html">NVIS-P2P as a per-cluster capability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="active-passive-and-blue-green.html">Active/passive and blue/green (roadmap)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="p2p-catalog-distribution.html">How catalog images reach every node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rack-placement-and-collective-performance.html">Rack placement and collective performance</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">How a script path is chosen</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="how-a-script-path-is-chosen">
+<h1>How a script path is chosen<a class="headerlink" href="#how-a-script-path-is-chosen" title="Link to this heading">#</a></h1>
+<div class="nvis-diataxis nvis-diataxis-explanation docutils">
+<p>Explanation — background and reasoning. No instructions.</p>
+</div>
+<p>Registering a Tool records a <strong>basename</strong> — <code class="docutils literal notranslate"><span class="pre">sysinfo.sh</span></code>, <code class="docutils literal notranslate"><span class="pre">nccl_allreduce.sbatch</span></code> — never a
+path. This page is the decision behind that: which directory the app looks in, in what order,
+and which of those directories anybody is allowed to write.</p>
+<p>It exists because the ambiguity was real. Before the layered tree, two resolvers disagreed:
+<code class="docutils literal notranslate"><span class="pre">paths._scripts_dir()</span></code> honoured the topology <code class="docutils literal notranslate"><span class="pre">scripts</span></code> role while <code class="docutils literal notranslate"><span class="pre">workflow_engine</span></code> read
+<code class="docutils literal notranslate"><span class="pre">RACK_REMOTE_BASE_PATH</span></code> directly, so on a deployment that declared a scripts role the API and a
+workflow step ran <em>different copies of the same script</em> and nothing reported it.</p>
+<section id="the-layers">
+<h2>The layers<a class="headerlink" href="#the-layers" title="Link to this heading">#</a></h2>
+<p>One server runs several customers’ projects. A script resolves through four directories, most
+specific first:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Order</p></th>
+<th class="head"><p>Directory</p></th>
+<th class="head"><p>Who owns it</p></th>
+<th class="head"><p>Writable by the app</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{base}/scripts/project-&lt;project-id&gt;/</span></code></p></td>
+<td><p>one project</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{base}/scripts/custom/</span></code></p></td>
+<td><p>this deployment’s operators</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{base}/scripts/&lt;platform-id&gt;/</span></code></p></td>
+<td><p>the product (shipped)</p></td>
+<td><p>no</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{base}/scripts/multi-platform/</span></code></p></td>
+<td><p>the product (shipped)</p></td>
+<td><p>no</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The first directory that contains the basename wins. <code class="docutils literal notranslate"><span class="pre">backend/script_tree.py</span></code> is the only module
+that answers this; asking <code class="docutils literal notranslate"><span class="pre">RACK_REMOTE_BASE_PATH</span></code> yourself is how the two resolvers came to
+disagree.</p>
+<p>An explicit env override still beats all four. A site that sets
+<code class="docutils literal notranslate"><span class="pre">RACK_SYSINFO_SCRIPT=/opt/site/sysinfo.sh</span></code> gets exactly that path, layering or not.</p>
+</section>
+<section id="where-to-put-a-script">
+<h2>Where to put a script<a class="headerlink" href="#where-to-put-a-script" title="Link to this heading">#</a></h2>
+<p><strong>A script that runs anywhere → <code class="docutils literal notranslate"><span class="pre">multi-platform/</span></code>.</strong> This is the shipped default set, and it is
+what a project’s copy is composed from.</p>
+<p><strong>A script that runs on exactly one platform → <code class="docutils literal notranslate"><span class="pre">&lt;platform-id&gt;/</span></code>.</strong> <code class="docutils literal notranslate"><span class="pre">gb200-nvl72</span></code>, <code class="docutils literal notranslate"><span class="pre">gb300-nvl72</span></code>,
+and so on, named after the catalog Platform id. The whole file is replaced for that platform, so
+reach for this only when the <em>script</em> differs — a different scheduler invocation, a different
+tool, a different sequence. When a threshold, an image tag or a binary name differs, a
+<code class="docutils literal notranslate"><span class="pre">tool_param_defaults</span></code> entry on the Platform record reaches the script as an environment variable
+and keeps one file. <code class="docutils literal notranslate"><span class="pre">CUDA_MAJ</span></code> works that way: one CUDA major per platform, read at run time
+to pick the workspace toolkit, with one script serving them all. Better still is no per-platform value at all:
+ClusterKit used to pick a fixed per-platform CPU/HCA mapper (<code class="docutils literal notranslate"><span class="pre">core_to_hca_dgxgb200.sh</span></code>/<code class="docutils literal notranslate"><span class="pre">300.sh</span></code>)
+and now reads each rail’s GPU, core and NUMA node from the node itself (<code class="docutils literal notranslate"><span class="pre">nvis_fabric_rail_map</span></code>).</p>
+<p><strong>A script you wrote for this deployment → <code class="docutils literal notranslate"><span class="pre">custom/</span></code>.</strong> Shared across every project on the
+server, and never touched by a deploy or by bootstrapping a project.</p>
+<p><strong>A change to one project’s copy → edit it in <code class="docutils literal notranslate"><span class="pre">project-&lt;id&gt;/</span></code>.</strong> That directory is a full copy,
+composed at bootstrap from the default set with the platform layer over the top, and nothing
+overwrites a file you have changed there.</p>
+</section>
+<section id="why-custom-exists">
+<h2>Why <code class="docutils literal notranslate"><span class="pre">custom/</span></code> exists<a class="headerlink" href="#why-custom-exists" title="Link to this heading">#</a></h2>
+<p>Two rules that are each correct were in direct conflict.</p>
+<p>The shipped layers must not be edited in place: they are shared by every project on the server,
+so a fix for one customer silently changes another customer’s run. That is the whole reason a
+project gets its own copy.</p>
+<p>But registering a Tool only records a basename — somebody has to put the file on the head node.
+Before <code class="docutils literal notranslate"><span class="pre">custom/</span></code>, the only writable directory was a project’s, which would make a genuinely
+cross-platform script the property of whichever project happened to be active when it was added.</p>
+<p>So <code class="docutils literal notranslate"><span class="pre">custom/</span></code> is operator-owned and deployment-wide. It sits <em>above</em> the shipped layers, so a
+script there shadows a shipped one of the same name without editing it — the same relationship a
+project directory has, one scope wider.</p>
+<p><strong>To change what ships with the app, open a merge request.</strong> A script that belongs in the
+product should arrive in <code class="docutils literal notranslate"><span class="pre">multi-platform/</span></code> (or a platform layer) through review, and then every
+deployment gets it on the next <code class="docutils literal notranslate"><span class="pre">bin/deploy-scripts.sh</span></code>. <code class="docutils literal notranslate"><span class="pre">custom/</span></code> is deliberately not a
+substitute for that: a script only in <code class="docutils literal notranslate"><span class="pre">custom/</span></code> exists on one head node, is invisible to every
+other site, and nobody reviews it.</p>
+</section>
+<section id="what-immutability-means-here-precisely">
+<h2>What immutability means here, precisely<a class="headerlink" href="#what-immutability-means-here-precisely" title="Link to this heading">#</a></h2>
+<p>It is a property of the <strong>layer</strong>, not a flag on a record. <code class="docutils literal notranslate"><span class="pre">script_tree.is_writable()</span></code> answers
+from the path alone and there is nothing to toggle — a <code class="docutils literal notranslate"><span class="pre">protected</span></code> field on a Platform document
+could be cleared, and then the shared <code class="docutils literal notranslate"><span class="pre">gb300-nvl72/</span></code> scripts would be editable for every project
+on the box, which is the outcome being prevented. Platform <em>records</em> stay fully editable, since
+tuning <code class="docutils literal notranslate"><span class="pre">tool_param_defaults</span></code> per site is routine.</p>
+<p>Two clarifications that follow from “the layer, not the file”:</p>
+<ul>
+<li><p><strong>The shipped layers are written by a deploy, and only by a deploy.</strong> <code class="docutils literal notranslate"><span class="pre">bin/deploy-scripts.sh</span></code>
+is one; <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/scripts/deploy</span></code>, behind the setup wizard’s Scripts step and the Projects
+screen’s “Deploy scripts to head”, is the other. The rule this protects was never “the app’s
+process must not write that path” — it is that updating the product’s scripts is a deliberate
+act, never a side effect of something else. A checkbox an operator ticks on a setup screen
+meets that; a launch quietly refreshing a layer on its way past would not.</p>
+<p>This used to read “<em>the app</em> never writes them”, which described the implementation of the
+day rather than the principle, and the gap showed: an operator setting up an appliance has a
+browser and no repo checkout, so the only route to a usable head node was a shell script they
+had no way to run. Two properties keep the weaker rule sound — the deploy is <strong>additive</strong>
+(<code class="docutils literal notranslate"><span class="pre">custom/</span></code> and <code class="docutils literal notranslate"><span class="pre">project-*/</span></code> are not in the archive, so extraction cannot touch them, and there
+is no delete pass), and it is <strong>explicit</strong> (its own endpoint, its own action, its own audit
+line, never invoked by a launch).</p>
+</li>
+<li><p><strong>The legacy flat <code class="docutils literal notranslate"><span class="pre">{base}/bin/scripts</span></code> counts as shipped.</strong> On a deployment that has not been
+migrated it is shared by every project, so a write there has the widest blast radius of all.
+Creating the tree is what makes a writable layer available.</p></li>
+</ul>
+</section>
+<section id="what-the-compatibility-list-does-not-do">
+<h2>What the compatibility list does <em>not</em> do<a class="headerlink" href="#what-the-compatibility-list-does-not-do" title="Link to this heading">#</a></h2>
+<p>A Tool’s platform compatibility — <code class="docutils literal notranslate"><span class="pre">all</span></code>, by capability, or specific platform ids — decides
+<strong>whether the tool is offered</strong> for a cluster. It never affects which directory the script comes
+from. A tool marked compatible with GB200 and GB300 still resolves through the four layers
+above; the <em>implementation</em> difference comes from the platform layer, which bootstrap copied into
+the project directory. Nothing branches on platform at run time.</p>
+</section>
+<section id="one-project-one-directory">
+<h2>One project, one directory<a class="headerlink" href="#one-project-one-directory" title="Link to this heading">#</a></h2>
+<p>There is one script directory per <strong>project</strong>, not per cluster. A project whose clusters span two
+platforms gets whichever platform layer was bootstrapped first, and a later bootstrap will not
+overwrite it — by design, since that is the rule protecting operator edits. Where a project is
+one platform, which is every deployment today, this never arises. If mixed-platform projects
+become real, the directory needs the cluster id in its name.</p>
+</section>
+<section id="related">
+<h2>Related<a class="headerlink" href="#related" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../how-to/add-your-own-script.html"><span class="std std-doc">How to add your own script and register it as a tool</span></a>
+— the task version of this page.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bin/bootstrap-project-scripts.sh</span></code> — composes a project’s directory from the shipped layers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/EXECUTION_ARCHITECTURE.md</span></code> — which <em>host</em> runs the script, as opposed to which copy.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="why-authorization-is-default-deny.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Why authorization is default-deny</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="the-cluster-home-directory.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">The cluster home directory</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-layers">The layers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-to-put-a-script">Where to put a script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-custom-exists">Why <code class="docutils literal notranslate"><span class="pre">custom/</span></code> exists</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-immutability-means-here-precisely">What immutability means here, precisely</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-compatibility-list-does-not-do">What the compatibility list does <em>not</em> do</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-project-one-directory">One project, one directory</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related">Related</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

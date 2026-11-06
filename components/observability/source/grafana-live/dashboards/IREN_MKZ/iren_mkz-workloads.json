@@ -1,0 +1,1848 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Controller-authoritative active Slurm jobs plus cgroup-derived allocation, GPU efficiency, validation context, and runtime failure evidence.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "home",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "\u2302 IREN_MKZ Home",
+      "tooltip": "Back to IREN_MKZ Home",
+      "type": "link",
+      "url": "/d/iren_mkz-home?${__url_time_range}"
+    },
+    {
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "iren_mkz"
+      ],
+      "title": "IREN_MKZ Dashboards",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "description": "Operator orientation and direct routes to every IREN_MKZ evidence domain.",
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "# IREN_MKZ \u2014 Workloads, Slurm & Validation\n\n**Slurm workload operations and validation evidence.** Head-node scheduler state makes pending/configuring/running jobs visible before cgroups exist; current cgroups show landed allocation truth and the selected time range reconstructs historical jobs. Click a Job ID once to open its flight recorder.\n\n[Home](/d/iren_mkz-home?${__url_time_range}) \u00b7 [Command Center](/d/iren_mkz-command-center?${__url_time_range}) \u00b7 [Live Topology](/d/iren_mkz-topology?${__url_time_range}) \u00b7 [Infrastructure](/d/iren_mkz-infrastructure?${__url_time_range}) \u00b7 [GPU & NVLink](/d/iren_mkz-accelerators?${__url_time_range}) \u00b7 [Fabric, CVT & Cabling](/d/iren_mkz-fabric?${__url_time_range}) \u00b7 [Workloads, Slurm & Validation](/d/iren_mkz-workloads?${__url_time_range})",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "description": "Workload decisions \u2014 allocation, accounting and pressure: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Workload decisions \u2014 allocation, accounting and pressure",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Distinct Slurm Job IDs in current tray-side cgroup accounting.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open live job placement",
+              "url": "/d/iren_mkz-workloads?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 6
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by(jobid)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Jobs running now",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Distinct Job IDs whose cgroup identity appeared in the selected dashboard window.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open job inventory",
+              "url": "/d/iren_mkz-workloads?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 6
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by(jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Jobs in selected range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Distinct trays currently carrying a Slurm job cgroup.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open current placement",
+              "url": "/d/iren_mkz-workloads?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 6
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by(node)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Trays allocated now",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current resident memory for job cgroups in scope. Zero is shown only when cgroup identity telemetry is present.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 6
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(cgroup_memory_rss_bytes{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",cgroup=~\".*job_.*\"}) or on() (count(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Job resident memory",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPUs on currently allocated trays reporting zero SM utilisation. Idle is a workload symptom, not hardware failure.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open exact idle-GPU worklist",
+              "url": "/d/iren_mkz-workloads?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 6
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count((DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} == 0) * on(node) group_left(jobid) max by(node,jobid)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})) or on() (count(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} and on(node) max by(node)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs on allocated trays idle",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Runtime slurmd lines in the selected window that contain scheduler decisions or non-zero step cleanup. Anchored to the same Slurm log stream.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open Slurm evidence",
+              "url": "/d/iren_mkz-workloads?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 6
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "sum(count_over_time({job=\"slurm\"} |~ \"(?i)(CANCELLED|TIME LIMIT|NODE_FAIL|launch failed|stepd_cleanup.*rc\\\\[0x[1-9a-f])\" [$__range])) or (sum(count_over_time({job=\"slurm\"} [$__range])) * 0)",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Slurm failure lines",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "description": "L2 \u2014 active scheduler queue and landed resource footprint: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "id": 9,
+      "panels": [],
+      "title": "L2 \u2014 active scheduler queue and landed resource footprint",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Controller-authoritative active jobs, including pending jobs without cgroups. State, reason, requested range, resources, parsed progress, and stall detector lead directly to the reusable flight recorder.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "job_id"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open job flight recorder",
+                    "url": "/d/iren_mkz-job-root-cause?var-jobid=${__data.fields.job_id}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Queue wait"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Progress"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Stuck"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "green",
+                        "text": "NO"
+                      },
+                      "1": {
+                        "color": "red",
+                        "text": "YES"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "job_id"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_info{cluster=~\"$cluster\"} and on(job_id) (nvis_slurm_job_active{cluster=~\"$cluster\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_queue_age_seconds{cluster=~\"$cluster\"} and on(job_id) (nvis_slurm_job_active{cluster=~\"$cluster\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_requested_nodes{cluster=~\"$cluster\"} and on(job_id) (nvis_slurm_job_active{cluster=~\"$cluster\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_allocated_nodes{cluster=~\"$cluster\"} and on(job_id) (nvis_slurm_job_active{cluster=~\"$cluster\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_requested_gpus{cluster=~\"$cluster\"} and on(job_id) (nvis_slurm_job_active{cluster=~\"$cluster\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_progress_ratio{cluster=~\"$cluster\"} and on(job_id) (nvis_slurm_job_active{cluster=~\"$cluster\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_stuck{cluster=~\"$cluster\"} and on(job_id) (nvis_slurm_job_active{cluster=~\"$cluster\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "G"
+        }
+      ],
+      "title": "Active Slurm queue \u2014 click any Job ID for its flight recorder",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "job_id",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Record": true,
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "node": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "renameByName": {
+              "Value #A": "Record",
+              "Value #B": "Queue wait",
+              "Value #C": "Requested trays",
+              "Value #D": "Allocated trays",
+              "Value #E": "Requested GPUs",
+              "Value #F": "Progress",
+              "Value #G": "Stuck"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "job_id"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "One row per job seen in the selected window. Historical jobs retain identity, tray count and CPU time; live GPU/RSS columns populate only while the job is currently observable.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "jobid"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open single-job root cause",
+                    "url": "/d/iren_mkz-job-root-cause?var-jobid=${__data.fields.jobid}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU core-hours"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "h"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RSS"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU util"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU power"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hottest GPU"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 70
+                    },
+                    {
+                      "color": "orange",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 85
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "jobid"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk_max(1, count by(jobid,username)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) by(jobid)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by(jobid)(count by(jobid,node)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(jobid)(label_replace(increase(cgroup_cpu_total_seconds{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",cgroup=~\".*job_.*\"}[$__range]), \"jobid\", \"$1\", \"cgroup\", \".*job_([0-9]+)\")) / 3600",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(jobid)(label_replace(cgroup_memory_rss_bytes{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",cgroup=~\".*job_.*\"}, \"jobid\", \"$1\", \"cgroup\", \".*job_([0-9]+)\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg by(jobid)(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} * on(node) group_left(jobid) max by(node,jobid,username,rack,su)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(jobid)(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} * on(node) group_left(jobid) max by(node,jobid,username,rack,su)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(jobid)(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} * on(node) group_left(jobid) max by(node,jobid,username,rack,su)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "format": "table",
+          "instant": true,
+          "refId": "G"
+        }
+      ],
+      "title": "Jobs in selected range \u2014 identity, trays and resource evidence",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "jobid",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "renameByName": {
+              "Value #A": "Identity samples",
+              "Value #B": "Trays",
+              "Value #C": "CPU core-hours",
+              "Value #D": "RSS",
+              "Value #E": "GPU util",
+              "Value #F": "GPU power",
+              "Value #G": "Hottest GPU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "jobid"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Every GPU behind the idle-allocation KPI. Click Job ID for full root-cause evidence; zero utilisation alone is not coloured as hardware failure.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "jobid"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open job root cause",
+                    "url": "/d/iren_mkz-job-root-cause?var-jobid=${__data.fields.jobid}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open tray root cause",
+                    "url": "/d/iren_mkz-tray-root-cause?var-node=${__data.fields.node}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU util"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 31
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "jobid"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} == 0) * on(node) group_left(jobid,username) max by(node,jobid,username,rack,su)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Allocated GPUs at 0% SM utilisation \u2014 exact job, tray and GPU",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "renameByName": {
+              "Value": "GPU util"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "jobid"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Every tray currently allocated to a job, with exact GPU coverage and live operating envelope.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "jobid"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open job root cause",
+                    "url": "/d/iren_mkz-job-root-cause?var-jobid=${__data.fields.jobid}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open tray root cause",
+                    "url": "/d/iren_mkz-tray-root-cause?var-node=${__data.fields.node}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU util"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU power"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hottest GPU"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 70
+                    },
+                    {
+                      "color": "orange",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 85
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 31
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "jobid"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(max by(node,jobid,username,rack,su)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}), \"entity\", \"/\", \"jobid\", \"node\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(count by(node,rack,su,jobid,username)(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} * on(node) group_left(jobid,username) max by(node,jobid,username)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})), \"entity\", \"/\", \"jobid\", \"node\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(avg by(node,rack,su,jobid,username)(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} * on(node) group_left(jobid,username) max by(node,jobid,username)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})), \"entity\", \"/\", \"jobid\", \"node\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(sum by(node,rack,su,jobid,username)(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} * on(node) group_left(jobid,username) max by(node,jobid,username)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})), \"entity\", \"/\", \"jobid\", \"node\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(max by(node,rack,su,jobid,username)(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} * on(node) group_left(jobid,username) max by(node,jobid,username)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})), \"entity\", \"/\", \"jobid\", \"node\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        }
+      ],
+      "title": "Current allocated trays \u2014 cgroup and accelerator envelope",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "entity",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "entity": true,
+              "instance": true,
+              "job": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "renameByName": {
+              "Value #A": "Cgroup",
+              "Value #B": "GPUs",
+              "Value #C": "GPU util",
+              "Value #D": "GPU power",
+              "Value #E": "Hottest GPU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "jobid"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "Workload trends and scheduler evidence: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 14,
+      "panels": [],
+      "title": "Workload trends and scheduler evidence",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Concurrent jobs and allocated trays over time from current cgroup identity series.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 41
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by(jobid)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "legendFormat": "jobs",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by(node)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "legendFormat": "trays",
+          "refId": "B"
+        }
+      ],
+      "title": "Running jobs and allocated trays",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live workload demand: board power and mean SM utilisation restricted to trays with a current job cgroup.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*power W.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*util %.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 41
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} and on(node) max by(node)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "legendFormat": "power W",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} and on(node) max by(node)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "legendFormat": "util %",
+          "refId": "B"
+        }
+      ],
+      "title": "Allocated GPU power and utilisation",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Raw slurmd evidence behind the failure KPI. Script source text is excluded by selecting only the runtime slurm stream.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 49
+      },
+      "id": 17,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "{job=\"slurm\"} |~ \"(?i)(CANCELLED|TIME LIMIT|NODE_FAIL|launch failed|stepd_cleanup.*rc\\\\[0x[1-9a-f]|error:)\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Slurm runtime failures and decisions \u2014 exact evidence",
+      "type": "logs"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "curated",
+    "observability"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "label": "Metrics source",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 2,
+        "label": "Logs source",
+        "name": "loki_datasource",
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(cgroup_info, cluster)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(cgroup_info, cluster)",
+          "refId": "clusterQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(cgroup_info{cluster=~\"$cluster\"}, datahall)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Data hall",
+        "multi": false,
+        "name": "datahall",
+        "options": [],
+        "query": {
+          "query": "label_values(cgroup_info{cluster=~\"$cluster\"}, datahall)",
+          "refId": "datahallQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\"}, su)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Super Unit",
+        "multi": false,
+        "name": "su",
+        "options": [],
+        "query": {
+          "query": "label_values(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\"}, su)",
+          "refId": "suQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\"}, rack)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rack",
+        "multi": false,
+        "name": "rack",
+        "options": [],
+        "query": {
+          "query": "label_values(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\"}, rack)",
+          "refId": "rackQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tray",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\"}, node)",
+          "refId": "nodeQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "30m",
+      "1h"
+    ]
+  },
+  "timezone": "utc",
+  "title": "IREN_MKZ \u2014 Workloads, Slurm & Validation",
+  "uid": "iren_mkz-workloads",
+  "version": 3
+}

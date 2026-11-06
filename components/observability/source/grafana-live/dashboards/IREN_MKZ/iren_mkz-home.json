@@ -1,0 +1,1763 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "IREN_MKZ SuperPOD landing page: total nodes and GPUs, immediate faults, coverage gaps, and one-click routes to every dashboard.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "home",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "\u2302 IREN_MKZ Home",
+      "tooltip": "Back to IREN_MKZ Home",
+      "type": "link",
+      "url": "/d/iren_mkz-home?${__url_time_range}"
+    },
+    {
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "iren_mkz"
+      ],
+      "title": "IREN_MKZ Dashboards",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "description": "IREN_MKZ SuperPOD landing page and navigation contract.",
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "<div style=\"background:radial-gradient(circle at 15% 0,#163451,#07111d 48%);border:1px solid #25445e;border-radius:10px;padding:17px 22px;display:flex;align-items:center;gap:18px\"><div style=\"width:11px;height:48px;border-radius:8px;background:linear-gradient(#50c8ff,#25d27a);box-shadow:0 0 22px #36b9ff88\"></div><div style=\"flex:1\"><div style=\"color:#e8f5ff;font-size:25px;font-weight:850;letter-spacing:-.03em\">IREN_MKZ SuperPOD</div><div style=\"color:#84a5bd;font-size:11px;margin-top:4px\">OPERATIONS HOME \u00b7 14 SUPER UNITS \u00b7 GB300 FLEET \u00b7 LIVE DECISIONS TO L3 EVIDENCE</div></div><div style=\"display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:580px\"><span style=\"border:1px solid #2b5674;color:#7fd2ff;border-radius:999px;padding:5px 9px;font-size:9px\">VICTORIAMETRICS LIVE</span><span style=\"border:1px solid #2a6246;color:#66e69d;border-radius:999px;padding:5px 9px;font-size:9px\">LOKI LIVE</span><span style=\"border:1px solid #735623;color:#ffc967;border-radius:999px;padding:5px 9px;font-size:9px\">EXPECTED \u2260 OBSERVED PATH</span></div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "description": "Fleet posture \u2014 capacity, availability and immediate risk: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Fleet posture \u2014 capacity, availability and immediate risk",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Distinct GB300 tray nodes in the fleet-wide health target roster.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open tray roster",
+              "url": "/d/iren_mkz-infrastructure?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 6
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(max by(node)(up{cluster=\"IREN_MKZ\",job=\"node-exporter-fleet-health\"}))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Total nodes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Fleet-wide node health targets currently UP.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open infrastructure",
+              "url": "/d/iren_mkz-infrastructure?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 6
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(max by(node)(up{cluster=\"IREN_MKZ\",job=\"node-exporter-fleet-health\"} == 1))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes UP",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Fleet-wide node health targets currently DOWN; zero is anchored to the same target roster.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open infrastructure",
+              "url": "/d/iren_mkz-infrastructure?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 6
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(max by(node)(up{cluster=\"IREN_MKZ\",job=\"node-exporter-fleet-health\"} == 0)) or on() (count(up{cluster=\"IREN_MKZ\",job=\"node-exporter-fleet-health\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes DOWN",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Every GPU currently represented by a DCGM core-temperature series.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open GPU fleet",
+              "url": "/d/iren_mkz-accelerators?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 6
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Total GPUs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Distinct current GPUs with XID, DBE, uncorrectable remap, remap failure or critical thermal evidence.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open exact GPU worklist",
+              "url": "/d/iren_mkz-accelerators?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 12,
+        "y": 6
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count((max by(node,rack,su,gpu)(label_replace((DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\"} >= bool 85) * 2, \"fault\", \"core_temp\", \"\", \"\") or label_replace((DCGM_FI_DEV_MEMORY_TEMP{cluster=\"IREN_MKZ\"} >= bool 90) * 2, \"fault\", \"hbm_temp\", \"\", \"\") or label_replace((DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=\"IREN_MKZ\"} > bool 0) * 3, \"fault\", \"ecc_dbe\", \"\", \"\") or label_replace((DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=\"IREN_MKZ\"} > bool 0) * 3, \"fault\", \"ecc_dbe_aggregate\", \"\", \"\") or label_replace((DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=\"IREN_MKZ\"} > bool 0) * 3, \"fault\", \"uncorrectable_remap\", \"\", \"\") or label_replace((DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=\"IREN_MKZ\"} > bool 0) * 3, \"fault\", \"row_remap\", \"\", \"\") or label_replace((DCGM_FI_DEV_XID_ERRORS{cluster=\"IREN_MKZ\"} > bool 0) * 3, \"fault\", \"xid\", \"\", \"\"))) > 0) or on() (count(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs with issues",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Exact host HCA ports not in ACTIVE state 4.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open exact HCA worklist",
+              "url": "/d/iren_mkz-fabric?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 6
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(ib_hca_port_state{cluster=\"IREN_MKZ\"} != 4) or on() (count(ib_hca_port_state{cluster=\"IREN_MKZ\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "HCA not ACTIVE",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Unique switch inventory endpoints that are unreachable or unhealthy.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open switch worklist",
+              "url": "/d/iren_mkz-fabric?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 18,
+        "y": 6
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(max by(switch)((switch_up{cluster=\"IREN_MKZ\"} == 0) or (switch_health{cluster=\"IREN_MKZ\"} != 1))) or on() (count(switch_up{cluster=\"IREN_MKZ\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Switches needing action",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current firing alert series; Command Center retains the exact labels.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open Command Center",
+              "url": "/d/iren_mkz-command-center?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 6
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(ALERTS{alertstate=\"firing\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Firing alerts",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Distinct live job IDs from tray-side cgroup accounting.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open workloads",
+              "url": "/d/iren_mkz-workloads?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 10
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by(jobid)(cgroup_info{cluster=\"IREN_MKZ\",jobid!=\"\"})) or on() (count(up{cluster=\"IREN_MKZ\",job=\"cgroup-exporter\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Jobs running now",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Overall current SM utilisation across all reporting GPUs.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open AI performance",
+              "url": "/d/iren_mkz-ai-performance?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 10
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_GPU_UTIL{cluster=\"IREN_MKZ\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Fleet GPU utilisation",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Required per-tray observability targets currently down.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open agent worklist",
+              "url": "/d/iren_mkz-infrastructure?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 10
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(up{cluster=\"IREN_MKZ\",job=~\"alloy|node-exporter|cgroup-exporter|dcgm-exporter\"} == 0) or on() (count(up{cluster=\"IREN_MKZ\",job=~\"alloy|node-exporter|cgroup-exporter|dcgm-exporter\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Tray agents DOWN",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Maximum current GPU core temperature across the reporting fleet.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open GPU thermal evidence",
+              "url": "/d/iren_mkz-accelerators?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 10
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Hottest GPU core",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live bounded flush lag from the lakewriter publisher.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open platform evidence",
+              "url": "/d/iren_mkz-platform-root-cause?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 900
+              },
+              {
+                "color": "orange",
+                "value": 3600
+              },
+              {
+                "color": "red",
+                "value": 21600
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 10
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(nvis_lake_flush_lag_seconds{cluster=\"IREN_MKZ\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Lake flush lag",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Racks whose newest canonical single-rack NCCL result fails the configured all-reduce acceptance floor or correctness check.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open NCCL validation",
+              "url": "/d/iren_mkz-nccl-campaigns?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 10
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(topk by(rack)(1,iren_mkz_nccl_rack_latest_started_timestamp_seconds) and on(run_id) iren_mkz_nccl_rack_latest_started_timestamp_seconds{status=\"FAIL\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "NCCL racks FAIL",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "One means the head-node publisher is absent or its local node-exporter scrape is down; this is never rendered as a healthy zero.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open head-node evidence",
+              "url": "/d/iren_mkz-head-node?${__url_time_range}"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 10
+      },
+      "id": 17,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "absent(up{cluster=\"IREN_MKZ\",job=\"headnode\",role=\"head\"}) or (1-max(up{cluster=\"IREN_MKZ\",job=\"headnode\",role=\"head\"}))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Head telemetry missing",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "description": "Immediate attention \u2014 exact entities behind the red counts: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 18,
+      "panels": [],
+      "title": "Immediate attention \u2014 exact entities behind the red counts",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Up to 20 exact required tray targets currently down; click the node for complete tray evidence.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "text": "DOWN"
+                      },
+                      "1": {
+                        "color": "green",
+                        "text": "UP"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open tray root cause",
+                    "url": "/d/iren_mkz-tray-root-cause?var-node=${__data.fields.node}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 0,
+        "y": 15
+      },
+      "id": 19,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(20, up{cluster=\"IREN_MKZ\",job=~\"alloy|node-exporter|cgroup-exporter|dcgm-exporter\"} == 0)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Node / agent targets DOWN",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "renameByName": {
+              "Value": "State"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Exact GPUs behind the issue count, reduced to one severity row per node/GPU.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "green",
+                        "text": "HEALTHY"
+                      },
+                      "1": {
+                        "color": "yellow",
+                        "text": "WARM"
+                      },
+                      "2": {
+                        "color": "orange",
+                        "text": "DEGRADED"
+                      },
+                      "3": {
+                        "color": "red",
+                        "text": "CRITICAL"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "orange",
+                      "value": 2
+                    },
+                    {
+                      "color": "red",
+                      "value": 3
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "gpu"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open GPU root cause",
+                    "url": "/d/iren_mkz-gpu-root-cause?var-node=${__data.fields.node}&var-gpu=${__data.fields.gpu}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 6,
+        "y": 15
+      },
+      "id": 20,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Severity"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(node,rack,su,gpu)(label_replace((DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\"} >= bool 85) * 2, \"fault\", \"core_temp\", \"\", \"\") or label_replace((DCGM_FI_DEV_MEMORY_TEMP{cluster=\"IREN_MKZ\"} >= bool 90) * 2, \"fault\", \"hbm_temp\", \"\", \"\") or label_replace((DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=\"IREN_MKZ\"} > bool 0) * 3, \"fault\", \"ecc_dbe\", \"\", \"\") or label_replace((DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=\"IREN_MKZ\"} > bool 0) * 3, \"fault\", \"ecc_dbe_aggregate\", \"\", \"\") or label_replace((DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=\"IREN_MKZ\"} > bool 0) * 3, \"fault\", \"uncorrectable_remap\", \"\", \"\") or label_replace((DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=\"IREN_MKZ\"} > bool 0) * 3, \"fault\", \"row_remap\", \"\", \"\") or label_replace((DCGM_FI_DEV_XID_ERRORS{cluster=\"IREN_MKZ\"} > bool 0) * 3, \"fault\", \"xid\", \"\", \"\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Critical GPUs",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "fault": true,
+              "instance": true,
+              "job": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "renameByName": {
+              "Value": "Severity"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "Severity"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Up to 20 exact non-ACTIVE HCA ports; click an HCA for state, counters and logs.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "1": {
+                        "color": "red",
+                        "text": "DOWN"
+                      },
+                      "2": {
+                        "color": "orange",
+                        "text": "INIT"
+                      },
+                      "3": {
+                        "color": "yellow",
+                        "text": "ARMED"
+                      },
+                      "4": {
+                        "color": "green",
+                        "text": "ACTIVE"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hca"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open HCA root cause",
+                    "url": "/d/iren_mkz-hca-root-cause?var-node=${__data.fields.node}&var-hca=${__data.fields.hca}&var-rack=${__data.fields.rack}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 12,
+        "y": 15
+      },
+      "id": 21,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(20, ib_hca_port_state{cluster=\"IREN_MKZ\"} != 4)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "HCA ports not ACTIVE",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "renameByName": {
+              "Value": "State"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Up to 20 inventory endpoints that are unreachable or unhealthy; L3 keeps reachability separate from inventory health.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "switch"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open switch root cause",
+                    "url": "/d/iren_mkz-switch-root-cause?var-switch=${__data.fields.switch}&var-kind=${__data.fields.kind}&var-rack=${__data.fields.rack}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 18,
+        "y": 15
+      },
+      "id": 22,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(20, switch_info{cluster=\"IREN_MKZ\"} and on(switch) max by(switch)((switch_up{cluster=\"IREN_MKZ\"} == 0) or (switch_health{cluster=\"IREN_MKZ\"} != 1)))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Switches needing action",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Evidence": true,
+              "Time": true,
+              "__name__": true,
+              "asic": true,
+              "cluster": true,
+              "component": true,
+              "instance": true,
+              "job": true,
+              "model": true,
+              "os_version": true,
+              "part_number": true,
+              "plane": true,
+              "serial": true
+            },
+            "renameByName": {
+              "Value": "Evidence"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "IREN_MKZ observability directory: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 23,
+      "panels": [],
+      "title": "IREN_MKZ observability directory",
+      "type": "row"
+    },
+    {
+      "description": "Landing-page directory for the complete IREN_MKZ observability suite.",
+      "gridPos": {
+        "h": 16,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 24,
+      "options": {
+        "content": "<div style=\"font-family:Inter,Roboto,sans-serif;padding:4px 2px\"><div style=\"margin-bottom:11px\"><div style=\"display:flex;align-items:center;gap:8px;margin-bottom:7px;color:#4db6ff;font-size:13px;font-weight:800;letter-spacing:.04em\">Operate the SuperPOD<span style=\"height:1px;flex:1;background:linear-gradient(90deg,#4db6ff55,transparent)\"></span></div><div style=\"display:grid;grid-template-columns:repeat(3,minmax(240px,1fr));gap:7px\"><a href=\"/d/iren_mkz-command-center?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #4db6ff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Command Center</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Prioritized fleet decisions and Super Unit roll-up</div></a><a href=\"/d/iren_mkz-topology?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #4db6ff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Live Topology</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Fleet \u2192 rack \u2192 tray \u2192 four GPUs in one visual surface</div></a><a href=\"/d/iren_mkz-infrastructure?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #4db6ff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Infrastructure</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Agent, CPU, memory, filesystem, pressure and sensor worklists</div></a><a href=\"/d/iren_mkz-accelerators?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #4db6ff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">GPU & NVLink</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Fleet GPU health, load, power, thermals and NVLink readiness</div></a><a href=\"/d/iren_mkz-fabric?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #4db6ff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Fabric, CVT & Cabling</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Host HCAs, switch inventory and fabric coverage truth</div></a><a href=\"/d/iren_mkz-workloads?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #4db6ff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Workloads, Slurm & Validation</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Live and range job inventory, placement and efficiency</div></a><a href=\"/d/iren_mkz-ai-performance?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #4db6ff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">AI Performance & Inference SLO</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Overall GPU utilisation plus inference/SLO coverage truth</div></a><a href=\"/d/iren_mkz-head-node?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #4db6ff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Head Node & BCM Control Plane</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Head-node load, storage, CMDaemon, cmsh cost, sockets and control-plane logs</div></a></div></div><div style=\"margin-bottom:11px\"><div style=\"display:flex;align-items:center;gap:8px;margin-bottom:7px;color:#9b8cff;font-size:13px;font-weight:800;letter-spacing:.04em\">Investigate an exact entity<span style=\"height:1px;flex:1;background:linear-gradient(90deg,#9b8cff55,transparent)\"></span></div><div style=\"display:grid;grid-template-columns:repeat(3,minmax(240px,1fr));gap:7px\"><a href=\"/d/iren_mkz-tray-root-cause?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #9b8cff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Tray Root Cause</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Selected tray OS, storage, GPUs, HCAs, jobs and logs</div></a><a href=\"/d/iren_mkz-gpu-root-cause?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #9b8cff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">GPU Root Cause</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Selected GPU identity, XID, ECC, PCIe and NVLink evidence</div></a><a href=\"/d/iren_mkz-hca-root-cause?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #9b8cff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">HCA / Port Root Cause</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Selected HCA state, traffic, counters, job impact and driver logs</div></a><a href=\"/d/iren_mkz-switch-root-cause?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #9b8cff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Switch Root Cause</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Selected switch reachability, firmware and rack blast radius</div></a><a href=\"/d/iren_mkz-job-root-cause?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #9b8cff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Job Flight Recorder</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">One job across placement, GPU, host, HCA and runtime evidence</div></a><a href=\"/d/iren_mkz-expected-path?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #9b8cff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Workload Expected Fabric Path</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Job \u2192 DGX \u2192 HCA \u2192 expected leaf and spine design intent</div></a><a href=\"/d/iren_mkz-platform-root-cause?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #9b8cff;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Platform, Storage & Telemetry</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">VictoriaMetrics, Loki, lake durability and head-node gap</div></a></div></div><div style=\"margin-bottom:11px\"><div style=\"display:flex;align-items:center;gap:8px;margin-bottom:7px;color:#25d27a;font-size:13px;font-weight:800;letter-spacing:.04em\">Specialist evidence<span style=\"height:1px;flex:1;background:linear-gradient(90deg,#25d27a55,transparent)\"></span></div><div style=\"display:grid;grid-template-columns:repeat(3,minmax(240px,1fr));gap:7px\"><a href=\"/d/iren_mkz-accelerator-reliability?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #25d27a;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Accelerator Reliability</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Violation counters, throttle, memory and PCIe reliability</div></a><a href=\"/d/iren_mkz-nvlink-fabric?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #25d27a;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">NVLink & NVSwitch Fabric</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Per-lane NVLink, IMEX, registration and NVSwitch state</div></a><a href=\"/d/iren_mkz-ethernet-host-network?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #25d27a;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Ethernet & Host Network</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Host NIC carrier, errors, drops, softnet and TCP reliability</div></a><a href=\"/d/iren_mkz-host-reliability?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #25d27a;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Host Reliability & Inventory</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Filesystem, disk, EDAC, pressure, OS and hardware inventory</div></a><a href=\"/d/iren_mkz-thermal-power?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #25d27a;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Thermal & Power</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Every hwmon sensor, alarm, thermal zone and power meter</div></a><a href=\"/d/iren_mkz-logs-events?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #25d27a;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">Logs & Events</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Fleet-wide GPU, kernel, network, scheduler and platform logs</div></a><a href=\"/d/iren_mkz-nccl-campaigns?${__url_time_range}\" style=\"text-decoration:none;display:block;background:#0a1522;border:1px solid #20364b;border-left:3px solid #25d27a;border-radius:7px;padding:9px 11px;min-height:54px\"><div style=\"color:#e4f2ff;font-size:12px;font-weight:750\">NCCL Validation</div><div style=\"color:#7894aa;font-size:10px;line-height:1.35;margin-top:3px\">Rack verdicts, acceptance bandwidth, run history and missing coverage</div></a></div></div><div style=\"color:#607a90;font-size:9px;margin-top:4px\">Every dashboard returns here through the persistent HOME link. Expected topology and unavailable telemetry are explicitly labelled; no missing publisher is rendered healthy.</div></div>",
+        "mode": "html"
+      },
+      "title": "Every operational and root-cause dashboard",
+      "transparent": true,
+      "type": "text"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "curated",
+    "observability"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "label": "Metrics source",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 2,
+        "label": "Logs source",
+        "name": "loki_datasource",
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "30m",
+      "1h"
+    ]
+  },
+  "timezone": "utc",
+  "title": "IREN_MKZ \u2014 Home",
+  "uid": "iren_mkz-home",
+  "version": 3
+}

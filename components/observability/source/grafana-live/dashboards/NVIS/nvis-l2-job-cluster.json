@@ -1,0 +1,2024 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Fleet-wide Slurm workload accounting from the tray-side cgroup exporter. Canonical owner of job counts, per-job/per-tray/per-user allocation and cgroup-exporter coverage. GPU faults are owned by GPU Health, tray availability by Executive, host pressure by Node Deep Dive.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Jobs & Cluster home",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/nvis-l2-job-cluster"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Job Stats \u2014 one job",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/iren_mkz-single-job-stats"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Job Health \u2014 fault triage",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/iren_mkz-job-health"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Cross-domain impact",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/nvis-impact-analysis"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "<style>\n.nvh{font-family:Inter,Roboto,sans-serif;color:#c7d0d9;line-height:1.5;padding:2px 2px}\n.nvh h4{font-size:15px;font-weight:600;color:#e6edf3;margin:0 0 4px 0}\n.nvh code{color:#9fb4c7}\n.nvn{margin-top:8px}\n.nvn a{display:inline-block;padding:4px 11px;margin-right:8px;border:1px solid #2b3138;\n border-radius:4px;background:#181b1f;color:#c7d0d9;text-decoration:none;font-size:12px}\n.nvn a:hover{border-color:#3d7a4e;color:#e6edf3}\n.nvn a.on{border-color:#3d7a4e;color:#e6edf3;background:#1c2026}\n</style><div class=\"nvh\"><h4>Jobs &amp; Cluster &mdash; area home</h4>Workload accounting for IREN_MKZ comes from the <b>Slurm cgroup exporter on every tray</b> (<code>cgroup_info</code>, <code>cgroup_memory_*</code>, <code>cgroup_cpu_*</code>) &mdash; a job appears here as soon as its cgroup exists on a tray. Counts labelled &ldquo;in range&rdquo; cover the dashboard time range; the rest are the latest scrape. <b>Every tile is backed by the table beneath it</b>: the tile is that table's row count, or the total in its footer. Fleet GPU faults live on <i>GPU&nbsp;Health</i>, host and tray availability on <i>Executive</i> and <i>Node&nbsp;Deep&nbsp;Dive</i>. <b>Silent</b> means no sample for over five minutes, measured from the last sample timestamp &mdash; not <code>up==0</code>, which never fires here because a dead tray loses its scrape target instead of reporting zero.<div class=\"nvn\"><a class=\"on\" href=\"/d/nvis-l2-job-cluster\">Jobs &amp; Cluster home</a><a class=\"\" href=\"/d/iren_mkz-single-job-stats\">Job Stats \u2014 one job</a><a class=\"\" href=\"/d/iren_mkz-job-health\">Job Health \u2014 fault triage</a><a class=\"\" href=\"/d/nvis-impact-analysis\">Cross-domain impact</a></div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 10,
+      "panels": [],
+      "title": "Workload \u2014 every Slurm job seen through tray-side cgroup accounting",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Distinct Slurm job IDs whose cgroups were observed on any tray in scope inside the dashboard time range. Equals the row count of \u201cJobs in range\u201d below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 5
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Jobs in range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Jobs with a live cgroup at the latest scrape. Equals the row count of \u201cJobs running right now\u201d below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 5
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(jobid)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Jobs running now",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Trays that hosted at least one job cgroup in the range. Equals the row count of \u201cTrays allocated in range\u201d below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 5
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(node)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Trays allocated in range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Distinct cgroup owners. Equals the row count of \u201cUsers in range\u201d.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 5
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(username)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",username!=\"\"}[$__range]))) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Users in range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "RSS of every Slurm job cgroup at the latest scrape. Equals the Resident memory total in \u201cJobs running right now\u201d.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 5
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum((sum by(jobid)(label_replace(cgroup_memory_rss_bytes{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",cgroup=~\".*job_.*\"}, \"jobid\", \"$1\", \"cgroup\", \".*job_([0-9]+)\")) and on(jobid) count by(jobid)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Job resident memory now",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "CPU core-hours consumed by all Slurm job cgroups over the range. Equals the CPU core-hours total in the footer of \u201cJobs in range\u201d.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 5
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum((sum by(jobid)(label_replace(increase(cgroup_cpu_total_seconds{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",cgroup=~\".*job_.*\"}[$__range]), \"jobid\", \"$1\", \"cgroup\", \".*job_([0-9]+)\")) and on(jobid) count by(jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))) / 3600 or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Job CPU time in range (core-hours)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Every Slurm job observed in the range, largest first. Open Job Stats or Job Health with a Job ID from here for the per-tray and per-GPU breakdown. Footer: the CPU core-hours total is the tile above exactly. The Trays total is the sum of per-job tray counts, so a tray shared by two jobs is counted twice \u2014 the distinct-tray figure is the \u201cTrays allocated in range\u201d tile and its own table below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "No Slurm job cgroup seen on any tray in scope in this range",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trays"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU core-hours"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 125
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Job ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 13,
+        "x": 0,
+        "y": 9
+      },
+      "id": 17,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": [],
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk_max(1, count by(jobid,username)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) by (jobid)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(jobid)(count by(jobid,node)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(((sum by(jobid)(label_replace(increase(cgroup_cpu_total_seconds{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",cgroup=~\".*job_.*\"}[$__range]), \"jobid\", \"$1\", \"cgroup\", \".*job_([0-9]+)\")) and on(jobid) count by(jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) and count by(jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) or (0 * count by(jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))) / 3600",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        }
+      ],
+      "title": "L2 \u00b7 Jobs in range \u2014 rows = \u201cJobs in range\u201d, CPU core-hours total = the tile above",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "Value #A": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #B": 2,
+              "Value #C": 3,
+              "jobid": 0,
+              "username": 1
+            },
+            "renameByName": {
+              "Value #B": "Trays",
+              "Value #C": "CPU core-hours",
+              "jobid": "Job ID",
+              "username": "User"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "CPU core-hours"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "The jobs holding trays at this moment. Footer: the resident-memory total is the tile above exactly; the Trays total is the sum of per-job tray counts.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "No Slurm job cgroup is live on any tray in scope right now",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trays"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Resident memory"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Job ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 11,
+        "x": 13,
+        "y": 9
+      },
+      "id": 18,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": [],
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk_max(1, count by(jobid,username)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})) by (jobid)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(jobid)(count by(jobid,node)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(((sum by(jobid)(label_replace(cgroup_memory_rss_bytes{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",cgroup=~\".*job_.*\"}, \"jobid\", \"$1\", \"cgroup\", \".*job_([0-9]+)\")) and on(jobid) count by(jobid)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})) and count by(jobid)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})) or (0 * count by(jobid)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        }
+      ],
+      "title": "L2 \u00b7 Jobs running right now \u2014 rows = \u201cJobs running now\u201d, resident-memory total = the tile above",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "Value #A": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #B": 2,
+              "Value #C": 3,
+              "jobid": 0,
+              "username": 1
+            },
+            "renameByName": {
+              "Value #B": "Trays",
+              "Value #C": "Resident memory",
+              "jobid": "Job ID",
+              "username": "User"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Trays"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Every tray that carried work in the range, busiest first.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "No tray in scope carried a job cgroup in this range",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Jobs hosted"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 105
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU core-hours"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 125
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Resident memory"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 135
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "id": 19,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": [],
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(node,rack,su)(count by(node,rack,su,jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((sum by(node,rack,su)(increase(cgroup_cpu_total_seconds{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",cgroup=~\".*job_.*\"}[$__range])) and count by(node,rack,su)(count by(node,rack,su,jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))) or (0 * count by(node,rack,su)(count by(node,rack,su,jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))))) / 3600",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "((sum by(node,rack,su)(last_over_time(cgroup_memory_rss_bytes{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",cgroup=~\".*job_.*\"}[$__range])) and count by(node,rack,su)(count by(node,rack,su,jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))) or (0 * count by(node,rack,su)(count by(node,rack,su,jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])))))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        }
+      ],
+      "title": "L2 \u00b7 Trays allocated in range \u2014 rows = \u201cTrays allocated in range\u201d",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #A": 3,
+              "Value #B": 4,
+              "Value #C": 5,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "Value #A": "Jobs hosted",
+              "Value #B": "CPU core-hours",
+              "Value #C": "Resident memory",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Resident memory"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Who the work belongs to. A job whose cgroup was seen under more than one owner (root then the user) is counted for each, so these columns do not partition the job or tray totals.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "No named cgroup owner in this range",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Jobs touched"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trays touched"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 125
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "id": 20,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": false,
+        "footer": {
+          "countRows": false,
+          "fields": [],
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(username)(count by(username,jobid)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",username!=\"\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(username)(count by(username,node)(last_over_time(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",username!=\"\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        }
+      ],
+      "title": "L2 \u00b7 Users in range \u2014 rows = \u201cUsers in range\u201d",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value #A": 1,
+              "Value #B": 2,
+              "username": 0
+            },
+            "renameByName": {
+              "Value #A": "Jobs touched",
+              "Value #B": "Trays touched",
+              "username": "User"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Jobs touched"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 30,
+      "panels": [],
+      "title": "Job accounting coverage and shape of the workload",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Trays whose newest cgroup-exporter sample inside the window is more than 5 minutes old, so any job still running on them is no longer being accounted for. Measured as sample staleness, NOT as up==0: on this stack a tray that stops answering has its scrape target withdrawn rather than reporting 0, so an up==0 tile reads 0 even when whole racks are dark. Equals the row count below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 31
+      },
+      "id": 31,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(min by(node,rack,su)(time() - tlast_over_time(up{job=~\"cgroup|cgroup-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])) > 300) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Trays whose job accounting went silent",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "The exact trays and how long each has been silent. Same selector and same 5-minute threshold as the tile above.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "noValue": "None \u2014 every tray in scope reported job accounting within the last 5 minutes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Silent for"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#B77D34",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 900
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 0,
+        "y": 35
+      },
+      "id": 32,
+      "options": {
+        "cellHeight": "sm",
+        "enablePagination": true,
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "min by(node,rack,su)(time() - tlast_over_time(up{job=~\"cgroup|cgroup-exporter\",cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])) > 300",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "L2 \u00b7 Trays whose job accounting went silent \u2014 the exact trays",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "Value": false,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "container": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "hostname": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "indexByName": {
+              "Value": 3,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "Value": "Silent for",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Silent for"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Concurrency of the workload. Steps down are jobs completing.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "axisWidth": null,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 8,
+        "x": 8,
+        "y": 31
+      },
+      "id": 33,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(jobid)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "legendFormat": "jobs with a live cgroup",
+          "refId": "A"
+        }
+      ],
+      "title": "Jobs running over time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "How much of the fleet is actually carrying work.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "axisWidth": null,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 8,
+        "x": 16,
+        "y": 31
+      },
+      "id": 34,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(node)(cgroup_info{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "legendFormat": "trays holding a job cgroup",
+          "refId": "A"
+        }
+      ],
+      "title": "Trays allocated over time",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "jobs",
+    "slurm",
+    "L2",
+    "area-home"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "nvis-victoriametrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 2,
+        "label": "Datasource",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "clusterQuery"
+        },
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up{cluster=~\"$cluster\"}, datahall)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Data hall",
+        "multi": true,
+        "name": "datahall",
+        "options": [],
+        "query": {
+          "query": "label_values(up{cluster=~\"$cluster\"}, datahall)",
+          "refId": "datahallQuery"
+        },
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\"}, su)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "SU",
+        "multi": true,
+        "name": "su",
+        "options": [],
+        "query": {
+          "query": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\"}, su)",
+          "refId": "suQuery"
+        },
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\"}, rack)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rack",
+        "multi": true,
+        "name": "rack",
+        "options": [],
+        "query": {
+          "query": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\"}, rack)",
+          "refId": "rackQuery"
+        },
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tray",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(up{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\"}, node)",
+          "refId": "nodeQuery"
+        },
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": false,
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "30m",
+      "1h",
+      "2h"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Jobs & Cluster \u2014 Area Home (L2)",
+  "uid": "nvis-l2-job-cluster",
+  "version": 1,
+  "weekStart": ""
+}

@@ -1,0 +1,800 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Current-file view of all 4,032 single-node validation directories. Historical .fail/.prev attempts never override a later current result.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "targetBlank": false,
+      "title": "LLM solo GPU variance drill-down",
+      "type": "link",
+      "url": "/d/iren_mkz-llm-solo-variance?var-node=example50-dh01-a03-15"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "<b>Current node result, not attempt history.</b> Solo PASS/FAIL is recalculated from <code>llm-pretrain-solo.txt</code> with the production verdict math: median per rank, then population CoV across the four medians. <span style='color:#e0a020'>Near limit</span> is 0.018\u20130.020; fail is &gt;0.020. Health decisions are read from the latest completed decision in <code>health.log</code>; the timestamp is shown because much of that evidence is stale.",
+        "mode": "html"
+      },
+      "title": "How to read this board",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixedColor"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "PASS",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+count(*)+AS+value+FROM+single_node+WHERE+solo_status=%27PASS%27",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Solo PASS",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixedColor"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 5,
+        "y": 3
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "FAIL",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+count(*)+AS+value+FROM+single_node+WHERE+solo_status=%27FAIL%27",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Solo FAIL",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixedColor"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 10,
+        "y": 3
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "MISSING",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+count(*)+AS+value+FROM+single_node+WHERE+solo_status=%27MISSING%27",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Solo missing",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "yellow",
+            "mode": "fixedColor"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 15,
+        "y": 3
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "NEAR",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+sum(near_limit)+AS+value+FROM+single_node",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Near 0.02 limit",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "purple",
+            "mode": "fixedColor"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 19,
+        "y": 3
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "NO DECISION",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+count(*)+AS+value+FROM+single_node+WHERE+health_status+IN+(%27MISSING%27,%27UNKNOWN%27)",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Health evidence missing",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "description": "Each cell is one exact node: row=rack; n01\u2013n18 map to physical suffixes 11\u201318, then 28\u201337. Green=pass, yellow=near 0.02 CoV, orange=missing, red=fail.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/^n(0[1-9]|1[0-8])$/"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "orange",
+                      "value": 2
+                    },
+                    {
+                      "color": "red",
+                      "value": 3
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "rack_id",
+              "type": "string"
+            },
+            {
+              "selector": "1",
+              "text": "n01",
+              "type": "number"
+            },
+            {
+              "selector": "2",
+              "text": "n02",
+              "type": "number"
+            },
+            {
+              "selector": "3",
+              "text": "n03",
+              "type": "number"
+            },
+            {
+              "selector": "4",
+              "text": "n04",
+              "type": "number"
+            },
+            {
+              "selector": "5",
+              "text": "n05",
+              "type": "number"
+            },
+            {
+              "selector": "6",
+              "text": "n06",
+              "type": "number"
+            },
+            {
+              "selector": "7",
+              "text": "n07",
+              "type": "number"
+            },
+            {
+              "selector": "8",
+              "text": "n08",
+              "type": "number"
+            },
+            {
+              "selector": "9",
+              "text": "n09",
+              "type": "number"
+            },
+            {
+              "selector": "10",
+              "text": "n10",
+              "type": "number"
+            },
+            {
+              "selector": "11",
+              "text": "n11",
+              "type": "number"
+            },
+            {
+              "selector": "12",
+              "text": "n12",
+              "type": "number"
+            },
+            {
+              "selector": "13",
+              "text": "n13",
+              "type": "number"
+            },
+            {
+              "selector": "14",
+              "text": "n14",
+              "type": "number"
+            },
+            {
+              "selector": "15",
+              "text": "n15",
+              "type": "number"
+            },
+            {
+              "selector": "16",
+              "text": "n16",
+              "type": "number"
+            },
+            {
+              "selector": "17",
+              "text": "n17",
+              "type": "number"
+            },
+            {
+              "selector": "18",
+              "text": "n18",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+rack_id,max(CASE+WHEN+position_slot=1+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n01,max(CASE+WHEN+position_slot=2+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n02,max(CASE+WHEN+position_slot=3+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n03,max(CASE+WHEN+position_slot=4+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n04,max(CASE+WHEN+position_slot=5+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n05,max(CASE+WHEN+position_slot=6+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n06,max(CASE+WHEN+position_slot=7+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n07,max(CASE+WHEN+position_slot=8+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n08,max(CASE+WHEN+position_slot=9+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n09,max(CASE+WHEN+position_slot=10+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n10,max(CASE+WHEN+position_slot=11+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n11,max(CASE+WHEN+position_slot=12+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n12,max(CASE+WHEN+position_slot=13+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n13,max(CASE+WHEN+position_slot=14+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n14,max(CASE+WHEN+position_slot=15+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n15,max(CASE+WHEN+position_slot=16+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n16,max(CASE+WHEN+position_slot=17+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n17,max(CASE+WHEN+position_slot=18+THEN+CASE+WHEN+solo_status=%27FAIL%27+THEN+3+WHEN+solo_status=%27MISSING%27+THEN+2+WHEN+near_limit=1+THEN+1+ELSE+0+END+END)+n18+FROM+single_node+GROUP+BY+1+ORDER+BY+1",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Node heatmap \u2014 224 racks \u00d7 18 slots (0 pass, 1 near, 2 missing, 3 fail)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cov_pct"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1.8
+                    },
+                    {
+                      "color": "red",
+                      "value": 2.0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": true
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "node",
+              "type": "string"
+            },
+            {
+              "selector": "1",
+              "text": "rack",
+              "type": "string"
+            },
+            {
+              "selector": "2",
+              "text": "status",
+              "type": "string"
+            },
+            {
+              "selector": "3",
+              "text": "cov_pct",
+              "type": "number"
+            },
+            {
+              "selector": "4",
+              "text": "max_min_pct",
+              "type": "number"
+            },
+            {
+              "selector": "5",
+              "text": "slowest_gpu",
+              "type": "number"
+            },
+            {
+              "selector": "6",
+              "text": "iterations",
+              "type": "number"
+            },
+            {
+              "selector": "7",
+              "text": "reason",
+              "type": "string"
+            },
+            {
+              "selector": "8",
+              "text": "result_time",
+              "type": "string"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+node,rack_id,solo_status,round(cov_pct,4),round(relative_spread_pct,3),slowest_gpu,min_iterations,solo_reason,solo_mtime+FROM+single_node+WHERE+solo_status%3C%3E%27PASS%27+OR+near_limit=1+ORDER+BY+CASE+solo_status+WHEN+%27FAIL%27+THEN+0+WHEN+%27MISSING%27+THEN+1+ELSE+2+END,cov_pct+DESC",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Node worklist \u2014 failed, missing, or near-limit solo results",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 27
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "test",
+              "type": "string"
+            },
+            {
+              "selector": "1",
+              "text": "pass",
+              "type": "number"
+            },
+            {
+              "selector": "2",
+              "text": "fail",
+              "type": "number"
+            },
+            {
+              "selector": "3",
+              "text": "pending",
+              "type": "number"
+            },
+            {
+              "selector": "4",
+              "text": "disabled",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+test,sum(CASE+WHEN+test_status=%27PASS%27+THEN+1+ELSE+0+END)+AS+pass,sum(CASE+WHEN+test_status=%27FAIL%27+THEN+1+ELSE+0+END)+AS+fail,sum(CASE+WHEN+test_status=%27PENDING%27+THEN+1+ELSE+0+END)+AS+pending,sum(CASE+WHEN+test_status=%27DISABLED%27+THEN+1+ELSE+0+END)+AS+disabled+FROM+single_node_tests+GROUP+BY+1+ORDER+BY+1",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "All single-node tests \u2014 current quick-view rollup",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 27
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": true
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "node",
+              "type": "string"
+            },
+            {
+              "selector": "1",
+              "text": "rack",
+              "type": "string"
+            },
+            {
+              "selector": "2",
+              "text": "decision_time",
+              "type": "string"
+            },
+            {
+              "selector": "3",
+              "text": "failed_checks",
+              "type": "string"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+node,rack_id,health_time,health_detail+FROM+single_node+WHERE+health_status=%27FAIL%27+ORDER+BY+health_time+DESC+LIMIT+500",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Latest health-check failures (timestamped evidence)",
+      "type": "table"
+    }
+  ],
+  "refresh": "10m",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "validation",
+    "single-node",
+    "health"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "IREN_MKZ \u2014 Single-Node Tests & Health Heatmap",
+  "uid": "iren_mkz-single-node-health",
+  "version": 4
+}

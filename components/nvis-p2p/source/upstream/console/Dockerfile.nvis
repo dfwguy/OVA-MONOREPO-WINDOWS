@@ -1,0 +1,40 @@
+# syntax=docker/dockerfile:1
+FROM node@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374c8acc28487dea17 AS build
+
+WORKDIR /src
+ENV CI=true \
+    GENERATE_SOURCEMAP=false \
+    SOURCE_DATE_EPOCH=1784603018 \
+    TZ=UTC
+
+COPY package.json yarn.lock ./
+RUN corepack enable \
+    && yarn install --frozen-lockfile --non-interactive --production=false
+
+COPY config-overrides.js tsconfig.json ./
+COPY public ./public
+COPY src ./src
+
+ENV CI=false
+RUN yarn build \
+    && find dist -exec touch -h -d "@${SOURCE_DATE_EPOCH}" {} + \
+    && (cd dist && find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum) > /tmp/SHA256SUMS \
+    && mv /tmp/SHA256SUMS dist/SHA256SUMS \
+    && touch -h -d "@${SOURCE_DATE_EPOCH}" dist/SHA256SUMS
+
+FROM nginx@sha256:72ba65eb42c10344912a84ff42408db7d34f2feb642204570ab8fc5ffd29f1d3
+
+LABEL org.opencontainers.image.title="NVIS-P2P Console" \
+      org.opencontainers.image.description="NVIS-branded console for Dragonfly Manager v2.5.1" \
+      org.opencontainers.image.version="2.5.1-nvis.2" \
+      org.opencontainers.image.revision="084b2a8fb6f9432e8998951dfeec50fa5ffd597e" \
+      org.opencontainers.image.source="https://github.com/dragonflyoss/console" \
+      org.opencontainers.image.licenses="Apache-2.0"
+
+COPY deploy/nginx.nvis.conf /etc/nginx/nginx.conf
+COPY --from=build /src/dist /usr/share/nginx/html
+COPY LICENSE NOTICE /usr/share/licenses/nvis-p2p-console/
+
+USER 101:101
+ENTRYPOINT ["nginx"]
+CMD ["-g", "daemon off;", "-c", "/etc/nginx/nginx.conf"]

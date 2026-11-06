@@ -1,0 +1,634 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>How a decision is made &#8212; NVIS Greenlight</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/local-fonts.css?v=64a3f04a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=f6167d25" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="../../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=1657e09f"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/identity/evaluation';</script>
+
+    <link rel="icon" href="../../_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Action vocabulary" href="action-vocabulary.html" />
+    <link rel="prev" title="Policy schema" href="policy-schema.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.1" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials — learning by doing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/distribute-your-first-image.html">Distribute your first image with NVIS-P2P</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides — getting something done</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/configure-a-deployment.html">How to configure a deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/authenticate-to-the-api.html">How to authenticate to the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/grant-a-team-access.html">How to grant a team access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/diagnose-a-refused-request.html">How to diagnose a refused request</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/add-your-own-script.html">How to add your own script and register it as a tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/use-the-terminal.html">How to use the terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/stage-observability-agents.html">How to stage the observability node-agents to a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/connect-a-pythoncm-cluster.html">How to connect a PythonCM (BCM) cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/distribute-a-catalog-image.html">How to distribute a catalog image to the fleet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/recover-p2p-peers-after-a-reimage.html">How to bring P2P peers up on new or reimaged nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/publish-the-deployment-tracker.html">How to publish the deployment tracker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/forecast-cluster-completion.html">How to forecast when the cluster finishes validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/write-a-rack-handover-report.html">How to write a rack handover report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/place-a-multirack-job.html">How to place a multi-rack job for best collective performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how-to/list-bcm-racks-without-templates.html">How to list saved BCM racks without naming templates</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference — the machinery, described</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../configuration/settings.html">Configuration settings — every setting, generated</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../catalog/projects-and-clusters.html">Projects and clusters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../catalog/tools.html">Tool documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../actions-by-scope.html">Actions by scope — node, rack, multirack</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Identity and authorization</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="actions-and-resources.html">Actions and resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="policy-schema.html">Policy schema</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">How a decision is made</a></li>
+<li class="toctree-l2"><a class="reference internal" href="action-vocabulary.html">Action vocabulary — every service and action</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../p2p-catalog-distribution.html">P2P catalog distribution — components, parameters, scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../collective-settings-by-job-size.html">Collective settings by job size</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation — why it is like this</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/the-parametric-platform.html">The parametric platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/why-authorization-is-default-deny.html">Why authorization is default-deny</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/how-a-script-path-is-chosen.html">How a script path is chosen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/the-cluster-home-directory.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/how-cluster-paths-reach-scripts.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/geometry-and-hostnames.html">Geometry and hostnames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/which-storage-engine.html">Which storage engine, and why</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/why-no-pythoncm-broker.html">Why there is no PythonCM broker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/porting-the-pythoncm-fork.html">Porting the PythonCM fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/p2p-module-integration.html">NVIS-P2P as a per-cluster capability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/active-passive-and-blue-green.html">Active/passive and blue/green (roadmap)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/p2p-catalog-distribution.html">How catalog images reach every node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/rack-placement-and-collective-performance.html">Rack placement and collective performance</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Identity and authorization</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">How a decision is made</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="how-a-decision-is-made">
+<h1>How a decision is made<a class="headerlink" href="#how-a-decision-is-made" title="Link to this heading">#</a></h1>
+<div class="nvis-diataxis nvis-diataxis-reference docutils">
+<p>Reference — a description of the machinery. Look things up here.</p>
+</div>
+<p>Implemented by <code class="docutils literal notranslate"><span class="pre">PolicyEngine.evaluate</span></code> in <code class="docutils literal notranslate"><span class="pre">backend/authz/policy.py</span></code>. Every request passes through
+it once, in the request gate, before the handler runs.</p>
+<section id="the-procedure">
+<h2>The procedure<a class="headerlink" href="#the-procedure" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Collect the policies in scope.</strong> The principal’s own attachments, plus one lookup per group
+it belongs to. A policy attached both directly and through a group is evaluated once.</p></li>
+<li><p><strong>Every <code class="docutils literal notranslate"><span class="pre">deny</span></code>, first.</strong> A matching deny returns immediately.</p></li>
+<li><p><strong>Then every <code class="docutils literal notranslate"><span class="pre">allow</span></code>.</strong> The first match permits.</p></li>
+<li><p><strong>Otherwise refuse.</strong> Default deny.</p></li>
+</ol>
+<p>Steps 2 and 3 are separate passes over all attached documents, not one pass. A deny appearing
+<em>after</em> an allow — in the same document or a different one — still wins, so file order cannot
+decide a security outcome.</p>
+<p>A statement matches when <strong>both</strong> its action patterns and its resource patterns match, by glob.</p>
+</section>
+<section id="what-the-caller-is-told">
+<h2>What the caller is told<a class="headerlink" href="#what-the-caller-is-told" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Outcome</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>Body</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Allowed</p></td>
+<td><p>the handler’s own</p></td>
+<td><p>the handler’s own</p></td>
+</tr>
+<tr class="row-odd"><td><p>Refused by policy</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">403</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;ok&quot;:</span> <span class="pre">false,</span> <span class="pre">&quot;error&quot;:</span> <span class="pre">&quot;Access</span> <span class="pre">Denied.</span> <span class="pre">Contact</span> <span class="pre">administrator</span> <span class="pre">to</span> <span class="pre">request</span> <span class="pre">access</span> <span class="pre">to</span> <span class="pre">this</span> <span class="pre">resource&quot;,</span> <span class="pre">&quot;reason&quot;:</span> <span class="pre">&quot;policy&quot;}</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Target not identifiable</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">400</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;ok&quot;:</span> <span class="pre">false,</span> <span class="pre">&quot;reason&quot;:</span> <span class="pre">&quot;unresolvable_target&quot;}</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">403</span></code>, not <code class="docutils literal notranslate"><span class="pre">401</span></code>: the caller <em>is</em> authenticated and simply may not do this. Answering <code class="docutils literal notranslate"><span class="pre">401</span></code> would
+tell a client to re-authenticate, which cannot help and produces a credential-prompt loop. See
+<code class="docutils literal notranslate"><span class="pre">docs/API_RESPONSE_CODES.md</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A refusal names the action but <strong>never the resource</strong>. A message confirming that a resource exists
+is an existence oracle for anyone probing. The full detail — principal, action, resource, engine
+and deciding rule — goes to the audit trail, which only an administrator reads.</p>
+</div>
+</section>
+<section id="failure-modes">
+<h2>Failure modes<a class="headerlink" href="#failure-modes" title="Link to this heading">#</a></h2>
+<p>Every way this machinery can break resolves to a denial.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Situation</p></th>
+<th class="head"><p>Result</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>No policy matches</p></td>
+<td><p><strong>deny</strong> — <code class="docutils literal notranslate"><span class="pre">no</span> <span class="pre">policy</span> <span class="pre">grants</span> <span class="pre">&lt;action&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>No engine registered</p></td>
+<td><p><strong>deny</strong>, logged at ERROR. A deployment bug; nothing else would notice</p></td>
+</tr>
+<tr class="row-even"><td><p>The policy file will not parse</p></td>
+<td><p><strong>deny everything</strong>, logged at ERROR</p></td>
+</tr>
+<tr class="row-odd"><td><p>The evaluator raises</p></td>
+<td><p><strong>deny</strong> — an evaluator that cannot decide has not permitted anything</p></td>
+</tr>
+<tr class="row-even"><td><p>An attachment names a policy that no longer exists</p></td>
+<td><p>skipped with a warning; the request proceeds on the rest</p></td>
+</tr>
+<tr class="row-odd"><td><p>A group lookup fails</p></td>
+<td><p>treated as no groups; direct attachments still apply</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The last two are softened deliberately: deleting a document should not take down every request
+that mentions it, and a failing group lookup should not revoke a grant held directly.</p>
+</section>
+<section id="which-engine-is-running">
+<h2>Which engine is running<a class="headerlink" href="#which-engine-is-running" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">authz.install_default()</span></code> chooses at startup, and the audit trail records the answer on every
+event as <code class="docutils literal notranslate"><span class="pre">policy_engine</span></code>:</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">rbac-v1</span></code></dt><dd><p>A policy file exists. Default-deny, as described above.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">allow-all</span></code></dt><dd><p>No policy file. Every authenticated request is permitted — and every audit event says so, which
+is the point. This is the honest way to run permissively.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Since the startup gate landed, a brand-new deployment creates an <code class="docutils literal notranslate"><span class="pre">administrators</span></code> policy during
+first boot, so <code class="docutils literal notranslate"><span class="pre">allow-all</span></code> is no longer what a fresh install gets. A deployment reporting
+<code class="docutils literal notranslate"><span class="pre">allow-all</span></code> has had its policy file removed.</p>
+</div>
+</section>
+<section id="cost">
+<h2>Cost<a class="headerlink" href="#cost" title="Link to this heading">#</a></h2>
+<p>Bounded by what the <em>caller</em> holds, not by the size of the policy corpus: one attachment lookup
+for the principal plus one per group, then a walk of the matched documents’ statements. Adding
+policies for other teams does not slow anybody else’s requests. Measured figures are in
+<code class="docutils literal notranslate"><span class="pre">docs/PERFORMANCE_BASELINE.md</span></code>.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="policy-schema.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Policy schema</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="action-vocabulary.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Action vocabulary</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-procedure">The procedure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-caller-is-told">What the caller is told</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#failure-modes">Failure modes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#which-engine-is-running">Which engine is running</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cost">Cost</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+# /etc/systemd/system/nvis-lake-compact-hourly.timer
+# Install: systemctl enable --now nvis-lake-compact-hourly.timer
+[Unit]
+Description=Hourly NVIS data-lake compaction (landing -> curated)
+
+[Timer]
+OnCalendar=*-*-* *:15:00
+Persistent=true
+Unit=nvis-lake-compact@hourly.service
+
+[Install]
+WantedBy=timers.target

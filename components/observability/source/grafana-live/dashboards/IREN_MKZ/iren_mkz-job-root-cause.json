@@ -1,0 +1,4127 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "rgba(31, 96, 196, 1)",
+        "name": "NCCL phase markers and operator evidence",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Operator-first Slurm job triage followed by scheduler, application correctness, GPU, host, HCA, selected-SU switch, BMC, and log evidence.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "home",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "\u2302 IREN_MKZ Home",
+      "tooltip": "Back to IREN_MKZ Home",
+      "type": "link",
+      "url": "/d/iren_mkz-home?${__url_time_range}"
+    },
+    {
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "iren_mkz"
+      ],
+      "title": "IREN_MKZ Dashboards",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "description": "Operator orientation and direct routes to every IREN_MKZ evidence domain.",
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "# IREN_MKZ \u2014 Job Flight Recorder\n\n**Live and historical flight recorder for Job `$jobid`.** Scheduler state and requested/allocated trays come directly from Slurm; NeMo/NCCL progress and final Llama windows come from bounded rank-0 parsing on the shared benchmark filesystem; hardware panels correlate those trays with GPU, power, thermal, cooling, Xid, host, and fabric evidence. For a pending job, tray telemetry is context for the requested placement\u2014not usage by the job.\n\n[Home](/d/iren_mkz-home?${__url_time_range}) \u00b7 [Command Center](/d/iren_mkz-command-center?${__url_time_range}) \u00b7 [Live Topology](/d/iren_mkz-topology?${__url_time_range}) \u00b7 [Infrastructure](/d/iren_mkz-infrastructure?${__url_time_range}) \u00b7 [GPU & NVLink](/d/iren_mkz-accelerators?${__url_time_range}) \u00b7 [Fabric, CVT & Cabling](/d/iren_mkz-fabric?${__url_time_range}) \u00b7 [Workloads, Slurm & Validation](/d/iren_mkz-workloads?${__url_time_range})",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "description": "Operator verdict \u2014 start here: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 48,
+      "panels": [],
+      "title": "Operator verdict \u2014 start here",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Read left to right: terminal Slurm outcome, affected SU/tray count, application stall, telemetry completeness, selected-SU switch pressure, then transient queue candidates.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Job outcome"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "yellow",
+                        "text": "UNKNOWN"
+                      },
+                      "1": {
+                        "color": "yellow",
+                        "text": "PENDING"
+                      },
+                      "10": {
+                        "color": "red",
+                        "text": "OUT OF MEMORY"
+                      },
+                      "11": {
+                        "color": "orange",
+                        "text": "PREEMPTED"
+                      },
+                      "12": {
+                        "color": "orange",
+                        "text": "SUSPENDED"
+                      },
+                      "2": {
+                        "color": "blue",
+                        "text": "CONFIGURING"
+                      },
+                      "3": {
+                        "color": "green",
+                        "text": "RUNNING"
+                      },
+                      "4": {
+                        "color": "blue",
+                        "text": "COMPLETING"
+                      },
+                      "5": {
+                        "color": "green",
+                        "text": "COMPLETED"
+                      },
+                      "6": {
+                        "color": "orange",
+                        "text": "CANCELLED"
+                      },
+                      "7": {
+                        "color": "red",
+                        "text": "FAILED"
+                      },
+                      "8": {
+                        "color": "red",
+                        "text": "TIMEOUT"
+                      },
+                      "9": {
+                        "color": "red",
+                        "text": "NODE FAIL"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Application progress"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "green",
+                        "text": "NO STALL"
+                      },
+                      "1": {
+                        "color": "red",
+                        "text": "STALL DETECTED"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU coverage"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 99
+                    },
+                    {
+                      "color": "green",
+                      "value": 100
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Host / OS coverage"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 99
+                    },
+                    {
+                      "color": "green",
+                      "value": 100
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Host fabric coverage"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 99
+                    },
+                    {
+                      "color": "green",
+                      "value": 100
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Switch sustained pressure"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "green",
+                        "text": "NOT PROVEN"
+                      }
+                    },
+                    "type": "value"
+                  },
+                  {
+                    "options": {
+                      "from": 1,
+                      "result": {
+                        "color": "red",
+                        "text": "PRESSURE DETECTED"
+                      },
+                      "to": 100000
+                    },
+                    "type": "range"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Switch transient queues"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 49,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(last_over_time(nvis_slurm_job_state_code{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "Job outcome",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by(su)((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range]))))",
+          "instant": true,
+          "legendFormat": "{{su}} trays",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(max_over_time(nvis_slurm_job_stuck{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])) or on() (max(nvis_slurm_job_info{cluster=~\"$cluster\",job_id=\"$jobid\"}) * 0)",
+          "instant": true,
+          "legendFormat": "Application progress",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * ((count(count by(node)(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range]))))) or on() (count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))) * 0)) / clamp_min(count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))), 1))",
+          "instant": true,
+          "legendFormat": "GPU coverage",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * ((count(count by(node)(up{cluster=~\"$cluster\",job=~\"node-exporter($|-active-validation)\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range]))))) or on() (count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))) * 0)) / clamp_min(count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))), 1))",
+          "instant": true,
+          "legendFormat": "Host / OS coverage",
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * ((count(count by(node)(ib_hca_port_state{cluster=~\"$cluster\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range]))))) or on() (count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))) * 0)) / clamp_min(count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))), 1))",
+          "instant": true,
+          "legendFormat": "Host fabric coverage",
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(count(label_replace(increase(nvswitch_interface_tx_wait{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_rx_buffer_almost_full{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_rx_buffer_full{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_tc_tx_ecn_marked_tc{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_discards_egress_hoq_stall{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_tc_tx_no_buffer_discard_uc{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_tx_ebp{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_rx_ebp{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_if_out_discards{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_if_in_discards{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0)) or on() (count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))) * 0)",
+          "instant": true,
+          "legendFormat": "Switch sustained pressure",
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count((max by(net_host_name,interface, switch_pod)(label_replace(max_over_time(nvswitch_interface_tc_tx_queue{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\"))) > 0) * on(net_host_name,interface) group_left(system_name,port_id,port_description) max by(net_host_name,interface,system_name,port_id,port_description)(nvswitch_lldp_neighbor_info{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"})) or on() (count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))) * 0)",
+          "instant": true,
+          "legendFormat": "Switch transient queues",
+          "refId": "H"
+        }
+      ],
+      "title": "One-screen operator verdict",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "description": "Live scheduler, progress and stall state: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Live scheduler, progress and stall state",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current/latest Slurm state, refreshed from the head-node controller snapshot every minute.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "yellow",
+                  "text": "UNKNOWN"
+                },
+                "1": {
+                  "color": "yellow",
+                  "text": "PENDING"
+                },
+                "10": {
+                  "color": "red",
+                  "text": "OUT OF MEMORY"
+                },
+                "11": {
+                  "color": "orange",
+                  "text": "PREEMPTED"
+                },
+                "12": {
+                  "color": "orange",
+                  "text": "SUSPENDED"
+                },
+                "2": {
+                  "color": "blue",
+                  "text": "CONFIGURING"
+                },
+                "3": {
+                  "color": "green",
+                  "text": "RUNNING"
+                },
+                "4": {
+                  "color": "blue",
+                  "text": "COMPLETING"
+                },
+                "5": {
+                  "color": "green",
+                  "text": "COMPLETED"
+                },
+                "6": {
+                  "color": "orange",
+                  "text": "CANCELLED"
+                },
+                "7": {
+                  "color": "red",
+                  "text": "FAILED"
+                },
+                "8": {
+                  "color": "red",
+                  "text": "TIMEOUT"
+                },
+                "9": {
+                  "color": "red",
+                  "text": "NODE FAIL"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 15
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(last_over_time(nvis_slurm_job_state_code{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Job state",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Eligible-to-start wait. For a pending job this continues increasing; after start it freezes at the actual queue delay.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 300
+              },
+              {
+                "color": "orange",
+                "value": 1800
+              },
+              {
+                "color": "red",
+                "value": 7200
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 15
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(last_over_time(nvis_slurm_job_queue_age_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Queue wait",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Node count requested from Slurm. The identity record below shows the exact compact node list and whether it is requested or allocated.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 15
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(last_over_time(nvis_slurm_job_requested_nodes{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Requested trays",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Generic GPU TRES requested by the job; allocation remains zero while pending.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 15
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(last_over_time(nvis_slurm_job_requested_gpus{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Requested GPUs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "NeMo iteration/total or NCCL completed-test/total parsed from the bounded log tail. Zero on a queued job means not started.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "yellow",
+                "value": null
+              },
+              {
+                "color": "blue",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 15
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(max(last_over_time(nvis_slurm_job_progress_ratio{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])) * 100) or on() (max(last_over_time(nvis_slurm_job_active{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Application progress",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "One only when a RUNNING job older than ten minutes has made no log/progress change for five minutes. Pending resource wait is not called stuck.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "NO"
+                },
+                "1": {
+                  "color": "red",
+                  "text": "YES"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 15
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(last_over_time(nvis_slurm_job_stuck{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Progress stuck",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Error/exception/traceback/failure/Xid/OOM/timeout matches in the newest 10,000 parsed application-log lines.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 15
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(last_over_time(nvis_slurm_job_log_tail_error_lines{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])) or on() (max(last_over_time(nvis_slurm_job_active{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Errors in parsed log tail",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "One scheduler record: owner, workload, state, reason, exit code, requested node range, stdout filename, resources, elapsed/time limit, log age, and parsed progress.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Elapsed"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time limit"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Log age"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_info{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_requested_nodes{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_allocated_nodes{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_requested_gpus{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_allocated_gpus{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_elapsed_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_timelimit_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_log_age_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "H"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_progress_current{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "I"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_progress_total{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "J"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_correctness_failures{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "K"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_expected_got_failures{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "L"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_nccl_oob_failed_tests{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "M"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_nccl_wrong_values{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "N"
+        }
+      ],
+      "title": "Authoritative Slurm record and parsed-log freshness",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "job_id",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Record": true,
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "node": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "renameByName": {
+              "Value #A": "Record",
+              "Value #B": "Requested trays",
+              "Value #C": "Allocated trays",
+              "Value #D": "Requested GPUs",
+              "Value #E": "Allocated GPUs",
+              "Value #F": "Elapsed",
+              "Value #G": "Time limit",
+              "Value #H": "Log age",
+              "Value #I": "Progress",
+              "Value #J": "Progress total",
+              "Value #K": "Correctness failures",
+              "Value #L": "Expected/got",
+              "Value #M": "OOB tests",
+              "Value #N": "Wrong values"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "Decision matrix \u2014 exact job trays and layer evidence: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 18,
+      "panels": [],
+      "title": "Decision matrix \u2014 exact job trays and layer evidence",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Every Slurm-requested/allocated tray, with historical cgroup fallback. Click a node for infrastructure evidence; the allocation column prevents pending placement from being mistaken for consumption.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open tray root cause",
+                    "url": "/d/iren_mkz-tray-root-cause?var-node=${__data.fields.node}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU max temp"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 70
+                    },
+                    {
+                      "color": "orange",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 85
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ECC DBE"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU util"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 75
+                    },
+                    {
+                      "color": "orange",
+                      "value": 85
+                    },
+                    {
+                      "color": "red",
+                      "value": 95
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 75
+                    },
+                    {
+                      "color": "orange",
+                      "value": 85
+                    },
+                    {
+                      "color": "red",
+                      "value": 95
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HCA not ACTIVE"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Node exporter"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "text": "DOWN"
+                      },
+                      "1": {
+                        "color": "green",
+                        "text": "UP"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 19,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "HCA not ACTIVE"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_replace(max by(exported_node,rack,su,allocation)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su,jobid,username)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(node)(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(node)(DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg by(node)(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(node)(100 - avg by(node)(rate(node_cpu_seconds_total{cluster=~\"$cluster\",mode=\"idle\"}[5m])) * 100 and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(node)(100 * (1-node_memory_MemAvailable_bytes{cluster=~\"$cluster\"}/node_memory_MemTotal_bytes{cluster=~\"$cluster\"}) and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(node)((ib_hca_port_state{cluster=~\"$cluster\"} != bool 4) and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "format": "table",
+          "instant": true,
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "min by(node)(up{cluster=~\"$cluster\",job=~\"node-exporter($|-active-validation)\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "format": "table",
+          "instant": true,
+          "refId": "H"
+        }
+      ],
+      "title": "Job trays \u2014 host, GPU and HCA evidence",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "node",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cgroup": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true,
+              "uid": true
+            },
+            "renameByName": {
+              "Value #A": "Placement evidence",
+              "Value #B": "GPU max temp",
+              "Value #C": "ECC DBE",
+              "Value #D": "GPU util",
+              "Value #E": "CPU",
+              "Value #F": "Memory",
+              "Value #G": "HCA not ACTIVE",
+              "Value #H": "Node exporter"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "HCA not ACTIVE"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "Performance correlation \u2014 what changed while the job ran: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "id": 20,
+      "panels": [],
+      "title": "Performance correlation \u2014 what changed while the job ran",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPU demand and power across selected job trays. On a pending job these are placement conditions, not job attribution; once allocated, collapse aligned with log errors helps locate failure time.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*GPU util %.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*GPU power W.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 43
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "legendFormat": "GPU util %",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "legendFormat": "GPU power W",
+          "refId": "B"
+        }
+      ],
+      "title": "Job-tray GPU utilisation and power",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Worst GPU core, HBM, host thermal-zone temperature, and processor cooling state across requested/allocated trays. Use tray drill-down for the exact sensor.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*\u00b0C.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*cooling state.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 43
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "legendFormat": "GPU core max \u00b0C",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(DCGM_FI_DEV_MEMORY_TEMP{cluster=~\"$cluster\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "legendFormat": "HBM max \u00b0C",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(node_thermal_zone_temp{cluster=~\"$cluster\",type=\"acpitz\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "legendFormat": "Host thermal zone max \u00b0C",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(node_cooling_device_cur_state{cluster=~\"$cluster\",type=\"Processor\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "legendFormat": "Processor cooling state",
+          "refId": "D"
+        }
+      ],
+      "title": "Thermals and platform cooling state",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Host pressure and fabric error rates restricted to job trays. Use raw Slurm timestamps to align symptoms with the failure decision.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*(CPU|Memory) %.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*HCA.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ops"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 43
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(100 - avg by(node)(rate(node_cpu_seconds_total{cluster=~\"$cluster\",mode=\"idle\"}[5m])) * 100 and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "legendFormat": "CPU %",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(100 * (1-node_memory_MemAvailable_bytes{cluster=~\"$cluster\"}/node_memory_MemTotal_bytes{cluster=~\"$cluster\"}) and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "legendFormat": "Memory %",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(ib_hca_port_rcv_errors{cluster=~\"$cluster\"}[5m]) and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "legendFormat": "HCA RX errors/s",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(ib_hca_link_downed{cluster=~\"$cluster\"}[5m]) and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m]))))",
+          "legendFormat": "HCA link downs/s",
+          "refId": "D"
+        }
+      ],
+      "title": "Job-tray host and HCA pressure",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "description": "Runtime evidence \u2014 application, NCCL and scheduler logs: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "id": 24,
+      "panels": [],
+      "title": "Runtime evidence \u2014 application, NCCL and scheduler logs",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "All Alloy-tailed top-level `.txt`, `.out`, and `.log` files whose filename ends in the selected Job ID. The recursive `nccl_traces` tree is intentionally excluded.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 0,
+        "y": 52
+      },
+      "id": 25,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "{cluster=\"IREN_MKZ\",job=\"benchmark\",filename=~\".*[-_]$jobid\\\\.(txt|out|log)$\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Raw application output for Job $jobid",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Focused application evidence: NeMo iteration/timing/loss, NCCL collective/bandwidth, and error/traceback/GPU signatures for this Job ID.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 8,
+        "y": 52
+      },
+      "id": 26,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "{cluster=\"IREN_MKZ\",job=\"benchmark\",filename=~\".*[-_]$jobid\\\\.(txt|out|log)$\"} |~ \"(?i)(iteration|Step Time|TFLOP|lm loss|NCCL|collective|bus bandwidth|error|exception|traceback|failed|Xid|CUDA|NVML)\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Progress, NCCL and application errors",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "All slurmctld or slurmd lines containing the selected Job ID. This is authoritative scheduler/step evidence for reasons, launch failures, cancellation, timeout, and node failure.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 52
+      },
+      "id": 27,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "{cluster=\"IREN_MKZ\",job=~\"slurm|slurmctld\"} |= \"$jobid\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Slurm controller and runtime for Job $jobid",
+      "type": "logs"
+    },
+    {
+      "collapsed": false,
+      "description": "Entity-exact GPU, dmesg and BMC SEL evidence: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 63
+      },
+      "id": 28,
+      "panels": [],
+      "title": "Entity-exact GPU, dmesg and BMC SEL evidence",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Selected-window GPU evidence on trays associated with this job. Signal labels prevent unlike fault types from being collapsed together.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "gpu"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open GPU root cause",
+                    "url": "/d/iren_mkz-gpu-root-cause?var-node=${__data.fields.node}&var-gpu=${__data.fields.gpu}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 0,
+        "y": 64
+      },
+      "id": 29,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "node"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_replace(max by(node,gpu,rack,su,err_code,err_msg)(max_over_time(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\"}[$__range]) and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m])))), \"signal\", \"XID\", \"\", \"\") or label_replace(max by(node,gpu,rack,su)(max_over_time(DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\"}[$__range]) and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m])))), \"signal\", \"ECC DBE\", \"\", \"\") or label_replace(max by(node,gpu,rack,su)(max_over_time(DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\"}[$__range]) and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m])))), \"signal\", \"ROW REMAP\", \"\", \"\") or label_replace(max by(node,gpu,rack,su)(max_over_time(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}[$__range]) and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[15m])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[15m])))), \"signal\", \"MAX CORE TEMP\", \"\", \"\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPU window evidence \u2014 one row per signal and GPU",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "renameByName": {
+              "Value": "Evidence"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "node"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Raw dmesg lines in the selected dashboard window, restricted to the exact Slurm tray roster for Job $jobid. Empty means Loki has no dmesg lines for those trays in this window; it is not reported as a healthy zero.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 8,
+        "y": 64
+      },
+      "id": 30,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "{cluster=\"IREN_MKZ\",job=\"dmesg\",node=~\"$job_nodes\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "dmesg \u2014 exact job-tray kernel events",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Actual deduplicated BMC SEL/EventLog entries observed during the selected window for the exact Slurm roster, newest observation first. Observed at is the central collector/Loki time; BMC event timestamp is retained exactly so BMC clock skew remains visible. No rows plus a green telemetry diagnostic below means no SEL events. A red diagnostic means SEL telemetry is unavailable for one or more selected trays; it must not be interpreted as a healthy zero.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Node"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open tray root cause",
+                    "url": "/d/iren_mkz-tray-root-cause?var-node=${__data.fields.Node}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 64
+      },
+      "id": 31,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Observed at"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "{cluster=\"IREN_MKZ\",source=\"docker\",container=~\"nvis-redfish-bmc-.*\"} | json | event_kind=\"redfish_sel\" | event_uid!=\"\" | node=~\"$job_nodes\"",
+          "maxLines": 2000,
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "BMC SEL events \u2014 exact Job $jobid trays",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "json",
+            "keepTime": true,
+            "replace": false,
+            "source": "labels"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Line": true,
+              "bmc": true,
+              "cluster": true,
+              "cluster_extracted": true,
+              "container": true,
+              "detected_level": true,
+              "entry_type": true,
+              "event_kind": true,
+              "event_uid": true,
+              "id": true,
+              "labelTypes": true,
+              "labels": true,
+              "message_id": true,
+              "sensor_type": true,
+              "serial": true,
+              "service": true,
+              "service_name": true,
+              "shard": true,
+              "source": true,
+              "source_extracted": true,
+              "tsNs": true,
+              "ts_unix": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "event_id": 4,
+              "event_source": 5,
+              "event_type": 6,
+              "message": 7,
+              "node": 2,
+              "severity": 3,
+              "ts": 1
+            },
+            "renameByName": {
+              "Time": "Observed at",
+              "event_id": "Event ID",
+              "event_source": "Source",
+              "event_type": "Type",
+              "message": "Message",
+              "node": "Node",
+              "severity": "Severity",
+              "ts": "BMC event timestamp"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "Observed at"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Zero means all selected job trays supplied Redfish SEL telemetry throughout the window, so an empty event table means NO SEL EVENTS. Any positive value means TELEMETRY UNAVAILABLE for that many job trays.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "AVAILABLE \u2014 empty table means no events"
+                }
+              },
+              "type": "value"
+            },
+            {
+              "options": {
+                "from": 1,
+                "result": {
+                  "color": "red",
+                  "text": "TELEMETRY UNAVAILABLE"
+                },
+                "to": 100000
+              },
+              "type": "range"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 8,
+        "x": 16,
+        "y": 72
+      },
+      "id": 32,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))) unless on(node) (min by(node)(min_over_time(redfish_up{cluster=~\"$cluster\"}[$__range])))) or on() (count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SEL telemetry gaps for Job $jobid",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "description": "Final Llama performance \u2014 durable rank-0 summary: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 74
+      },
+      "id": 33,
+      "panels": [],
+      "title": "Final Llama performance \u2014 durable rank-0 summary",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Rank-0 output is parsed once per completed file. Official means arithmetic mean over iterations 35-44 inclusive; steady means 10-50 inclusive. Cluster model EFLOP/s multiplies official per-GPU TFLOP/s by Slurm allocated GPUs. Token throughput is global batch \u00d7 sequence length \u00f7 official mean step time.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Official 35-44 step"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Iterations 10-50 step"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster model EFLOP/s"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "suffix: EFLOP/s"
+              },
+              {
+                "id": "decimals",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Token throughput"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "suffix: tok/s"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total job elapsed"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 75
+      },
+      "id": 34,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(llmb_job_official_tflops_per_gpu{cluster=~\"$cluster\",jobid=\"$jobid\"})",
+          "instant": true,
+          "legendFormat": "Official 35-44 TFLOP/s/GPU",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(llmb_job_official_step_seconds{cluster=~\"$cluster\",jobid=\"$jobid\"})",
+          "instant": true,
+          "legendFormat": "Official 35-44 step",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(llmb_job_official_tflops_per_gpu{cluster=~\"$cluster\",jobid=\"$jobid\"}) * scalar(max(nvis_slurm_job_allocated_gpus{cluster=~\"$cluster\",job_id=\"$jobid\"})) / 1000000",
+          "instant": true,
+          "legendFormat": "Cluster model EFLOP/s",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(llmb_job_tokens_per_second{cluster=~\"$cluster\",jobid=\"$jobid\"})",
+          "instant": true,
+          "legendFormat": "Token throughput",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(llmb_job_steady_tflops_per_gpu{cluster=~\"$cluster\",jobid=\"$jobid\"})",
+          "instant": true,
+          "legendFormat": "Iterations 10-50 TFLOP/s/GPU",
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(llmb_job_steady_step_seconds{cluster=~\"$cluster\",jobid=\"$jobid\"})",
+          "instant": true,
+          "legendFormat": "Iterations 10-50 step",
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(llmb_job_peak_tflops_per_gpu{cluster=~\"$cluster\",jobid=\"$jobid\"})",
+          "instant": true,
+          "legendFormat": "Peak TFLOP/s/GPU",
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(nvis_slurm_job_elapsed_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"})",
+          "instant": true,
+          "legendFormat": "Total job elapsed",
+          "refId": "H"
+        }
+      ],
+      "title": "Final benchmark numbers for Job $jobid",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "description": "InfiniBand counters \u2014 exact Job $jobid allocation: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 80
+      },
+      "id": 35,
+      "panels": [],
+      "title": "InfiniBand counters \u2014 exact Job $jobid allocation",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Measured 64-bit UFM REST v2 counter increases on the exact Slurm roster for Job $jobid. Each node value is the sum of its four host HCA ports. Collection began on 2026-08-19; earlier jobs have no recoverable UFM history.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 81
+      },
+      "id": 36,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(port_xmit_wait{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "port_xmit_wait",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(port_xmit_discard{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "port_xmit_discard",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(symbol_error_counter{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "symbol_error_counter",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(link_down_counter{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "link_down_counter",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(link_error_recovery_counter{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "link_error_recovery_counter",
+          "refId": "E"
+        }
+      ],
+      "title": "Actual counter increase over selected job window",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Measured aggregate rates from real UFM REST v2 counters across the selected job's exact Slurm node roster. UFM supplies the sample timestamps at its approximately five-minute source cadence.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 86
+      },
+      "id": 37,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(port_xmit_wait{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__rate_interval]))",
+          "legendFormat": "port_xmit_wait",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(port_xmit_discard{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__rate_interval]))",
+          "legendFormat": "port_xmit_discard",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(symbol_error_counter{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__rate_interval]))",
+          "legendFormat": "symbol_error_counter",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(link_down_counter{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__rate_interval]))",
+          "legendFormat": "link_down_counter",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(link_error_recovery_counter{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__rate_interval]))",
+          "legendFormat": "link_error_recovery_counter",
+          "refId": "E"
+        }
+      ],
+      "title": "Counter rate during Job $jobid",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Every non-zero measured UFM REST v2 device-aggregate increase during the selected window, restricted to the exact Slurm allocation. Each row sums the node's four host HCA ports; no node-exporter or Ethernet substitute is used.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Window increase"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 94
+      },
+      "id": 38,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Window increase"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_replace((sum by(node,device,port,scope)(increase(port_xmit_wait{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__range])) > 0), \"counter\", \"port_xmit_wait\", \"\", \"\") or label_replace((sum by(node,device,port,scope)(increase(port_xmit_discard{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__range])) > 0), \"counter\", \"port_xmit_discard\", \"\", \"\") or label_replace((sum by(node,device,port,scope)(increase(symbol_error_counter{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__range])) > 0), \"counter\", \"symbol_error_counter\", \"\", \"\") or label_replace((sum by(node,device,port,scope)(increase(link_down_counter{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__range])) > 0), \"counter\", \"link_down_counter\", \"\", \"\") or label_replace((sum by(node,device,port,scope)(increase(link_error_recovery_counter{cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}[$__range])) > 0), \"counter\", \"link_error_recovery_counter\", \"\", \"\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Non-zero real UFM counter increases by job node",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true
+            },
+            "renameByName": {
+              "Value": "Window increase",
+              "counter": "Counter",
+              "device": "UFM device",
+              "node": "Node",
+              "port": "Ports",
+              "scope": "Scope"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "Window increase"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "Selected-job switch congestion and NCCL phase correlation: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 104
+      },
+      "id": 39,
+      "panels": [],
+      "title": "Selected-job switch congestion and NCCL phase correlation",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Same-axis correlation for the selected job's SU: parsed progress-stall age is overlaid with the matching switch-pod queue and direct backpressure indicators. The switch scope is derived from the historical Slurm roster.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*stale seconds.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*links.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 0,
+        "y": 105
+      },
+      "id": 40,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(nvis_slurm_job_progress_stalled_seconds{cluster=~\"$cluster\",job_id=\"$jobid\"})",
+          "legendFormat": "NCCL progress stale seconds",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(label_replace(nvswitch_interface_tc_tx_queue{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}, \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) or on() (max(nvis_slurm_job_info{cluster=~\"$cluster\",job_id=\"$jobid\"}) * 0)",
+          "legendFormat": "Switch links with queued traffic",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(label_replace(rate(nvswitch_interface_tx_wait{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[5m]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) or on() (max(nvis_slurm_job_info{cluster=~\"$cluster\",job_id=\"$jobid\"}) * 0)",
+          "legendFormat": "TX-wait links",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(label_replace(rate(nvswitch_interface_rx_buffer_full{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[5m]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) or on() (max(nvis_slurm_job_info{cluster=~\"$cluster\",job_id=\"$jobid\"}) * 0)",
+          "legendFormat": "RX-buffer-full links",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(label_replace(rate(nvswitch_interface_tc_tx_ecn_marked_tc{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[5m]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) or on() (max(nvis_slurm_job_info{cluster=~\"$cluster\",job_id=\"$jobid\"}) * 0)",
+          "legendFormat": "ECN-marking links",
+          "refId": "E"
+        }
+      ],
+      "title": "NCCL progress stall overlaid with selected-SU switch pressure",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Exact switch interfaces for the selected job's SU with non-zero queue occupancy. Brief one-scrape spikes are transient candidates; persistent occupancy with direct pressure evidence supports congestion.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 105
+      },
+      "id": 41,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(net_host_name,interface)(label_replace(nvswitch_interface_tc_tx_queue{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}, \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\"))) > 0",
+          "legendFormat": "{{{{net_host_name}}}} {{{{interface}}}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected-SU per-link transient queue occupancy",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Number of selected-job trays represented by ib_hca_* telemetry. Compare with the allocated tray count above. Zero means the host-side congestion panels have no evidentiary coverage, not that the links are healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 256
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 114
+      },
+      "id": 42,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by(node)(ib_hca_port_state{cluster=~\"$cluster\"} and on(node) (label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range]))))) or on() (count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Job trays with host-HCA telemetry",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Actual UFM REST v2 series tagged to the selected Job ID. Zero means the existing UFM panels are unavailable for this job and must not be interpreted as zero congestion.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 114
+      },
+      "id": 43,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count({__name__=~\"port_xmit_wait|port_xmit_discard|symbol_error_counter|link_down_counter|link_error_recovery_counter\",cluster=~\"$cluster\",job_id=\"$jobid\",source=\"ufm_rest_v2\",scope=\"device_aggregate\"}) or on() (count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Job-tagged UFM counter series",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Count of selected-SU switch links whose direct pressure counters increased during the selected window. Queue occupancy is shown separately because a one-scrape queue is not proof of persistent congestion.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 114
+      },
+      "id": 44,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(count(label_replace(increase(nvswitch_interface_tx_wait{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_rx_buffer_almost_full{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_rx_buffer_full{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_tc_tx_ecn_marked_tc{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_discards_egress_hoq_stall{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_tc_tx_no_buffer_discard_uc{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_tx_ebp{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_rx_ebp{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_if_out_discards{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0) + count(label_replace(increase(nvswitch_interface_if_in_discards{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\")) > 0)) or on() (count((label_replace(max by(exported_node,rack,su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"node\", \"$1\", \"exported_node\", \"(.+)\") or max by(node,rack,su)(last_over_time(cgroup_info{cluster=~\"$cluster\",jobid=\"$jobid\"}[$__range])))) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Direct selected-SU switch-pressure signals",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Exact selected-SU switch/interface candidates whose queue gauge was non-zero at least once in the selected window, enriched with the LLDP neighbor and peer port. This is correlation evidence only; the direct-pressure stat and same-axis plot distinguish transient queueing from sustained congestion.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Max queued"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 118
+      },
+      "id": 45,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Max queued"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by(net_host_name,interface, switch_pod)(label_replace(max_over_time(nvswitch_interface_tc_tx_queue{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"}[$__range]), \"switch_pod\", \"$1\", \"net_host_name\", \".*-(p[0-9]+)-.*\") * on(switch_pod) group_left() (label_replace(max by(su)(last_over_time(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}[$__range])), \"switch_pod\", \"p$1\", \"su\", \"SU([0-9]+)\"))) > 0) * on(net_host_name,interface) group_left(system_name,port_id,port_description) max by(net_host_name,interface,system_name,port_id,port_description)(nvswitch_lldp_neighbor_info{net_host_name=~\"example50-02-dh0[12]-p[0-9]+-.*\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Selected-SU switch links with queue occupancy in selected window",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true
+            },
+            "renameByName": {
+              "Value": "Max queued",
+              "interface": "Port",
+              "net_host_name": "Switch",
+              "port_description": "Link description",
+              "port_id": "Neighbor port",
+              "system_name": "LLDP neighbor"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "Max queued"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "Application correctness evidence: the summary and exact evidence for this decision layer.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 126
+      },
+      "id": 46,
+      "panels": [],
+      "title": "Application correctness evidence",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Bounded exact correctness evidence emitted by the Slurm job collector. GPU, SM, lane, collective, expected and actual values come directly from application output; the value is the occurrence count for that exact tuple.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Occurrences"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 127
+      },
+      "id": 47,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Occurrences"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_correctness_sample_info{cluster=~\"$cluster\",job_id=\"$jobid\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Exact expected/got samples from bounded application logs",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "instance": true,
+              "job": true,
+              "job_id": true,
+              "kind": true
+            },
+            "renameByName": {
+              "Value": "Occurrences",
+              "actual": "Actual",
+              "expected": "Expected",
+              "gpu": "Local GPU",
+              "lane": "Lane",
+              "sm": "SM"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "Occurrences"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "curated",
+    "observability"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "label": "Metrics source",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 2,
+        "label": "Logs source",
+        "name": "loki_datasource",
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(nvis_slurm_job_info, cluster)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(nvis_slurm_job_info, cluster)",
+          "refId": "clusterQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(nvis_slurm_job_info{cluster=~\"$cluster\"}, job_id)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job ID",
+        "multi": false,
+        "name": "jobid",
+        "options": [],
+        "query": {
+          "query": "label_values(nvis_slurm_job_info{cluster=~\"$cluster\"}, job_id)",
+          "refId": "jobidQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 4,
+        "type": "query"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}, exported_node)",
+        "hide": 2,
+        "includeAll": true,
+        "label": "Exact job tray roster",
+        "multi": true,
+        "name": "job_nodes",
+        "options": [],
+        "query": {
+          "query": "label_values(nvis_slurm_job_node_info{cluster=~\"$cluster\",job_id=\"$jobid\"}, exported_node)",
+          "refId": "job_nodesQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "30m",
+      "1h"
+    ]
+  },
+  "timezone": "utc",
+  "title": "IREN_MKZ \u2014 Job Flight Recorder",
+  "uid": "iren_mkz-job-root-cause",
+  "version": 11
+}

@@ -1,0 +1,279 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+ *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
+ */
+/**
+ * App Knowledge / Context Layer — Artifact Distribution (NVIS-P2P) domain.
+ *
+ * P2P is single-tenant: one Dragonfly instance per cluster, distributing a
+ * validated container-image catalog across the compute fleet with peer-assisted
+ * transfer. These entries scope the AI assistant and Help page to that surface.
+ */
+import type { HelpContent } from "../types";
+
+export const p2pContent: HelpContent[] = [
+  {
+    id: "p2pArtifacts",
+    kind: "view",
+    title: "Artifact Distribution",
+    domain: "Artifact Distribution",
+    routePath: "/p2p/artifacts",
+    summary:
+      "Where the image catalog stands on the fleet, and the campaigns that distribute it: a task (one image), a roster (which nodes) and a wave plan.",
+    description:
+      "Artifact Distribution is the NVIS-P2P surface for the active cluster. A status strip counts the nodes that are complete, incomplete and unavailable (each opens those nodes on the coverage map) beside the catalog and the object store. Campaigns are the main section: each pairs a catalog image with a roster and a wave plan, shows how it last ran, and launches after a confirmation; New campaign opens a four-step wizard (task, roster, plan, review). The coverage map draws every node grouped by SU, filtered by roster or by state, with a colour key for both channels. The catalog appears read-only, with how much of the fleet holds each image and two row actions -- Distribute (a new campaign for that image) and Persist (load it into the object store the seeds serve). Fleet-wide maintenance -- Check eligibility, Audit fleet, Push catalog to nodes -- sits in one menu. P2P is enabled per cluster, so this surface only appears for clusters that have the capability turned on.",
+    features: [
+      "Campaigns table with each campaign's last run, and a confirmed Launch",
+      "New campaign wizard: task, roster, plan, review -- save, or save and launch",
+      "Coverage map of every node grouped by SU, filtered by roster or state, with a colour key",
+      "Read-only catalog with fleet coverage per image, Distribute and Persist per row",
+      "Maintenance menu: Check eligibility, Audit fleet, Push catalog to nodes",
+    ],
+    howTo: [
+      {
+        task: "Distribute an image to a set of nodes",
+        steps: [
+          "Open New campaign (or Distribute on the image's catalog row).",
+          "Choose the image, then the roster -- a named roster or the whole fleet.",
+          "Pick the wave plan, name the campaign, and Save and launch.",
+          "Watch the campaign's last run and the coverage map fill in.",
+        ],
+      },
+      {
+        task: "Find the nodes that are not complete",
+        steps: [
+          "Use Show on map on the Incomplete or Unavailable tile.",
+          "Narrow the map to a roster if you only care about one.",
+          "Hover a cell for the node's images and its last verification.",
+        ],
+      },
+    ],
+    tips: [
+      "Amber means reachable but incomplete, bad-sized, or present without a valid receipt -- not offline.",
+      "Rosters say which nodes; there is no separate SU scope. SU is how the map is grouped.",
+      "Compute nodes have back-to-source disabled; origin traffic is concentrated through the seeds.",
+    ],
+    keywords: [
+      "p2p",
+      "dragonfly",
+      "artifact",
+      "catalog",
+      "campaign",
+      "roster",
+      "image",
+      "distribution",
+      "dfstore",
+      "seed",
+      "fleet",
+      "heatmap",
+    ],
+    aria: {
+      label: "Artifact Distribution",
+      description:
+        "Distribute the validated container-image catalog across the compute fleet with campaigns.",
+    },
+    aiContext:
+      "Artifact Distribution is the NVIS-P2P surface for the active cluster. Distribution is modelled as catalog (images) + task (one image) + roster (which nodes) + campaign (task + roster + wave plan, launched as a distribute operation). The page shows a status strip, the campaigns table and a New campaign wizard (task, roster, plan, review), a coverage map grouped by SU and filtered by roster or state, a read-only catalog with fleet coverage and Distribute/Persist row actions, and a Maintenance menu (Check eligibility = preflight, Audit fleet = verify, Push catalog to nodes = sync). There is no SU scope selector. P2P is single-tenant -- one instance per cluster -- and enabled per project.",
+  },
+  {
+    id: "p2pSettings",
+    kind: "view",
+    title: "Dragonfly Settings",
+    domain: "Artifact Distribution",
+    routePath: "/p2p/settings",
+    summary:
+      "Per-cluster NVIS-P2P instance configuration — addresses, the app-server connection, inventory, paths — and the button that provisions or reconciles the control plane.",
+    description:
+      "Dragonfly Settings holds everything the reconcile needs to stand up this cluster's P2P instance: the Manager and app-server addresses, how the reconcile reaches the app server over SSH (a host in its own right, not the cluster's control node), the compute-peer inventory pattern, the install/storage paths, and the campaign defaults -- wave size and pacing plus the wave plan (Sequential or Rack-staged, the stage ladder, and the fill wave size used once racks hold a copy). Secrets are generated on the app server and never stored here. Missing pieces are named, and Provision stays disabled until they are filled in; provisioning starts a reconcile run tracked under Workflows.",
+    features: [
+      "Manager / app-server addresses and the app-server SSH connection",
+      "Compute-peer inventory pattern and source path",
+      "Install root, catalog (.json) and storage paths, service account",
+      "Named provisioning blockers, and a gated Provision (reconcile) action",
+    ],
+    howTo: [
+      {
+        task: "Configure and provision a cluster's P2P instance",
+        steps: [
+          "Enable P2P for the cluster in Projects & Clusters.",
+          "Fill in the Manager IP, app-server IP, the app-server SSH user/key, and the inventory pattern.",
+          "Save, then click Provision once no blockers remain, and track the run under Workflows.",
+        ],
+      },
+    ],
+    tips: [
+      "The app server is often a different host from the cluster's control node — set its SSH connection explicitly.",
+      "The catalog path must name a .json file; the inventory source is a file path, not a scheduler name.",
+    ],
+    keywords: ["p2p", "dragonfly", "settings", "provision", "reconcile", "app server", "inventory", "manager"],
+    aria: {
+      label: "Dragonfly Settings",
+      description: "Per-cluster NVIS-P2P instance configuration and provisioning.",
+    },
+    aiContext:
+      "Dragonfly Settings is the per-cluster NVIS-P2P instance configuration for the active cluster (backend P2pSettings). It edits the Manager/app-server addresses, the app-server SSH connection the reconcile runs over (the app server is its own host, not the cluster control node), the compute-peer inventory pattern and source path, install/storage paths, and the rollout defaults (rollout_wave_size, rollout_parallelism, rollout_poll_seconds, rollout_max_launches, rollout_max_unreachable, rollout_timeout_seconds, rollout_strategy sequential|rack-staged, rollout_stages ladder ending at 100%, rollout_fill_wave_size where 0 = the wave size, rollout_stall_seconds default 600 where 0 turns stall handling off, rollout_verify_mb_per_second default 100 -- a fully written image that is checksumming gets the larger of 2 x stall and its size at this rate, 0 keeps the flat 2 x stall, rollout_download_timeout_seconds default 3600 -- the hard limit each node enforces on one download). Secrets are generated on the app server, never stored. It names provisioning blockers and exposes a gated Provision action that starts a reconcile workflow run.",
+  },
+  {
+    id: "p2pCatalog",
+    kind: "view",
+    title: "Catalog",
+    domain: "Artifact Distribution",
+    routePath: "/p2p/catalog",
+    summary:
+      "Edit the active cluster's catalog — the container images (tasks) P2P can distribute — and pin each one to the exact file staged on the origin.",
+    description:
+      "The Catalog is the list of distributable images for the active cluster, stored by Rack Status as the source of truth. Each entry is a bare *.sqsh filename, a display name, its size in bytes and a SHA-256 pin. Every node verifies a download against that pin, so the pin must match the file staged on the origin byte for byte; a blank pin marks an image added but not yet imported. Saving does not touch the fleet: a Push catalog to nodes operation (Artifact Distribution) projects the catalog onto the cluster's manifest and the nodes, and each node also refreshes its copy of the catalog every 15 minutes. If no catalog has been authored yet, the editor opens with the cluster's current manifest.",
+    features: [
+      "Per-image order, name, *.sqsh filename, size and SHA-256 pin",
+      "Validation of filenames (bare names only, never a path) and pins (64 hex characters, or blank)",
+      "Opens with the cluster's current manifest when nothing has been authored yet",
+    ],
+    howTo: [
+      {
+        task: "Add a newly staged image",
+        steps: [
+          "Compute the SHA-256 and byte size of the file staged on the origin.",
+          "Add a row with the bare filename, a name, the size and the pin, then Save.",
+          "Run Push catalog to nodes from Artifact Distribution so the cluster's manifest and the nodes carry the new pin.",
+        ],
+      },
+    ],
+    tips: [
+      "A rebuilt image never reproduces an earlier hash: re-pin from the staged file, not from a previous build.",
+      "A pin that does not match the staged file fails verification on every node that downloads it.",
+    ],
+    keywords: ["p2p", "catalog", "task", "image", "sqsh", "sha256", "pin", "manifest", "sync"],
+    related: ["p2pArtifacts", "p2pCampaigns"],
+    aria: {
+      label: "Catalog",
+      description: "Edit the container images P2P can distribute and their SHA-256 pins.",
+    },
+    aiContext:
+      "Catalog is the editable list of distributable container images (tasks) for the active cluster's NVIS-P2P instance (backend P2pCatalog, GET/PUT /api/p2p/catalog). Each image has an order, name, bare *.sqsh filename, byte size and a SHA-256 pin that every node verifies downloads against — a pin that does not match the file staged on the origin fails verification fleet-wide, and a rebuilt image always has a new hash. A blank pin means added but not yet imported. Saving changes only Rack Status's copy; the Sync operation projects it onto the cluster manifest and nodes, and nodes also refresh their catalog every 15 minutes.",
+  },
+  {
+    id: "p2pRosters",
+    kind: "view",
+    title: "Rosters",
+    domain: "Artifact Distribution",
+    routePath: "/p2p/rosters",
+    summary: "Named node lists that a fleet operation or campaign can target instead of the whole inventory.",
+    description:
+      "A roster is a named list of compute nodes — one hostname per line — stored per cluster. Campaigns on Artifact Distribution can target a roster by name, so a rollout can be scoped to one scalable unit, a set of verified nodes, or a canary group without editing the cluster's inventory. A roster name is free text (it may contain spaces); node entries must be bare hostnames. An operation that names a roster that no longer exists is refused before it reaches the fleet.",
+    features: [
+      "Named node lists, one hostname per line",
+      "Targeting from campaigns",
+      "Bare-hostname validation for every node entry",
+    ],
+    howTo: [
+      {
+        task: "Roll an image out to a canary group first",
+        steps: [
+          "Add a roster with a name such as canary and the canary hostnames, then Save.",
+          "Create or edit a campaign that targets that roster and launch it.",
+          "Once the canaries verify, launch the same image to the whole fleet.",
+        ],
+      },
+    ],
+    tips: ["Leaving the roster blank on a campaign or operation targets the cluster's default inventory."],
+    keywords: ["p2p", "roster", "nodes", "target", "canary", "scalable unit", "su", "inventory"],
+    related: ["p2pCampaigns", "p2pArtifacts"],
+    aria: {
+      label: "Rosters",
+      description: "Named node lists that fleet operations and campaigns can target.",
+    },
+    aiContext:
+      "Rosters are named node lists for the active cluster's NVIS-P2P instance (backend P2pRosters, GET/PUT /api/p2p/rosters). A fleet operation or a campaign can target a roster by name instead of the cluster's default inventory; the resolved node list travels with the operation to the worker. Roster names are free text; node entries must be bare hostnames. An operation naming an unknown roster is refused with a 400.",
+  },
+  {
+    id: "p2pCampaigns",
+    kind: "view",
+    title: "Campaigns",
+    domain: "Artifact Distribution",
+    routePath: "/p2p/campaigns",
+    summary:
+      "Saved distributions — an image, a roster and optional pacing — that you name once and launch to the fleet on demand.",
+    description:
+      "A campaign pairs one catalog image with a roster (or the whole fleet) and optional pacing overrides: wave size, parallelism, poll interval, launch and unreachable limits, and timeout. A pacing field left at 0 inherits the cluster's rollout default from Dragonfly Settings. A campaign can also choose its wave plan: Sequential slices the roster in order, Rack-staged gives every rack one copy first and then grows every rack up a stage ladder (by default to half, then full) so new nodes pull from rack-mates rather than the app server's seeds; Cluster default uses the plan set in Dragonfly Settings. Launching a campaign asks for confirmation, then queues a distribute operation tagged with the campaign's name; it preheats the seeds and rolls the image out wave by wave, and its progress and log appear in Artifact Distribution. Only one operation runs at a time, so a launch is refused while another is in flight. Re-launching is safe: nodes that already hold the pinned image are skipped.",
+    features: [
+      "Image × roster × pacing, saved per cluster",
+      "Confirm-before-launch, with a link to the launched operation's log",
+      "Pacing overrides where 0 inherits the cluster default",
+      "Runs tagged with the campaign name in the operations history",
+    ],
+    howTo: [
+      {
+        task: "Distribute a new image to the fleet",
+        steps: [
+          "Add and pin the image in Catalog, then run Sync.",
+          "Add a campaign with that image and a roster (blank for the whole fleet), then Save.",
+          "Click Launch, confirm, and follow the waves in Artifact Distribution or the operation log.",
+        ],
+      },
+    ],
+    tips: [
+      "A launch is refused while another operation is running; wait for it to finish.",
+      "Nodes deferred as unreachable in one run are picked up by launching the same campaign again.",
+      "For big images, Rack-staged with a ladder like 1, 50%, 100% keeps most pulls inside racks; a finer ladder (1, 2, 4, 8, 100%) spreads the load further.",
+      "A download that stops writing is restarted after the stall window (Stall, default 10 minutes) rather than holding the whole wave until its timeout.",
+      "A download that has every byte and is checksumming gets twice the stall window, or longer for a large image (its size at Verify rate, default 100 MB/s), so a busy node is not stopped mid-verify.",
+    ],
+    keywords: ["p2p", "campaign", "launch", "distribute", "rollout", "wave", "pacing", "roster", "image", "rack-staged", "stages", "topology"],
+    related: ["p2pCatalog", "p2pRosters", "p2pArtifacts", "p2pSettings"],
+    aria: {
+      label: "Campaigns",
+      description: "Saved image distributions that can be launched to a roster or the whole fleet.",
+    },
+    aiContext:
+      "Campaigns are saved distributions for the active cluster's NVIS-P2P instance (backend P2pCampaigns, GET/PUT /api/p2p/campaigns). A campaign names a catalog image, a roster (blank = whole fleet) and optional pacing overrides (wave_size, parallelism, poll_seconds, max_launches, max_unreachable, timeout_seconds, fill_wave_size, stall_seconds, download_timeout_seconds; 0 inherits the cluster default) and an optional wave plan (strategy sequential|rack-staged, stages ladder such as 1, 50%, 100%; blank inherits). Rack-staged is planned by the worker from the installed topology inventory (<install_root>/current/inventory/topology.tsv, node/SU/rack -- the same file the peers' scheduler labels come from): stage one puts one node in every rack at wave_size (the only stage that loads the seeds), later stages grow every rack to the next rung at fill_wave_size, racks round-robin across SUs; with no topology it falls back to sequential and says so in the log. When the fleet snapshot (<state>/p2p-snapshots/<cluster>.json) is under an hour old the plan also counts nodes that already hold the image toward each rack's rungs (a rack with a copy gets no seed wave), seeds each rack from the reachable peer with the most verified images, and puts unreachable nodes and roster holders in the rack's last stage. Every rollout watches each active download's written bytes: one that has not moved for stall_seconds (default 600, 0 = off) is stopped and relaunched, then deferred as stalled_<N>s_after_<L>_launches once it has used max_launches, instead of holding its wave to the timeout. Each node also enforces download_timeout_seconds (default 3600) on its own transfer -- dfget is killed when it passes -- and a launch replaces a running download older than that instead of re-adopting it; a wave that times out stops the downloads it gives up on. Launch is confirm-gated and enqueues an ordinary distribute operation through POST /api/p2p/operations tagged with the campaign name; the worker preheats the seeds then rolls out in waves. One operation runs at a time (409 otherwise). Re-launching is idempotent: nodes holding the pinned image are skipped by receipt.",
+  },
+  {
+    id: "p2pRollouts",
+    kind: "view",
+    title: "Rollouts",
+    domain: "Artifact Distribution",
+    routePath: "/p2p/rollouts",
+    summary:
+      "Pull distribution: put one catalog image onto racks through the node agents, rung by rung, and steer it while it runs.",
+    description:
+      "A rollout puts one pinned catalog image onto the racks you choose without opening an SSH session to any node. Rack Status writes each node's desired-state document into the directory the origin serves; the agent on the node fetches the image through its local Dragonfly peer, verifies it against the pin, installs it and reports back through the cluster's metrics. Each rack is released rung by rung -- by default one node first, which seeds the rack, then half, then all -- so most nodes pull from rack-mates rather than the app server. A rollout is a durable run: it survives a restart of Rack Status, and while it runs you can cancel it (nodes still downloading are told to stop; installed nodes keep the image), retry one node or every deferred node, and change the pacing, which applies from the next tick. A node with no live agent, one that keeps failing, or one that overruns its budget is deferred rather than holding its rack.",
+    features: [
+      "Rack-staged release with a live per-node view",
+      "Cancel, retry a node, retry every deferred node, change pacing -- all on a running rollout",
+      "Preview: each rack's members, live agents and current holders before starting",
+      "Survives a restart of Rack Status and resumes where it was",
+      "No SSH: desired-state documents out, agent metrics back",
+    ],
+    howTo: [
+      {
+        task: "Roll an image onto racks",
+        steps: [
+          "Pin the image in Catalog.",
+          "Choose the image and the racks, and adjust the stage ladder, budget and racks in flight if needed.",
+          "Click Preview to see each rack's members, live agents and current holders, then Start rollout and confirm.",
+          "Open the rollout to follow each rack's rungs and nodes; Retry deferred nodes once the cause is fixed.",
+        ],
+      },
+    ],
+    tips: [
+      "Racks only take part if their nodes run the pull agent; a node without a live agent is deferred as no_agent.",
+      "Starting the same image on the same racks while that rollout is running opens the running one instead of a second.",
+      "Pull rollouts need Desired-state directory and Origin URL set in Dragonfly Settings.",
+    ],
+    keywords: ["p2p", "rollout", "pull", "agent", "desired state", "rack", "rung", "cancel", "retry", "pacing", "distribute", "image"],
+    related: ["p2pCatalog", "p2pCampaigns", "p2pArtifacts", "p2pSettings"],
+    aria: {
+      label: "Rollouts",
+      description: "Pull rollouts of a catalog image onto racks, with cancel, retry and pacing while they run.",
+    },
+    aiContext:
+      "Rollouts are NVIS-P2P pull rollouts (backend p2p_rollout.py, /api/p2p/rollouts; design docs/DESIGN_p2p-pull-agent.md). A rollout is a workflow-engine run of the built-in nvis-p2p-rollout workflow whose single native step is the coordinator; it is registered resumable, so a Rack Status restart resumes it. Start: POST /api/p2p/rollouts {image, racks, pacing:{stages, budget_seconds, max_active_racks}} (action p2p:rollout_start); the plan fixes the image pin from the cluster's catalog and each rack's members in tray order from the server's node inventory (cluster snapshot nodes[], placed by the rack-mapping mode and naming templates). The coordinator writes <desired_dir>/<node>.json (schema_version 1, generation, origin, images) and reads nvis_p2p_agent_up, nvis_p2p_agent_last_poll_timestamp_seconds, nvis_p2p_image_state and nvis_p2p_image_failures_total from the cluster's metrics_url (VictoriaMetrics); a node's report counts only once its agent has acted on the generation written for it. Rungs per rack from the stage ladder (1, 50%, 100% -> 1, 9, 18 of 18); max_active_racks racks at a time; nodes deferred as no_agent, failed_<n>x or timeout. Controls on a live run: POST .../cancel (p2p:rollout_cancel; withdraws the image from nodes still downloading), POST .../retry {nodes} (p2p:rollout_retry; empty = all deferred; rewrites the document with a new generation), PUT .../pacing (p2p:rollout_pace). A second start with the same image and racks joins the live run (idempotency key). GET /api/p2p/rollouts/plan previews members, live agents and holders.",
+  },
+];

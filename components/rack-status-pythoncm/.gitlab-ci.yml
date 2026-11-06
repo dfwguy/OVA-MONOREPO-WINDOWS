@@ -1,0 +1,265 @@
+include:
+  - project: 'ci-toolkit/ci-toolkit'
+    ref: 'stable'
+    file:
+      - .reusable_jobs/release/mono/release.yml
+      - .reusable_jobs/auto_merge/auto_merge_automated_release.yml
+      - .reusable_jobs/docker/multi/buildkit/docker_build_and_push_rc.yml
+      - .reusable_jobs/docker/multi/buildkit/docker_build_and_push.yml
+  # Must be last: overrides ci-toolkit .pipeline_post_job_hooks (drops Slack failure notifications).
+  - local: .gitlab-ci/ci-toolkit-no-slack.yml
+
+default:
+  retry:
+    max: 2
+    when:
+      - script_failure
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - scheduler_failure
+      - api_failure
+      - data_integrity_failure
+      - unknown_failure
+
+# App CI (lint / test / image verify) runs first; ci-toolkit release + JFrog push last.
+stages:
+  - lint
+  - test
+  - build
+  - ci_toolkit_release
+
+variables:
+  # No Slack (MR notifier + pipeline-failure hooks). Re-enable: CI_TOOLKIT_ENABLE_SLACK: "true"
+  CI_TOOLKIT_ENABLE_SLACK: "false"
+  LOG_LEVEL: "INFO"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm-cache"
+  GITLAB_RUNNER_DOCKER_TAG: "fusion-instance-k8s"
+
+  ############# AUTOMATED BADGES ###########################################
+  CI_TOOLKIT_AUTOMATED_BADGES: "['apps_release_badges.json']"
+  ##########################################################################
+  CI_TOOLKIT_MR_COMMENTER_BOT: "CI_TOOLKIT_VERSION_BOT"
+  ##########################################################################
+
+  ############# AUTOMATED DOCKER BUILD AND PUSH TO JFROG ################
+  PUSH_TO_JFROG: "true"
+  JFROG_IMAGE_PREFIX: "artifactory.nvidia.com/it-astra-docker-local"
+  JFROG_DOCKER_REGISTRY_HOSTNAME: "artifactory.nvidia.com"
+  ##########################################################################
+
+# Run lint/test/build on branch pushes and merge requests
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+
+# ─── Lint ────────────────────────────────────────────────────────────────────
+
+python-lint:
+  stage: lint
+  image: python:3.12-slim
+  cache:
+    key: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .pip-cache/
+  script:
+    # Pinned on purpose. Unpinned, every ruff release can widen the default rule set under us --
+    # which is how this job sat red at ~310 findings for months while allow_failure hid it. Bump
+    # the pin deliberately, with the new findings fixed in the same commit.
+    - pip install -q ruff==0.16.0
+    - ruff check backend/ --exclude tests
+    - bash scripts/check_no_vault_in_git.sh
+
+typescript-check:
+  stage: lint
+  image: node:22-slim
+  cache:
+    key: npm-${CI_COMMIT_REF_SLUG}
+    paths:
+      - frontend/node_modules/
+      - .npm-cache/
+  script:
+    - cd frontend
+    - npm ci --ignore-scripts
+    - npx tsc -b --noEmit
+    # Hard gate, no allow_failure: every eslint rule in the config is at zero errors as of
+    # 2026-08-04, so any error here is something this commit introduced. Warnings do not fail
+    # the job -- set-state-in-effect is deliberately a warning and eslint.config.js says why.
+    - npm run lint
+
+# ─── Test ────────────────────────────────────────────────────────────────────
+
+python-test:
+  stage: test
+  image: python:3.12-slim
+  cache:
+    key: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .pip-cache/
+  script:
+    - pip install -q -r backend/requirements.txt pytest pytest-cov
+    # Run from the repo root so backend modules resolve repo-root assets (var/, etc.);
+    # pytest adds backend/ to sys.path via the backend/tests package.
+    - python -m pytest backend/tests/ -v --tb=short --junitxml=report-python.xml --cov=ai_chat --cov=workflow_engine --cov-report=term-missing
+  coverage: '/TOTAL.+\s(\d+%)/'
+  artifacts:
+    when: always
+    reports:
+      junit: report-python.xml
+
+frontend-test:
+  stage: test
+  image: node:22-slim
+  cache:
+    key: npm-${CI_COMMIT_REF_SLUG}
+    paths:
+      - frontend/node_modules/
+      - .npm-cache/
+  script:
+    - cd frontend
+    - npm ci --ignore-scripts
+    - npx vitest run --reporter=default --reporter=junit --outputFile=../report-frontend.xml --coverage --coverage.reporter=text-summary
+  coverage: '/Statements\s*:\s*(\d+\.?\d*%)/'
+  artifacts:
+    when: always
+    reports:
+      junit: report-frontend.xml
+
+# ─── Build (Kaniko verify; JFrog push is in ci_toolkit_release) ──────────────
+
+docker-build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - bin/write-build-info.sh --stamp "$(date -u +%Y%m%dT%H%M).${CI_COMMIT_SHORT_SHA}"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --no-push
+  rules:
+    # The release image build (docker-save) + JFrog push cover the release commit
+    # on main, so skip the redundant verify-only build there.
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  allow_failure: true
+
+# ─── Air-gapped image bundle (docker save → downloadable .tar artifact) ─────────
+# Produces a self-contained image tarball that can be downloaded from the pipeline,
+# copied to an offline/air-gapped host, then `docker load`ed and `docker run`. The
+# k8s runners have no Docker daemon, so we use Kaniko's --tarPath (the daemonless
+# equivalent of `docker save`) instead of build-docker.sh's local `docker save`.
+#
+# Builds automatically on the release (finalize) commit — tagged with the release
+# VERSION from version.py — so the bundle ships with every release. Also available
+# on-demand (manual) on any other pipeline for ad-hoc offline images.
+docker-save:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  variables:
+    IMAGE_NAME: "nvis-rack-status"
+  script:
+    # On the release commit version.py holds the new release version; elsewhere
+    # (manual runs) fall back to the short SHA so the artifact is still unique.
+    - export VERSION=$(grep -Eo '"[0-9]+\.[0-9]+\.[0-9]+[^"]*"' version.py 2>/dev/null | head -1 | tr -d '"')
+    - export BUNDLE_TAG="${VERSION:-$CI_COMMIT_SHORT_SHA}"
+    - export IMAGE_TAR="${IMAGE_NAME}-${BUNDLE_TAG}.tar"
+    # Stamped into var/build-info.json, which is what the dashboard reports as its build. Two
+    # images from the same release commit are otherwise indistinguishable to an operator.
+    - export BUILD_STAMP="$(date -u +%Y%m%dT%H%M).${CI_COMMIT_SHORT_SHA}"
+    - bin/write-build-info.sh --stamp "${BUILD_STAMP}"
+    - echo "Building air-gapped bundle ${IMAGE_TAR} (tag ${BUNDLE_TAG}, build ${BUILD_STAMP})"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --no-push
+      --destination "${IMAGE_NAME}:${BUNDLE_TAG}"
+      --destination "${IMAGE_NAME}:latest"
+      --tarPath "${CI_PROJECT_DIR}/${IMAGE_TAR}"
+    - gzip -f "${IMAGE_TAR}"
+    - sha256sum "${IMAGE_TAR}.gz" > "${IMAGE_TAR}.gz.sha256"
+    - ls -lh "${IMAGE_TAR}.gz"
+    # Pass the resolved tag + filename to the publish job via dotenv.
+    - printf 'BUNDLE_TAG=%s\nBUNDLE_FILE=%s\n' "${BUNDLE_TAG}" "${IMAGE_TAR}.gz" > bundle.env
+    - cat bundle.env
+  artifacts:
+    name: "nvis-rack-status-image-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - "nvis-rack-status-*.tar.gz"
+      - "nvis-rack-status-*.tar.gz.sha256"
+    reports:
+      dotenv: bundle.env
+    expire_in: 2 weeks
+  rules:
+    - !reference [.rules:on_main_finalize_commit, rules]
+    - when: manual
+      allow_failure: true
+
+# ─── Publish the bundle to the Package Registry + attach to the GitLab Release ──
+# Runs on the release (finalize) commit, alongside the ci-toolkit release jobs.
+# Uploads the versioned tarball to the project's generic Package Registry (a stable,
+# permanent, version-addressed URL) and links it as an asset on the GitLab Release
+# so the air-gapped image is downloadable straight from the release page.
+release:publish-bundle:
+  stage: ci_toolkit_release
+  image:
+    name: dockerhub.nvidia.com/python:3.12
+    pull_policy: ["if-not-present", "always"]
+  tags:
+    - $GITLAB_RUNNER_DOCKER_TAG
+  variables:
+    GIT_STRATEGY: none
+  needs:
+    - job: docker-save
+      artifacts: true
+    - job: "release:finalize"
+      artifacts: false
+      optional: true
+  rules:
+    - !reference [.rules:on_main_finalize_commit, rules]
+  script:
+    # Single literal block: keeps the `JOB-TOKEN: ...` header colon out of YAML's
+    # block-sequence parser (a bare `- curl ... "X: y"` item is read as a mapping).
+    - |
+      set -e
+      test -n "${BUNDLE_TAG:-}" && test -f "${BUNDLE_FILE:-}"
+      PKG_BASE="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/nvis-rack-status-image/${BUNDLE_TAG}"
+      echo "Uploading ${BUNDLE_FILE} -> ${PKG_BASE}/"
+      curl --fail-with-body --silent --show-error --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "${BUNDLE_FILE}" "${PKG_BASE}/${BUNDLE_FILE}"
+      curl --fail-with-body --silent --show-error --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "${BUNDLE_FILE}.sha256" "${PKG_BASE}/${BUNDLE_FILE}.sha256"
+      echo "Attaching release asset link to release ${BUNDLE_TAG} (best-effort)"
+      curl --fail-with-body --silent --show-error --request POST \
+        --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+        --data-urlencode "name=${BUNDLE_FILE} (air-gapped Docker image)" \
+        --data-urlencode "url=${PKG_BASE}/${BUNDLE_FILE}" \
+        --data "link_type=package" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/${BUNDLE_TAG}/assets/links" \
+        || echo "WARN: could not attach release link (release ${BUNDLE_TAG} may not exist yet or token scope); bundle is in the Package Registry regardless."
+  after_script:
+    - !reference [.pipeline_post_job_hooks, after_script]
+
+# Push to NVCR (uncomment when registry is configured)
+# docker-push:
+#   stage: build
+#   image:
+#     name: gcr.io/kaniko-project/executor:debug
+#     entrypoint: [""]
+#   variables:
+#     NVCR_REGISTRY: "nvcr.io/your-org"
+#   needs: [docker-build]
+#   script:
+#     - mkdir -p /kaniko/.docker
+#     - echo "{\"auths\":{\"nvcr.io\":{\"auth\":\"$(echo -n \$oauthtoken:${NVCR_API_KEY} | base64)\"}}}" > /kaniko/.docker/config.json
+#     - /kaniko/executor
+#       --context "${CI_PROJECT_DIR}"
+#       --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+#       --destination "${NVCR_REGISTRY}/nvis-rack-status:${CI_COMMIT_SHORT_SHA}"
+#       --destination "${NVCR_REGISTRY}/nvis-rack-status:latest"
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == "main"

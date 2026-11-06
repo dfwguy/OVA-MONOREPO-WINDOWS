@@ -1,0 +1,310 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+"""Stage 1 and Stage 2 per node: the ladder below the rack.
+
+A rack is validated by a run over all of its nodes; before that, each node earns its own two
+stages, and the rack page shows them per host.
+
+- **Stage 1** is the single-node NCCL run (the Stage-1 launcher with one host as its target). Its
+  evidence is the run's result log, which the native rack workers attribute to the host it covered
+  (``native_status._is_partial_rack_log``), and, while the job is still in Slurm, the open
+  ``scope="node"`` activity that launched it. A failed Stage 1 carries ``reason`` when the log says
+  why (``native_status.stage_failure_reason``); a job that never started still leaves a log saying so
+  (``collect_llmb_nccl_log.sh``), so a launched node is never left "pending". The bring-up
+  framework runs the same single-node NCCL check as its own job, and its pass counts too: a node
+  is Stage 1 ``done`` when either Rack Status's run or a bring-up job named by
+  ``RACK_NODE_STAGE1_BRINGUP_JOBS`` (default ``allreduce``; ``none`` turns it off) passed, and the
+  answer says which (``source``). A Rack Status run still in Slurm reads ``ongoing`` whatever
+  bring-up said, because it is the newer evidence.
+- **Stage 2** is a single-node LLM training run. The NeMo Stage-2 recipe does not fit one node
+  (the 56B GB300 config runs out of memory on 4 GPUs, and no smaller GB300 config ships in the
+  container), so the node's Stage 2 is the bring-up framework's single-node LLM job, read with that
+  framework's own verdicts. Which job is ``RACK_NODE_STAGE2_BRINGUP_JOB`` (default
+  ``llm-pretrain-solo``).
+
+Both answer in the rack table's vocabulary -- ``done``, ``fail``, ``ongoing``, ``pending`` -- so
+the UI renders them with the same pills.
+"""
+from __future__ import annotations
+
+import logging
+import threading
+import time
+from typing import Any
+
+from config_env import _eget, _env_int
+
+_logger = logging.getLogger(__name__)
+
+DEFAULT_STAGE2_BRINGUP_JOB = "llm-pretrain-solo"
+DEFAULT_STAGE1_BRINGUP_JOBS = ("allreduce",)
+
+#: ``source`` of a Stage 1 decided by Rack Status's own single-node NCCL run.
+STAGE1_SOURCE_RACK_STATUS = "rack-status"
+
+# Bring-up verdict word -> stage state. RETRY and INCOMPLETE mean the framework will run it again.
+_BRINGUP_STATE = {
+    "DONE": "done",
+    "FAIL": "fail",
+    "RUNNING": "ongoing",
+    "RETRY": "ongoing",
+    "INCOMPLETE": "ongoing",  # only while the node is busy; see stage2_state
+    "NOT_RUN": "pending",
+}
+
+
+def stage2_bringup_job() -> str:
+    """The bring-up job whose verdict is Stage 2: the cluster record's, then the setting, then the default."""
+    try:
+        from catalog import context as catalog_context
+
+        _project, cluster, _platform = catalog_context.resolve()
+        if cluster is not None and cluster.evidence.stage2_bringup_job.strip():
+            return cluster.evidence.stage2_bringup_job.strip()
+    except Exception:  # no catalog is a bare deployment; the setting still applies
+        _logger.debug("stage2_bringup_job: no cluster record to read", exc_info=True)
+    return (_eget("RACK_NODE_STAGE2_BRINGUP_JOB") or "").strip() or DEFAULT_STAGE2_BRINGUP_JOB
+
+
+def stage2_available() -> bool:
+    """Whether this cluster has a Stage 2 source at all: a bring-up framework on its record.
+
+    Without one, Stage 2 is not "still loading" or "not run" -- it does not exist here, and the
+    answer says so (``stage2_available``) so the tracker and the forecast can let Stage 1 stand as
+    the node ladder instead of waiting for verdicts no one will ever write.
+    """
+    import bringup
+
+    return bringup.is_enabled()
+
+
+def stage1_bringup_jobs() -> tuple[str, ...]:
+    """Bring-up jobs whose pass also counts as a node's Stage 1; empty when set to ``none``."""
+    raw = (_eget("RACK_NODE_STAGE1_BRINGUP_JOBS") or "").strip()
+    if not raw:
+        return DEFAULT_STAGE1_BRINGUP_JOBS
+    if raw.lower() == "none":
+        return ()
+    return tuple(dict.fromkeys(j.strip() for j in raw.split(",") if j.strip()))
+
+
+def combine_stage1(own: dict[str, Any], bringup: dict[str, dict[str, str]] | None,
+                   jobs: tuple[str, ...]) -> dict[str, Any]:
+    """Stage 1 from Rack Status's run (*own*, from :func:`stage1_state`) and the bring-up verdicts.
+
+    Either pass is a pass. A Rack Status run in Slurm stays ``ongoing`` (it is newer than any
+    bring-up verdict). Otherwise Rack Status's own answer stands, unless it has none: then a failed
+    bring-up job is the node's Stage 1, so a node bring-up already tested is not shown as untested.
+    """
+    if own.get("state") in ("done", "ongoing"):
+        return {**own, "source": STAGE1_SOURCE_RACK_STATUS}
+    verdicts = {job: (bringup or {}).get(job) for job in jobs}
+    for job, v in verdicts.items():
+        if v and str(v.get("status") or "").upper() == "DONE":
+            return {"state": "done", "status": "DONE", "source": f"bringup:{job}"}
+    if own.get("state") == "fail":
+        return {**own, "source": STAGE1_SOURCE_RACK_STATUS}
+    for job, v in verdicts.items():
+        state = stage2_state(v).get("state") if v else None
+        if state in ("fail", "ongoing"):
+            return {**stage2_state(v), "source": f"bringup:{job}"}
+    return {**own, "source": STAGE1_SOURCE_RACK_STATUS}
+
+
+def stage1_state(probe: dict[str, Any] | None, live_jid: str, running: set[str]) -> dict[str, Any]:
+    """A node's Stage 1 from its newest single-node log and any live launch.
+
+    A live launch wins: its result log is written only when the job ends, so the log on disk is
+    the previous attempt's.
+    """
+    if live_jid and live_jid in running:
+        return {"state": "ongoing", "job_id": live_jid}
+    if not probe:
+        return {"state": "pending"}
+    jid = str(probe.get("jid") or "")
+    out: dict[str, Any] = {"job_id": jid, "log": str(probe.get("_path") or "")}
+    if jid and jid in running:
+        out["state"] = "ongoing"
+    elif probe.get("nccl_ok") is True:
+        out["state"] = "done"
+    else:
+        out["state"] = "fail"
+        # What stopped it (the log scan's words), so a fabric that is not up or an image that is
+        # not on the node reads differently from a slow link -- they are fixed by different people.
+        # Else the probe's own integrity finding: wrong results, a failed or an unfinished test.
+        reason = str(probe.get("fail_reason") or probe.get("nccl_issue") or "").strip()
+        if reason:
+            out["reason"] = reason
+    return out
+
+
+#: Scheduler states in which a job can still be writing its result file.
+_BUSY_STATES = frozenset({"alloc", "allocated", "mix", "mixed", "comp", "completing"})
+
+
+def scheduler_busy(state: object) -> bool:
+    """True when a node's scheduler state (``allocated``, ``mixed+drain``, ...) means a job is on it."""
+    parts = {p.strip().lower().rstrip("*~#") for p in str(state or "").split("+")}
+    return bool(parts & _BUSY_STATES)
+
+
+def stage2_state(verdict: dict[str, str] | None, *, node_busy: bool | None = None) -> dict[str, Any]:
+    """A node's Stage 2 from its bring-up verdict.
+
+    ``INCOMPLETE`` is a result file with no end marker: the job is either still writing it or died.
+    Only a node the scheduler has busy can still be writing, so an idle one reads ``fail`` -- a
+    dead job must not show as ongoing forever. *node_busy* None (scheduler state unknown) keeps
+    the old reading rather than guessing.
+    """
+    if not verdict:
+        return {"state": "pending"}
+    status = str(verdict.get("status") or "").upper()
+    state = _BRINGUP_STATE.get(status, "pending")
+    if status == "INCOMPLETE" and node_busy is False:
+        state = "fail"
+    out: dict[str, Any] = {"state": state, "status": status}
+    reason = str(verdict.get("reason") or "").strip()
+    if reason:
+        out["reason"] = reason
+    return out
+
+
+_RETRY_AFTER_ERROR_SEC = 60
+
+
+class _BringupVerdicts:
+    """The bring-up job's verdict for every node, refreshed in the background.
+
+    The fleet status script takes about a minute on a 4,600-node cluster, which no page load
+    should wait for. Readers get the last answer at once (``None`` until the first one lands) and
+    an expired answer starts one refresh; concurrent readers never start a second.
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._data: dict[str, dict[str, dict[str, str]]] | None = None
+        self._at = 0.0
+        self._jobs: tuple[str, ...] = ()
+        self._refreshing = False
+        self.error = ""
+
+    def _ttl(self) -> int:
+        return max(30, _env_int("RACK_NODE_STAGE_BRINGUP_TTL_SEC", 300))
+
+    def get(self, *, wait: bool = False) -> dict[str, dict[str, dict[str, str]]] | None:
+        with self._lock:
+            # The answer covers one job (see _refresh), so a changed Stage 2 setting expires it too.
+            # A failed refresh is retried after a short wait, not on every call: each wait=1 caller
+            # would otherwise sit through another full run of a script that is already failing.
+            age = time.monotonic() - self._at
+            stale = (
+                self._at == 0.0
+                or self._jobs != _bringup_jobs()
+                or age >= self._ttl()
+                or (self.error != "" and age >= min(self._ttl(), _RETRY_AFTER_ERROR_SEC))
+            )
+            start = stale and not self._refreshing
+            if start:
+                self._refreshing = True
+        if start:
+            if wait:
+                self._refresh()
+            else:
+                threading.Thread(target=self._refresh, name="node-stage-bringup", daemon=True).start()
+        with self._lock:
+            return self._data
+
+    def _refresh(self) -> None:
+        jobs = _bringup_jobs()
+        try:
+            import bringup
+
+            if not bringup.is_enabled():
+                data: dict[str, dict[str, dict[str, str]]] = {}
+            else:
+                # Only the stage columns: the full report builds every bring-up column (and
+                # burn-in hours) for the fleet, which a cold /api/node-stages?wait=1 waited on.
+                data = bringup.parse_status_check_fleet(bringup.run_status_check_all(tests=list(jobs)))
+            with self._lock:
+                self._data, self._at, self._jobs, self.error = data, time.monotonic(), jobs, ""
+        except Exception as exc:  # noqa: BLE001 - keep the last answer; Stage 1 still renders
+            _logger.warning("node stages: bring-up verdicts unavailable: %s", exc)
+            with self._lock:
+                self.error = str(exc)
+                self._at, self._jobs = time.monotonic(), jobs
+        finally:
+            with self._lock:
+                self._refreshing = False
+
+
+def _bringup_jobs() -> tuple[str, ...]:
+    """Every bring-up job a node stage reads: Stage 2's, then Stage 1's."""
+    return tuple(dict.fromkeys((stage2_bringup_job(), *stage1_bringup_jobs())))
+
+
+_bringup = _BringupVerdicts()
+
+
+def node_stages(
+    nodes: list[tuple[str, str]],
+    node_logs: dict[str, dict[str, dict[str, Any]]],
+    *,
+    wait_for_bringup: bool = False,
+    busy_hosts: set[str] | None = None,
+) -> dict[str, Any]:
+    """Stage 1 and Stage 2 for each ``(host, rack)`` in *nodes*.
+
+    *node_logs* is the snapshot's ``node_stage_logs``: host -> stage kind -> newest sub-rack result.
+    """
+    import native_status
+    import validation_activities
+
+    running, times = native_status.load_squeue_jobs_map()
+    try:
+        live = validation_activities.live_stage_jobs_by_node()
+    except Exception:  # noqa: BLE001 - the overlay is best-effort, like the rack table's
+        live = {}
+    # ``squeue -u <service user>`` misses jobs submitted as the operator who launched them, so ask
+    # Slurm about the ones this answer depends on by id, exactly as the rack table does.
+    hosts = {h for h, _ in nodes}
+    want = {str((live.get(h) or {}).get("nccl") or "") for h in hosts}
+    want |= {str(((node_logs.get(h) or {}).get("nccl") or {}).get("jid") or "") for h in hosts}
+    native_status.augment_running_set_for_job_ids(running, times, sorted(j for j in want if j))
+    available = stage2_available()
+    job = stage2_bringup_job() if available else ""
+    s1_jobs = stage1_bringup_jobs() if available else ()
+    # No framework, nothing to wait for: an empty answer, never the "still loading" None.
+    verdicts = _bringup.get(wait=wait_for_bringup) if available else {}
+    rows = []
+    for host, rack in nodes:
+        logs = node_logs.get(host) or {}
+        own = stage1_state(logs.get("nccl"), str((live.get(host) or {}).get("nccl") or ""), running)
+        rows.append({
+            "node": host,
+            "rack": rack,
+            # Until the bring-up verdicts land, Stage 1 is Rack Status's alone.
+            "stage1": combine_stage1(own, (verdicts or {}).get(host), s1_jobs),
+            "stage2": (
+                {"state": "pending", "status": "NO_SOURCE"} if not available
+                else stage2_state(
+                    ((verdicts or {}).get(host) or {}).get(job),
+                    node_busy=None if busy_hosts is None else host in busy_hosts,
+                )
+                if verdicts is not None else {"state": "unknown"}
+            ),
+        })
+    return {
+        "nodes": rows,
+        "stage2_source": f"bringup:{job}" if available else "",
+        "stage2_available": available,
+        "stage1_sources": [STAGE1_SOURCE_RACK_STATUS, *(f"bringup:{j}" for j in s1_jobs)],
+        "stage2_loading": verdicts is None,
+        **({"stage2_error": _bringup.error} if _bringup.error else {}),
+    }

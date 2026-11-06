@@ -1,0 +1,1127 @@
+{
+  "source_release": "20261105-windows-native-02",
+  "publication_kind": "sanitized derivative; see evidence/sanitization-removals.json",
+  "requested_rack_implementation": "rack-status-pythoncm",
+  "original_rack_implementation_retained_for_provenance": "nvis-rack-status",
+  "components": [
+    {
+      "component": "OVA_Collection_Framework",
+      "provenance_path": "components/OVA_Collection_Framework/PROVENANCE.json",
+      "upstream": {
+        "project": "nvis-ova/OVA_Collection_Framework",
+        "url": "https://gitlab-master.nvidia.com/nvis-ova/OVA_Collection_Framework",
+        "branch": "main",
+        "commit": "7e66c24a0b475cb81610037809833f51e42df03b",
+        "prepared_at": "2026-11-05T04:24:54.148272+00:00",
+        "status": "SOURCE_PREPARED",
+        "native_windows_runtime_tested": false,
+        "cluster_contacted": false,
+        "live_acceptance": false,
+        "source_modifications": "None; wrapper handoff/provenance/manifests added outside source tree.",
+        "dependencies": "Two platform-specific CPython3.12 Linux wheelhouses included; OS/runtime prerequisites excluded."
+      }
+    },
+    {
+      "component": "auto-action-trigger",
+      "provenance_path": "components/auto-action-trigger/PROVENANCE.json",
+      "upstream": {
+        "project": "nvis-ova/auto-action-trigger",
+        "url": "https://gitlab-master.nvidia.com/nvis-ova/auto-action-trigger",
+        "branch": "main",
+        "commit": "6ebd106928aa08db455c0cfd122ad9ddc6d130e5",
+        "prepared_at": "2026-11-05T04:14:58.628804+00:00",
+        "status": "SOURCE_PREPARED",
+        "native_windows_runtime_tested": false,
+        "cluster_contacted": false,
+        "live_acceptance": false,
+        "source_modifications": "Known previous-site hostname prefixes and private IPv4 examples/fixtures sanitized; runtime logic/default switches unchanged; external paused profile supplied.",
+        "dependencies": "No workload containers/model caches/OS/runtime package closure included."
+      }
+    },
+    {
+      "component": "nvis-p2p",
+      "provenance_path": "components/nvis-p2p/PROVENANCE.json",
+      "upstream": {
+        "tool": "nvis-p2p",
+        "repository": "https://gitlab-master.nvidia.com/nvis-ova/nvis-p2p",
+        "upstream_commit": "229032db49b40ea011c755f972f4900207473720",
+        "branch": "main",
+        "built_utc": "2026-11-05T04:16:03.729078+00:00",
+        "status": "OFFLINE_MINIMAL_CORE_TESTED_NOT_LIVE_IREN_ACCEPTED",
+        "source_is_modified": true,
+        "modifications": {
+          "omitted": [
+            "docs/CONSOLE_WORKFLOW.md",
+            "docs/DEPLOYMENT_GUIDE.md",
+            "docs/NVIS-P2P_User_and_Deployment_Guide.pdf",
+            "docs/RELEASE_ARTIFACT_GAP_AUDIT_2026-09-17.md",
+            "docs/USER_GUIDE.md",
+            "docs/screenshots/artifact-fleet-overview.png",
+            "docs/screenshots/catalog-workflow-controls.png",
+            "docs/screenshots/dragonfly-settings.png",
+            "docs/screenshots/profile-password.png",
+            "docs/screenshots/sign-in.png",
+            "docs/screenshots/su-readiness-heatmap.png"
+          ],
+          "edited": [
+            "configs/scheduler.yaml",
+            "configs/seed.yaml",
+            "configs/peer.template.yaml",
+            "configs/seed2.yaml",
+            "configs/seed-dynconfig.yaml",
+            "scripts/deploy-catalog-sync-unit-node.sh",
+            "scripts/catalog-operation.sh",
+            "scripts/apply-uncapped-node.sh",
+            "scripts/distribute-catalog-image-fleet.sh",
+            "scripts/deploy-catalog-peer-fleet.sh",
+            "scripts/queue-native-dfstore-fleet-rollout.sh",
+            "scripts/render-site-config.py",
+            "scripts/download-catalog-image.sh",
+            "scripts/verify-catalog-node.sh",
+            "scripts/rollout-catalog-image-fleet.sh",
+            "scripts/preflight-catalog-node.sh",
+            "scripts/preheat-catalog-image.sh",
+            "scripts/preflight-catalog-fleet.sh",
+            "scripts/deploy-catalog-peer-node.sh",
+            "scripts/sync-catalog-service-fleet.sh",
+            "scripts/audit-fleet.sh",
+            "deploy/console/BUILD_PROVENANCE.md",
+            "deploy/console/compose.yaml",
+            "deploy/console/README.md",
+            "deploy/systemd/nvis-p2p-seed.service",
+            "deploy/systemd/nvis-p2p-seed2.service",
+            "deploy/systemd/nvis-p2p-manager.service",
+            "deploy/systemd/nvis-p2p-console-api.service",
+            "deploy/systemd/nvis-p2p-peer.service",
+            "deploy/systemd/nvis-p2p-catalog-sync.service",
+            "deploy/control-plane/compose.yaml",
+            "deploy/object-store/compose.yaml",
+            "deploy/seed-origin/nginx.conf",
+            "deploy/seed-origin/compose.yaml",
+            "services/console-api/server.py",
+            "upstream/console/deploy/nginx.nvis.conf",
+            "release/components.env (restored from prior audited deployed release; matched by eight binary hashes)",
+            "services/console-api/server.py (fresh-checkout root resolution)",
+            "scripts/render-site-config.py (create TLS certificate output directory before copy)",
+            "release/console-files.list (exclude historical customer PDF/screenshots/docs)",
+            "P2P active IDC defaults neutralized; controlled origin ACL requires explicit NVIS_COMPUTE_CIDR (documentation subnet by default)",
+            "scripts/control-plane.py (new gated offline single-host new-install coordinator; install branch not live tested)",
+            "source/dist/core/manager replaced by explicitlyauth-fixed derivative",
+            "source/release/components.env updatedlocalManagerpin+version",
+            "source/scripts/verify-release-inputs.sh recognizeslocalManager version/commit suffix; schedulerpin retained",
+            "newstandard-library minimalrenderer/preflight/image-loader/consolechecker, matchingconsoleassetsand3complete runtimeimagearchives",
+            "optionaladvancedMinIO/full-stackhandbook separated; nooptionalregistrycredentialgate for minimalcore",
+            "rootAGENTS and legacyfull-stackskillnotices selectminimaldefault unambiguously",
+            "safepeer/IP/CIDR/pathchecks; HTTPSonlytimedcookieUIcheck; originRange-capable nginx"
+          ]
+        },
+        "git_history_included": false,
+        "credentials_included": false,
+        "windows_backend_supported": false,
+        "final_packaging_notes": [
+          "No Git history, runtime credentials or cluster inventory",
+          "Linux/Windows live acceptance not performed",
+          "Independent review completed; installer remains held on exact image dependencies; install branch not executed"
+        ],
+        "delivery_revision": "02-minimal-core",
+        "default_architecture": "MinimalDragonfly Manager+Scheduler+oneSeed+PostgreSQL16.15+Redis+nginxconsole+HTTPorigin; noMinIO",
+        "postgres_compatibility_overlay": {
+          "name": "postgres",
+          "image": "docker.io/library/postgres@sha256:b95b87e93ceb7594715d5c71fb6e09f6fc878851ab537735d617325eb9ba8b1b",
+          "observed_version": "PostgreSQL16.15 (Debian16.15-1.pgdg13+2)",
+          "archive": "postgres16-linux-amd64.tar",
+          "archive_sha256": "6f0ff152e1931fec0eaf3cfcd8c32e21057f8679815bedeec5cec6176dff6126",
+          "config_id": "sha256:74d436cb49d3398cf7b5d7b33635d43623d9e4da4b93c22db453f7d5d81181b1",
+          "local_tag": "iren-mkz/p2p-postgres:16.15-b95b87e93ceb",
+          "compatibility_overlay": "Replace unavailable originalPostgres digest only; actual Manager2.5.1 migration/login tested against officialPostgres16.15; not an upstream release claim"
+        },
+        "manager_derivative": {
+          "component": "Dragonfly Manager Linux amd64 derivative",
+          "version": "v2.5.1-iren-authfix.1",
+          "upstream_commit": "5523218a3710b2d5bc8fbdb0b1473d3a4d64916d",
+          "upstream_source_archive_sha256": "1b93aab358bf25cc7d9a6e3c965691173b5ccd9579547d6eebec1a88a69fa820",
+          "upstream_source_url": "https://codeload.github.com/dragonflyoss/dragonfly/tar.gz/5523218a3710b2d5bc8fbdb0b1473d3a4d64916d",
+          "patch_sha256": "87ae15254ace8568f78cbe9d65189a917aac0e8c88109a4a5cff30a26060427a",
+          "patched_source_bundle_sha256": "c78f647ebd7823e59f294cf898e67d0a020ec92d9e12de6df9a03ddd8ab704ce",
+          "binary_sha256": "b8b39c4ba17767c8634aa471d1ffea2cf8987fe8e12590b62c3d511e6b26c8ac",
+          "binary_bytes": 81490104,
+          "binary_format": "Static ELF64 x86-64 CGO_ENABLED=0, stripped",
+          "original_upstream_binary": false,
+          "toolchain": "go1.25.5 linux/amd64",
+          "toolchain_archive_sha256": "9e9b755d63b36acf30c12a9a3fc379243714c1c6d3dd72861da637f336ebb35b",
+          "build_command": "CGO_ENABLED=0 GOMAXPROCS=4 go build -p 4 -mod=readonly -trimpath -ldflags '-s -w -X d7y.io/dragonfly/v2/version.GitVersion=v2.5.1-iren-authfix.1 -X d7y.io/dragonfly/v2/version.GitCommit=5523218a3710b2d5bc8fbdb0b1473d3a4d64916d+iren-authfix1 -X d7y.io/dragonfly/v2/version.BuildTime=2026-11-05T00:00:00Z' -o manager ./cmd/manager",
+          "build_timestamp_policy": "Fixed version BuildTime string 2026-11-05T00:00:00Z for reproducibility; not wallclock assertion",
+          "prepared_at_utc": "2026-11-05T05:05:41.358155+00:00",
+          "console_input": {
+            "archive": "/data/iren-mkz-work/p2p-rack/nvis-p2p/deploy/console/artifacts/NVIS-P2P-Console-2.5.1-nvis.2-static.tar.gz",
+            "sha256": "9b35f6614a24e16dd36435c9dd3e692c242e446f0f32d161652cccbb2a7d31a0",
+            "role": "Embed same prebuilt console assets already supplied by NVIS P2P source kit; not represented as pristine upstream Manager assets"
+          },
+          "behavior_changes": [
+            "SignIn and ResetPassword obtain credential rows through GORM Row/Scan rather than global JSON Query cache",
+            "User JSON credential fields remain excluded",
+            "Explicitly reject missing/empty/zero identity, disabled and soft-deleted credential records",
+            "Password reset updates verified row directly rather than refetching through cache"
+          ],
+          "regression_evidence": {
+            "pristine_upstream": "Expected FAIL: cached User omits json-excluded hash; first warmed signin fails bcrypt hashedSecret-too-short",
+            "patched_service": "PASS against isolated PostgreSQL16.15 with actual go-gorm JSON cache;20warm logins, cache callback counter unchanged, passwordrotation and negativeaccount/password cases",
+            "actual_http_runtime": {
+              "status": "PASS",
+              "checks": [
+                "unauthenticated API rejected",
+                "20 rapid root/dragonfly signins with real Manager global cache PASS",
+                "browser CookieJar authenticated clusters GET without bearer header PASS",
+                "wrong password rejected with warm cache",
+                "nonexistent account rejected",
+                "public profile omits credential hash",
+                "actual API password change accepted after warm-cache signins",
+                "20 rapid new-password signins PASS; old password rejected",
+                "embedded matching console index and 2 static assets served offline",
+                "disabled account rejected through actual HTTP API",
+                "soft-deleted account rejected through actual HTTP API"
+              ],
+              "manager_sha256": "b8b39c4ba17767c8634aa471d1ffea2cf8987fe8e12590b62c3d511e6b26c8ac",
+              "environment": "Local isolated PostgreSQL16.15 + Redis + native static Manager; no IREN access",
+              "secrets_recorded": false
+            }
+          },
+          "limits": [
+            "No IREN hosts or VPN used",
+            "No Windows execution claimed",
+            "No systemd/remote Docker installation acceptance claimed by this component test",
+            "Linux amd64 only; ARM64 Manager binary not built",
+            "Supplied console assets derive from NVIS source kit and optional NVIS pages are not made functional by this authentication fix",
+            "Go module cache/toolchain not bundled; connected builder needed to rebuild source; deployed binary itself is static"
+          ]
+        },
+        "live_IREN_acceptance": false,
+        "default_console": "https://localhost:4301 (loopback/configurable)",
+        "default_console_bootstrap": {
+          "username": "root",
+          "password": "dragonfly",
+          "action": "rotate on first acceptance;publicvendorbootstrapnotregistrycredential"
+        },
+        "optional_advanced_paths_do_not_gate_default": true
+      }
+    },
+    {
+      "component": "nvis-rack-status",
+      "provenance_path": "components/nvis-rack-status/PROVENANCE.json",
+      "upstream": {
+        "tool": "nvis-rack-status",
+        "repository": "https://gitlab-master.nvidia.com/nvis/nvis-rack-status",
+        "upstream_commit": "337a25615c083a09f567aed3cf7e848e766b6e84",
+        "branch": "main",
+        "built_utc": "2026-11-05T04:16:03.733654+00:00",
+        "status": "STAGED_CANDIDATE_NOT_LIVE_ACCEPTED",
+        "source_is_modified": true,
+        "modifications": {
+          "omitted": [
+            ".plc/briefs/auth-audit-logging-acceptance-validation.md",
+            ".plc/briefs/auth-audit-logging-brief.md",
+            ".plc/briefs/auth-audit-logging-test-plan.md",
+            ".plc/briefs/auth-audit-logging-traceability.md",
+            ".plc/briefs/auth-audit-reader-brief.md",
+            ".plc/briefs/auth-audit-reader-test-plan.md",
+            ".plc/briefs/auth-authorization-brief.md",
+            ".plc/briefs/auth-authorization-test-plan.md",
+            ".plc/briefs/auth-identity-brief.md",
+            ".plc/briefs/auth-oidc-provider-brief.md",
+            ".plc/briefs/auth-oidc-provider-test-plan.md",
+            ".plc/briefs/launch-configuration-brief.md",
+            ".plc/briefs/launch-configuration-test-plan.md",
+            ".plc/briefs/oidc-directory-claims-l0.md",
+            ".plc/briefs/user-contact-attributes-l0.md",
+            ".plc/design/SWE-PLC-L1-003-BasicPLC-SADD-NVIS-RACK-STATUS.md",
+            ".plc/plc-design-validation-report.md",
+            ".plc/plc-requirements-validation-report.md",
+            ".plc/plc-v-model-validate-summary.md",
+            ".plc/profile.json",
+            ".plc/requirements/SWE-PLC-L1-002-BasicPLC-SRD-NVIS-RACK-STATUS.md",
+            ".plc/security/threat-model-NVIS-RACK-STATUS.md",
+            ".plc/test/SWE-PLC-L1-003-BasicPLC-SUTP-NVIS-RACK-STATUS.md",
+            "PLANNING_README.md",
+            "bin/run-local-nscale-tx.sh",
+            "deploy/nscale-tx.override.consolidated.yml",
+            "docs/clusters/DELL_IDRAC_DATACENTER_LICENSE_HGX.md",
+            "docs/clusters/MULTIRACK_VALIDATION_LEDGER.md",
+            "docs/clusters/NSCALE_16K_PYTHONCM_HYBRID_AUDIT.md",
+            "docs/clusters/NSCALE_16K_RELEASE_AUDIT.md",
+            "docs/clusters/NSCALE_TX_CAPPED_SERVICE_TAGS.md",
+            "docs/clusters/NSCALE_TX_DELL_RCA_REBUTTAL.md",
+            "docs/clusters/NSCALE_TX_DELL_TRIAGE_699W.md",
+            "docs/clusters/NSCALE_TX_DEPLOYMENT.md",
+            "docs/clusters/NSCALE_TX_GB300_SLOT0_POWER_CAP.md",
+            "docs/clusters/NSCALE_TX_IMEX_DOMAIN_ROOT_CAUSE.md",
+            "docs/clusters/NSCALE_TX_SLOT0_POWER_CAP_SLACK.md",
+            "docs/clusters/NscaleTX_Aug5_runs.csv",
+            "docs/clusters/VR200_GBx00_FastTrack_Validation_MOP.md",
+            "docs/handovers/HANDOVER_2026-08-14.md",
+            "docs/handovers/HANDOVER_2026-09-04.md",
+            "docs/releases/RELEASE_NOTES_2026-08-13.md",
+            "docs/releases/RELEASE_QA_2026-08-13.md",
+            "docs/releases/SECURITY_ASSESSMENT_2026-08.md",
+            "docs/superpowers/plans/2026-07-22-progressive-dashboard-loading.md",
+            "docs/superpowers/plans/2026-07-23-progressive-overview-live-probes.md",
+            "docs/superpowers/specs/2026-07-22-progressive-dashboard-loading-design.md",
+            "docs/superpowers/specs/2026-07-23-progressive-overview-live-probes-design.md"
+          ],
+          "edited": [
+            "backend/node_inventory.py",
+            "bin/gen-tls-cert.py",
+            "bin/prod-drift.sh",
+            "desktop/README.md",
+            "docs/DESIGN_p2p-pull-agent.md",
+            "docs/RACKSTATUS_USER_GUIDE.md",
+            "docs/EXECUTION_ARCHITECTURE.md",
+            "frontend/src/features/handover-reports/__fixtures__/handover.ts",
+            "frontend/src/features/handover-reports/views/HandoverRunView.test.tsx",
+            "frontend/src/features/p2p/views/P2pSettingsView.tsx",
+            "frontend/src/components/setup/wizardDraft.test.ts",
+            ".cursor/rules/cluster-deployments.mdc",
+            ".cursor/claude-rules/cluster-deployments.md",
+            "static/docs/how-to/configure-a-deployment.html",
+            "static/docs/how-to/stage-observability-agents.html",
+            "static/docs/_sources/how-to/configure-a-deployment.md.txt",
+            "static/docs/_sources/how-to/stage-observability-agents.md.txt",
+            "static/spa/assets/P2pSettingsView-B51AK8qH.js",
+            "docs/how-to/configure-a-deployment.md",
+            "docs/how-to/stage-observability-agents.md",
+            "docs/bringup/BRINGUP_AUTOMATION_INTEGRATION.md",
+            "deploy/p2p/configs/scheduler.yaml",
+            "deploy/p2p/configs/seed.yaml",
+            "deploy/p2p/configs/peer.template.yaml",
+            "deploy/p2p/configs/seed2.yaml",
+            "deploy/p2p/configs/seed-dynconfig.yaml",
+            "deploy/p2p/scripts/deploy-catalog-sync-unit-node.sh",
+            "deploy/p2p/scripts/catalog-operation.sh",
+            "deploy/p2p/scripts/apply-uncapped-node.sh",
+            "deploy/p2p/scripts/distribute-catalog-image-fleet.sh",
+            "deploy/p2p/scripts/deploy-catalog-peer-fleet.sh",
+            "deploy/p2p/scripts/queue-native-dfstore-fleet-rollout.sh",
+            "deploy/p2p/scripts/render-site-config.py",
+            "deploy/p2p/scripts/verify-catalog-node.sh",
+            "deploy/p2p/scripts/preflight-catalog-node.sh",
+            "deploy/p2p/scripts/preheat-catalog-image.sh",
+            "deploy/p2p/scripts/preflight-catalog-fleet.sh",
+            "deploy/p2p/scripts/deploy-catalog-peer-node.sh",
+            "deploy/p2p/scripts/sync-catalog-service-fleet.sh",
+            "deploy/p2p/scripts/audit-fleet.sh",
+            "deploy/p2p/deploy/systemd/nvis-p2p-seed.service",
+            "deploy/p2p/deploy/systemd/nvis-p2p-seed2.service",
+            "deploy/p2p/deploy/systemd/nvis-p2p-manager.service",
+            "deploy/p2p/deploy/systemd/nvis-p2p-console-api.service",
+            "deploy/p2p/deploy/control-plane/compose.yaml",
+            "deploy/p2p/deploy/object-store/compose.yaml",
+            "deploy/p2p/deploy/seed-origin/nginx.conf",
+            "deploy/p2p/deploy/seed-origin/compose.yaml",
+            "desktop/src/main/deployments.ts",
+            "backend/tests/test_cluster_report.py",
+            "backend/tests/test_tls_cert_gen.py",
+            "backend/tests/test_interactive_ssh_argv.py",
+            "backend/tests/test_bcm_query.py",
+            "backend/tests/test_node_inventory.py",
+            "backend/tests/test_p2p_rollout.py",
+            "backend/tests/test_p2p_fleet.py",
+            "backend/tests/test_p2p_rollouts_api.py",
+            "backend/tests/test_p2p_catalog_refresh_installer.py",
+            "backend/tests/test_host_copy.py",
+            ".cursor/rules/cluster-deployments.mdc (replace cross-customer deployment map)",
+            "start.sh (optional offline wheelhouse; default upstream behavior preserved)",
+            "P2P active IDC defaults neutralized; controlled origin ACL requires explicit NVIS_COMPUTE_CIDR (documentation subnet by default)"
+          ]
+        },
+        "git_history_included": false,
+        "credentials_included": false,
+        "windows_backend_supported": false,
+        "exact_commit_ci": {
+          "url": "https://gitlab-master.nvidia.com/nvis/nvis-rack-status/-/pipelines/79123349",
+          "status": "success",
+          "frontend_artifact_job_id": 527645238,
+          "docs_artifact_job_id": 527645228
+        },
+        "windows_desktop": {
+          "version": "0.3.1-260915203005",
+          "source_tag": "desktop-0.3.1",
+          "source_commit": "0de2aa5b63612c916706db9becba543ef7912647",
+          "sha256": "f8f3e8c0f7773d448debfec656e2d9d99a259a47184782f02dda9259475c09a8",
+          "role": "Optional existing Windows x64 SSH tunnel/browser shell; no backend bundled; not executed here",
+          "authenticode": "Upstream CI documents unsigned Windows installer; signature not verified here"
+        },
+        "final_packaging_notes": [
+          "No Git history, runtime credentials or cluster inventory",
+          "Linux/Windows live acceptance not performed",
+          "Actual CPython3.12 offline install and124 focused/integration tests passed; backports.zstd marker gap found and closed; ARM64 wheels resolved but not executed",
+          "Revision02 changes documentation/provenance only; standalone Rack installation/runtime assets and prior validation evidence remain unchanged. Minimal Dragonfly availability does not qualify Rack advanced P2P provisioning or cross-tool endpoint integration."
+        ],
+        "documentation_revisions": [
+          {
+            "revision": "20261105-r2",
+            "scope": "documentation only",
+            "updated_utc": "2026-11-05T05:16:41.828673+00:00",
+            "files": [
+              "agent_handoff.md",
+              "PROVENANCE.json"
+            ],
+            "change": "Distinguish dedicated minimal Dragonfly helpers from unchanged Rack advanced PostgreSQL/MinIO provisioning; explicitly prohibit staging revised P2P dist through the old Rack artifacts.lock because it pins the original buggy Manager rather than v2.5.1-iren-authfix.1. Independently gate endpoint integration and advanced workflow qualification. Standalone Rack install instructions unchanged.",
+            "runtime_payloads": "All source, scripts, SPA, wheels, desktop binaries and existing validation evidence are byte/mode-identical to original manifest payloads.",
+            "validation": "Original payload hashes/modes checked before copying; archive CRC/member hashes checked after repack. Runtime tests not repeated for this documentation-only revision.",
+            "original_archive_sha256": "a992be06779836a742fe4fc7c55bc112a491cd75e7bdd1a16744bcfa9f7fef45"
+          }
+        ],
+        "monorepo_sanitization": {
+          "date": "2026-11-06",
+          "source_release": "20261105-windows-native-02",
+          "derivative": true,
+          "changes": "Removed six generated runtime secret/log/lock files; source code unchanged. See top-level evidence/sanitization-removals.json.",
+          "original_toolkit_sha256": "1e42423d7737aa6f77acbc8864ab7eb38086a09106a4d345eba6698a52fb3ae7"
+        }
+      }
+    },
+    {
+      "component": "nvisova-exemplar_recipe",
+      "provenance_path": "components/nvisova-exemplar_recipe/PROVENANCE.json",
+      "upstream": {
+        "project": "nvis-ova/nvisova-exemplar_recipe",
+        "url": "https://gitlab-master.nvidia.com/nvis-ova/nvisova-exemplar_recipe",
+        "branch": "main",
+        "commit": "398a99df777559333ab906558d826a210b588f48",
+        "prepared_at": "2026-11-05T04:15:05.761556+00:00",
+        "status": "SOURCE_PREPARED",
+        "native_windows_runtime_tested": false,
+        "cluster_contacted": false,
+        "live_acceptance": false,
+        "source_modifications": "None; wrapper handoff/provenance/manifests added outside source tree.",
+        "dependencies": "No workload containers/model caches/OS/runtime package closure included."
+      }
+    },
+    {
+      "component": "observability",
+      "provenance_path": "components/observability/PROVENANCE.json",
+      "upstream": {
+        "source": "NVFTP NscaleTX-16K/Observability/NVIS-Observability-16K-2026.09.24-Complete-Source.tar.gz",
+        "downloaded_utc": "2026-11-05",
+        "source_sha256": "2066a00595ce140d9e35f719aaf7b6dc7c3a7f28abc2f8a9a7673e26e5a48624",
+        "selected_architecture": "live-portable-config September 24 source overlay (not stale root platform compose or older GitLab)",
+        "source_changes": [
+          {
+            "path": "site-placeholders.env.example",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "RESTORE_ORDER.md",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "README.md",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboard-inventory.tsv",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/folders.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "tools/build_manifests.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "tools/capture_component_inventory.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/nvis-headnode-attribution-exporter.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/validation_exporter.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/nvis-ufm-telemetry-exporter.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/nvis-fleet-dcgm-targets.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/nvis-single-node-metrics.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/nvis-slurm-job-collector.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/lakewriter.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/compose.datalake.yml",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/nccl_ingest.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/lake_job_census.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/compose.logcollect.yml",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/lake_common.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/lake_compact.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/runlog_ingest.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/lake_artifact_collect.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/hot_manifest_collect.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/ask.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/lake_run_backfill.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/lake_health_exporter.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/lake_result_map.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/run_lake_jobs.sh",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/log_collector.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/lake_browser.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/runlog_parse.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/lake_artifacts.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/runlogs_schema.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/compose.lakewriter-16k.yml",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/single_node_metrics.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/README.md",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/schema.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/nccl_parse.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "core/victoriametrics.compose.yml",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "core/docker-compose.yml",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "core/README.live-source.md",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "core/validation-exporter.compose.yml",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "core/alloy/config.alloy",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "core/systemd/nvis-observability-core.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "core/prometheus/prometheus.yml",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "core/grafana/provisioning/dashboards/dashboards.yaml",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/systemd/nvis-single-node-metrics.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/systemd/nvis-lake-compact@.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/systemd/nvis-datalake.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/tests/test_lake_result_map.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/tests/test_lake_job_census.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/tests/test_hot_manifest_collect.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/tests/test_runlog_parse.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/wiring/alloy.lake.river",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/wiring/prometheus.remote_write.snippet.yml",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/wiring/otelcol.lake-export.yaml",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "datalake/fixtures/mk_nccl_fixture.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "node-agents/systemd/dcgm-exporter.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "node-agents/systemd/node_exporter.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "node-agents/systemd/cgroup-exporter.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/slurm-job/job-collector.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/fleet-dcgm/fleet-dcgm-targets.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/headnode-attribution/headnode_attribution_exporter.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/redfish-reachability/generate_targets.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/redfish-reachability/test_exporter.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/redfish-reachability/redfish_reachability_exporter.py",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "exporters/redfish-reachability/nvis-redfish-reachability.service",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/provisioning/dashboards-live.yaml",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-nvswitch-health.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/iren_mkz-job-health.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-eth-fabric-overview.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/iren_mkz-cluster-overview.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/kishore-node-view.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/iren_mkz-nccl-acceptance-matrix.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-eth-fabric.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l4-tray-gpus.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-eth-optical.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/iren_mkz-llmb-validation.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/gpu-nvlink-health.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/iren_mkz-llmb-nemotron.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-dcgm-diag.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-executive.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-switches.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-congestion.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-sm-pkey.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-gpu-health.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-flaps.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-ib-fabric.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-executive.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-signal.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-drops.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-fabric-topology.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-eth-jitter-latency.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-node-deep-dive.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l1-fleet.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/iren_mkz-down-nodes.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/gpu-health.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-bms-thermal.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-node-deep-dive.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/iren_mkz-nccl-validation.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l3-fleet-trays.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-overview.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-bms-facility.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/iren_mkz-llmb-deepseek.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-bmc-thermal.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/cvt-cable-validation.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/iren_mkz-single-job-stats.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-eth-pfc-ecn.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-business-insights.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/cvt-clusterminder-inventory.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-impact-analysis.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/gpu-errors.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-offenders.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-home.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-nvswitch-fleet.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-nccl-validation.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-fabric-v1.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-fleet-racks.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-fabric-detail.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-nvlink.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-topology-live.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-nodes-detail.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-eth-flaps-topology.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-cable-audit.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-llmb-validation.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-cvt-clusterminder.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/cvt-clusterminder-config.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-network-fabric.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-eth-buffers-drops.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-eth-ber-errors.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-ib-blast-radius.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-nvlink-downlanes.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/NVIS/nvis-l2-job-cluster.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-topology.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-llm-solo-variance.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-thermal-sensors.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-nccl-campaigns.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-job-correctness-forensics.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-ai-performance.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-head-node.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-workloads.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-switch-root-cause.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-accelerator-reliability.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-logs-events.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-hca-root-cause.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-host-reliability.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-single-node-health.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-command-center.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-gpu-root-cause.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-expected-path.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-ethernet-host-network.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-tray-root-cause.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-wc-hlt-flight-deck.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-accelerators.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-thermal-power.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-fabric.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-nvlink-fabric.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-infrastructure.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-home.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-platform-root-cause.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN_MKZ/iren_mkz-job-root-cause.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN-16kAIC-OVA/iren16k-ova-host-hca.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN-16kAIC-OVA/iren16k-ova-job-flight-recorder.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN-16kAIC-OVA/iren16k-ova-bmc.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN-16kAIC-OVA/iren16k-ova-node-health.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN-16kAIC-OVA/iren16k-ova-congestion.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN-16kAIC-OVA/iren16k-ova-telemetry.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN-16kAIC-OVA/iren16k-ova-ecc.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN-16kAIC-OVA/iren16k-ova-gpu-thermals.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN-16kAIC-OVA/iren16k-ova-command.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN-16kAIC-OVA/iren16k-ova-validation.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          },
+          {
+            "path": "grafana-live/dashboards/IREN-16kAIC-OVA/iren16k-ova-xid.json",
+            "change": "site identifiers anonymized; private endpoint references replaced with documentation placeholders"
+          }
+        ],
+        "endpoint_replacements": 10,
+        "node_identifier_replacements": 5495,
+        "dashboard_customization": "Source customer name and UID prefixes customized to IREN, references updated consistently; verify site-specific queries after import. 106 dashboard JSONs retained.",
+        "omitted": [
+          "source-cluster runtime receipts/inventory/source maps",
+          "stale root deployment architecture",
+          "original PDF and raw archive (retained privately)"
+        ],
+        "validation_status": "offline checks pass; live acceptance pending",
+        "additional_changes": [
+          "Dedicated IREN deployment Compose with empty targets and loopback UI/API ports",
+          "Source Alloy formatting normalized using staged v1.5.1 binary",
+          "Datasource URLs changed to internal service DNS in new deployment",
+          "Node prefix converted compositionally to example50; source parser geometry remains an explicitly uncommissioned template",
+          "Cleared cached Grafana query-variable options/current source selections (308 variables) and reset dashboards to relative six-hour time windows"
+        ]
+      }
+    },
+    {
+      "component": "rack-status-pythoncm",
+      "provenance_path": "provenance/rack-status-pythoncm.json",
+      "upstream": {
+        "project_id": 445747,
+        "url": "https://gitlab-master.nvidia.com/nvis-ova/rack-status-pythoncm",
+        "branch": "feature/rack-status-pythoncm",
+        "commit": "8d1896e55cf24c23ef80d9ccef8a0d9a8a7962f7",
+        "committed_date": "2026-09-16T11:54:31.000-07:00"
+      }
+    }
+  ]
+}

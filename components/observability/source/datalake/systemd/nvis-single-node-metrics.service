@@ -1,0 +1,11 @@
+[Unit]
+Description=Materialize NVIS single-node validation metrics for Grafana
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=hlakshminara
+Group=cmods
+ExecStart=/usr/bin/python3 /cluster/OVA/hlakshminara/opt/iren_mkz-16k-services/datalake/single_node_metrics.py
+TimeoutStartSec=180
+

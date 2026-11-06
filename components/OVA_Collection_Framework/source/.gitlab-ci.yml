@@ -1,0 +1,50 @@
+stages:
+  - validate
+  - package
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+
+default:
+  image: python:3.12-slim
+  tags:
+    - size/medium
+    - type/docker
+    - os/linux
+  interruptible: true
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq --no-install-recommends git systemd
+
+validate-source:
+  stage: validate
+  script:
+    - python3 -m pip install -r app/requirements.lock
+    - python3 -m pip check
+    - python3 tools/run_tests.py
+    - python3 tools/check_repository.py > ci-report.json
+    - cat ci-report.json
+    - python3 -m compileall -q app tools tests
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - ci-report.json
+      - test-receipt.json
+      - test-results.xml
+    reports:
+      junit: test-results.xml
+
+package-download:
+  stage: package
+  script:
+    - python3 tools/package.py --output dist
+  artifacts:
+    expire_in: 90 days
+    paths:
+      - dist/ova-collection-framework.tar.gz
+      - dist/SHA256SUMS.txt

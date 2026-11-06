@@ -1,0 +1,362 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+ *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
+ */
+import { useState, useMemo, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import Box from "@mui/material/Box";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import { Button, Banner, Text } from "@nvidia/foundations-react-core";
+import { ArrowLeft } from "lucide-react";
+import { RackOverview } from "../components/rack/RackOverview";
+import { NodeSelector, type NodeInfo } from "../components/rack/NodeSelector";
+import { rackMembers } from "../lib/rackNodesFromInventory";
+import { RackLastOutputDot } from "../components/rack/RackLastOutputDot";
+import { RackPendingTags } from "../components/rack/RackPendingTags";
+import { ValidationTab } from "../components/rack/ValidationTab";
+import { HardwareTab } from "../components/rack/HardwareTab";
+import { NetworkingTab } from "../components/rack/NetworkingTab";
+import { ServicesTab } from "../components/rack/ServicesTab";
+// Heavy dialogs are loaded on demand, and the *gating* below is as load-bearing as the
+// `lazy()`. A conditionally rendered component is still statically imported unless it is
+// lazy, and a lazy component fetches its chunk the moment it is first rendered -- so
+// `<Lazy open={false} />` would download everything at first paint and gain nothing. Both
+// halves are required: `lazy()` to split the chunk, and `flag && ...` so it stays unfetched
+// until the operator asks. See the note in App.tsx.
+// chart.js (~493 kB of source) rides in with the parser charts.
+const ParserResultsDialog = lazy(() =>
+  import("../components/ParserResultsDialog").then((m) => ({ default: m.ParserResultsDialog })),
+);
+// xterm + its WebGL addon (~461 kB).
+const WebTerminalDialog = lazy(() => import("../components/rack/WebTerminalDialog"));
+import { RackCommandProvider } from "../context/RackCommandProvider";
+import { CONTENT_MAX_WIDTH } from "../components/layout/contentWidth";
+import { VisuallyHidden } from "../components/a11y/VisuallyHidden";
+import { NodeIssueHistoryDialog } from "../components/rack/NodeIssueHistoryDialog";
+import { getContent } from "../content";
+import { useActiveCluster } from "../context/ActiveClusterContext";
+import { fetchPostRunNodeReport } from "../services/nodeIssuesService";
+import { fetchNodeStages } from "../services/nodeStagesService";
+import type {
+  NodeInventoryEntry,
+  NodeSources,
+  NodeIssue,
+  NodeIssueRollup,
+  NodeIssuesResponse,
+  NodeStagesResponse,
+  RackRow,
+  RackStatusResponse,
+} from "../types/api";
+import type { NvisNamingSchema } from "../types/naming";
+
+const RACK_DETAIL_HELP = getContent("rackDetail");
+
+interface RackDetailViewProps {
+  rack: string;
+  row: RackRow | undefined;
+  comment: string;
+  physicalRf0: Record<string, string>;
+  /** The server's resolved node inventory (``/api/status`` ``nodes``); rack membership comes from it. */
+  inventory?: NodeInventoryEntry[] | null;
+  /** Who answered for each half of a node record (``/api/status`` ``node_sources``): BCM / Slurm. */
+  nodeSources?: NodeSources;
+  /** Why the server has no inventory (``/api/status`` ``node_inventory_error``). */
+  inventoryError?: string;
+  /** ``/api/status`` ``rack_mapping_mode``: outside ``direct`` no member is derived from a template. */
+  rackMappingMode?: RackStatusResponse["rack_mapping_mode"];
+  naming?: NvisNamingSchema;
+  logDir?: string;
+  onBack: () => void;
+}
+
+export function RackDetailView({
+  rack, row, comment, physicalRf0, inventory, nodeSources, inventoryError, rackMappingMode, naming, logDir,
+  onBack,
+}: RackDetailViewProps) {
+  const [tabIndex, setTabIndex] = useState(0);
+  const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+  const [parserOpen, setParserOpen] = useState(false);
+  const [terminalNode, setTerminalNode] = useState("");
+  const [issueNode, setIssueNode] = useState("");
+  const [issueData, setIssueData] = useState<NodeIssuesResponse | null>(null);
+  const [stageData, setStageData] = useState<NodeStagesResponse | null>(null);
+  const { activeCluster, activePlatform } = useActiveCluster();
+  const traysPerRack =
+    activeCluster?.geometry?.trays_per_rack || activePlatform?.geometry?.trays_per_rack || 18;
+
+  const nodes = useMemo(
+    () => rackMembers(rack, { row, inventory, mappingMode: rackMappingMode, physicalRf0, traysPerRack, naming }),
+    [rack, row, inventory, rackMappingMode, physicalRf0, naming, traysPerRack],
+  );
+  // Outside direct mode the inventory is the only source of members; say so when it is missing,
+  // or an unreadable inventory looks exactly like an empty rack.
+  const inventoryUnavailable = !!rackMappingMode && rackMappingMode !== "direct" && (!!inventoryError || inventory == null);
+
+  /** Default selection = all trays; re-seed when rack or the tray id set changes (not on every row poll with same ids). */
+  const selectionSeedRef = useRef<string>("");
+  // An empty rack seeds an empty selection, so one rack's selection never rides into the next.
+  useEffect(() => {
+    const seed = `${rack}:${nodes.map((n) => n.id).join(",")}`;
+    if (selectionSeedRef.current === seed) return;
+    selectionSeedRef.current = seed;
+    setSelectedNodes(new Set(nodes.map((n) => n.id)));
+  }, [rack, nodes]);
+
+  // Each node's own Stage 1 / Stage 2. A rack's stages come only from runs over all its nodes,
+  // so this is where a one-node run shows up. Polled like the rack table; a failure keeps the last
+  // answer rather than blanking the column.
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      try {
+        const data = await fetchNodeStages({ rack, logDir });
+        if (alive) setStageData(data);
+      } catch {
+        /* keep the previous answer */
+      }
+    };
+    void load();
+    const timer = window.setInterval(() => void load(), 60_000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [rack, logDir]);
+
+  const nodeStages = useMemo(
+    () => (stageData ? Object.fromEntries(stageData.nodes.map((n) => [n.node, n])) : undefined),
+    [stageData],
+  );
+
+  useEffect(() => {
+    let alive = true;
+    const loadIssues = async (refresh = false) => {
+      try {
+        const report = await fetchPostRunNodeReport({ rack, refresh });
+        const issues: NodeIssue[] = [];
+        const rollups: Record<string, NodeIssueRollup> = {};
+        for (const node of report.nodes) {
+          const synthetic: NodeIssue[] = node.runs.filter((run) => run.attributed_failure).map((run) => ({
+            issue_id: `run-${run.activity_id}-${run.job_id}-${node.node}`,
+            node: node.node,
+            rack: node.rack,
+            category: run.category || "validation",
+            code: "validation_failure",
+            reason: run.reason || `${run.tool} job ${run.job_id} ended ${run.state}`,
+            severity: "failure",
+            source: run.tool,
+            validation_run_id: run.activity_id,
+            scheduler_ref: run.job_id,
+            evidence: "",
+            drained: false,
+            slurm_reason: node.slurm_reason,
+            drain_result: "participation finding",
+            operator: "validation ledger",
+            created_at: run.started_at,
+          }));
+          const combined = [...node.findings, ...synthetic];
+          issues.push(...combined);
+          const latest = combined.sort((a, b) => b.created_at.localeCompare(a.created_at))[0] || null;
+          rollups[node.node] = {
+            node: node.node,
+            rack: node.rack,
+            issue_count: node.failure_count,
+            imported_count: 0,
+            local_count: combined.length,
+            drained: node.slurm_state.toLowerCase().startsWith("drain"),
+            nccl: combined.some((issue) => issue.category === "network" || issue.reason.toLowerCase().includes("nccl")),
+            maintenance: combined.some((issue) => issue.category === "maintenance"),
+            latest,
+          };
+        }
+        if (alive) setIssueData({
+          ok: true,
+          updated_at: report.generated_at,
+          punchcard_synced_at: "",
+          summary: {
+            nodes_tracked: report.summary.nodes,
+            nodes_with_issues: report.nodes.filter((node) => node.failure_count > 0).length,
+            currently_flagged_drained: report.summary.drained_nodes,
+            repeat_nodes: report.summary.flagged_nodes,
+            local_findings: issues.length,
+            hardware_findings: issues.filter((issue) => issue.category === "hardware").length,
+            network_findings: issues.filter((issue) => issue.category === "network").length,
+          },
+          nodes: rollups,
+          issues,
+        });
+      } catch {
+        // Node actions remain usable if the optional history source is offline.
+      }
+    };
+    void loadIssues(false);
+    const timer = window.setInterval(() => void loadIssues(false), 60_000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [rack]);
+
+  const selectDownTraysForPowerReset = useCallback(
+    (nodeList: NodeInfo[]) => {
+      const downs = nodeList.filter((n) => n.status === "down").map((n) => n.id);
+      if (downs.length === 0) {
+        setSelectedNodes(new Set(nodeList.map((n) => n.id)));
+      } else {
+        setSelectedNodes(new Set(downs));
+      }
+    },
+    [],
+  );
+
+  return (
+    <RackCommandProvider rack={rack} logDir={logDir} jobId={row?.last_job}>
+      <Box
+        component="section"
+        sx={{ maxWidth: CONTENT_MAX_WIDTH.wide, mx: "auto", p: 4 }}
+        aria-label={RACK_DETAIL_HELP ? `${RACK_DETAIL_HELP.aria.label}: ${rack}` : `Rack detail: ${rack}`}
+        aria-describedby={RACK_DETAIL_HELP ? "help-desc-rackDetail" : undefined}
+      >
+        {RACK_DETAIL_HELP && (
+          <VisuallyHidden id="help-desc-rackDetail">{RACK_DETAIL_HELP.aria.description}</VisuallyHidden>
+        )}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3, flexWrap: "wrap" }}>
+          <Button kind="secondary" size="small" onClick={onBack}>
+            <ArrowLeft size={18} style={{ marginRight: 4 }} />
+            Back
+          </Button>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0 }}>
+            <Text kind="title/lg">{rack}</Text>
+            <RackLastOutputDot />
+          </Box>
+        </Box>
+
+        <RackPendingTags rack={rack} />
+
+        {row && <RackOverview row={row} comment={comment} />}
+
+        <Box sx={{ mt: 3 }}>
+          <Text kind="body/bold/md" style={{ marginBottom: 8, display: "block" }}>
+            Nodes
+          </Text>
+          {inventoryUnavailable && (
+            <Banner status="warning" style={{ marginBottom: 8 }}>
+              {inventoryError || "Node inventory is unavailable, so this rack's members are unknown."}
+            </Banner>
+          )}
+          <NodeSelector
+            nodes={nodes}
+            selected={selectedNodes}
+            onSelectionChange={setSelectedNodes}
+            onOpenTerminal={(nodeId) => setTerminalNode(nodeId)}
+            issueNodes={issueData?.nodes}
+            onOpenIssues={(nodeId) => setIssueNode(nodeId)}
+            nodeStages={nodeStages}
+            stage2Source={stageData?.stage2_source}
+            nodeSources={nodeSources}
+          />
+        </Box>
+
+        <Box sx={{ mt: 3 }}>
+          {selectedNodes.size === 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <Banner status="info">
+                Select one or more nodes above to enable actions.
+              </Banner>
+            </div>
+          )}
+
+          <Tabs
+            value={tabIndex}
+            onChange={(_, v) => setTabIndex(v)}
+            sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}
+          >
+            <Tab label="Validation" />
+            <Tab label="Hardware" />
+            <Tab label="Networking" />
+            <Tab label="Services" />
+          </Tabs>
+
+          {tabIndex === 0 && (
+            <ValidationTab
+              rack={rack}
+              logDir={logDir}
+              naming={naming}
+              selectedNodes={selectedNodes}
+              disabled={selectedNodes.size === 0}
+              jobId={row?.last_job}
+              onViewResults={() => setParserOpen(true)}
+            />
+          )}
+          {tabIndex === 1 && (
+            <HardwareTab
+              rack={rack}
+              logDir={logDir}
+              naming={naming}
+              selectedNodes={selectedNodes}
+              disabled={selectedNodes.size === 0}
+              onSelectPowerResetTargets={() => selectDownTraysForPowerReset(nodes)}
+            />
+          )}
+          {tabIndex === 2 && (
+            <NetworkingTab
+              rack={rack}
+              logDir={logDir}
+              naming={naming}
+              selectedNodes={selectedNodes}
+              disabled={selectedNodes.size === 0}
+            />
+          )}
+          {tabIndex === 3 && (
+            <ServicesTab
+              rack={rack}
+              logDir={logDir}
+              naming={naming}
+              selectedNodes={selectedNodes}
+              disabled={selectedNodes.size === 0}
+            />
+          )}
+        </Box>
+      </Box>
+
+      {parserOpen ? (
+        <Suspense fallback={null}>
+          <ParserResultsDialog
+            open
+            onClose={() => setParserOpen(false)}
+            rack={rack}
+            jobId={row?.last_job !== "-" ? row?.last_job : undefined}
+            logDir={logDir}
+          />
+        </Suspense>
+      ) : null}
+
+      {terminalNode ? (
+        <Suspense fallback={null}>
+          <WebTerminalDialog
+            open
+            onClose={() => setTerminalNode("")}
+            target={terminalNode}
+            mode="node"
+          />
+        </Suspense>
+      ) : null}
+
+      <NodeIssueHistoryDialog
+        open={!!issueNode}
+        node={issueNode}
+        rollup={issueData?.nodes?.[issueNode]}
+        issues={issueData?.issues ?? []}
+        punchcardSyncedAt={issueData?.punchcard_synced_at}
+        onClose={() => setIssueNode("")}
+      />
+    </RackCommandProvider>
+  );
+}

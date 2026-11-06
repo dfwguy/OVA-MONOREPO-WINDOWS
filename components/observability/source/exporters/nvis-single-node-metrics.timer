@@ -1,0 +1,13 @@
+[Unit]
+Description=Refresh NVIS single-node validation metrics every ten minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+RandomizedDelaySec=30s
+Persistent=true
+Unit=nvis-single-node-metrics.service
+
+[Install]
+WantedBy=timers.target
+

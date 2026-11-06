@@ -1,0 +1,261 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+"""The cluster's workspace is a project setting that cascades to every script -- never a script literal.
+
+The NCCL Benchmark (Stage-1) failed on Nscale NC with ``llmb-run not found (searched under
+LLMB_INSTALL=/home/nvis/dgxc-benchmarking)``: the launcher carried a default from an earlier
+cluster while the installer had put LLMB under ``/home/cmods/workspace/llmb``. Each script had
+its own guess (``/home/nvis``, ``/home/cmods``, ``/home/cmsupport``, ``/home/*``), so every new
+deployment meant editing scripts. Now the cluster record's ``connection.workspace_dir`` is
+exported as ``NVIS_WORKSPACE_DIR`` and ``bin/scripts/workspace-dir-common.sh`` is the one place
+that turns it into paths. See docs/explanation/how-cluster-paths-reach-scripts.md.
+"""
+from __future__ import annotations
+
+import os
+import re
+import subprocess
+from pathlib import Path
+
+import config_env
+import pytest
+from catalog import context, models
+
+SCRIPTS = Path(__file__).resolve().parents[2] / "bin" / "scripts"
+COMMON = SCRIPTS / "workspace-dir-common.sh"
+LLMB = SCRIPTS / "lib" / "llmb_paths.inc.sh"
+_WS_VARS = ("WORKSPACE_DIR", "NVIS_WORKSPACE_DIR", "RACK_WORKSPACE_DIR", "TOPDIR", "LLMB_INSTALL", "LLMB_VENV")
+
+
+def _cluster(**connection):
+    return models.Cluster.from_dict({"id": "c1", "name": "C1", "connection": connection})
+
+
+def _clean_env(**extra):
+    env = {k: v for k, v in os.environ.items() if k not in _WS_VARS}
+    env.update(extra)
+    return env
+
+
+class TestTheProjectSetting:
+    def test_it_round_trips(self):
+        c = _cluster(workspace_dir="/home/cmods/workspace")
+        assert c.to_dict()["connection"]["workspace_dir"] == "/home/cmods/workspace"
+
+    @pytest.mark.parametrize("bad", ["relative/ws", "/home/my ws", "/home/$(id)", "/a/../b"])
+    def test_paths_a_script_cannot_use_safely_are_refused(self, bad):
+        assert any("workspace_dir" in p for p in _cluster(workspace_dir=bad).connection.validate())
+
+    def test_the_overlay_exports_it(self):
+        env = context.high_overlay(None, _cluster(workspace_dir="/home/cmods/workspace"), None)
+        assert env["NVIS_WORKSPACE_DIR"] == "/home/cmods/workspace"
+        assert "NVIS_WORKSPACE_DIR" not in context.high_overlay(None, _cluster(), None)
+
+
+class TestNoGhostDefault:
+    def test_unset_resolves_to_nothing_not_a_strangers_home(self, monkeypatch):
+        monkeypatch.setattr(config_env, "_eget", lambda key, default=None: "")
+        assert config_env._nvis_workspace_dir_effective() == ""
+
+    def test_a_tool_without_a_workspace_says_where_to_set_it(self, monkeypatch):
+        from api import tools
+
+        monkeypatch.setattr(tools, "_nvis_workspace_dir_effective", lambda: "")
+        with pytest.raises(ValueError, match="Projects -> cluster -> Workspace"):
+            tools._resolve_workspace({})
+
+    def test_a_request_may_still_name_one(self, monkeypatch):
+        from api import tools
+
+        monkeypatch.setattr(tools, "_nvis_workspace_dir_effective", lambda: "")
+        monkeypatch.setattr(tools, "_resolve_tools_destination", lambda raw: raw)
+        assert tools._resolve_workspace({"workspace": "/scratch/ws"}) == "/scratch/ws"
+
+
+def _source(env, extra=""):
+    script = f'. "{COMMON}" || exit $?; {extra}'
+    return subprocess.run(["bash", "-c", script], capture_output=True, text=True, env=env, check=False)
+
+
+class TestTheShellResolver:
+    def test_no_workspace_is_an_error_naming_the_setting(self):
+        r = _source(_clean_env())
+        assert r.returncode == 2
+        assert "Projects -> cluster -> Workspace" in r.stderr
+
+    def test_the_workspace_resolves_and_trims(self):
+        r = _source(_clean_env(NVIS_WORKSPACE_DIR="/home/cmods/workspace/"), 'echo "$WORKSPACE_DIR|$TOPDIR"')
+        assert r.returncode == 0, r.stderr
+        assert r.stdout.strip() == "/home/cmods/workspace|/home/cmods/workspace"
+
+    def test_an_installer_argument_beats_the_setting(self):
+        r = _source(_clean_env(NVIS_WORKSPACE_DIR="/ws", WORKSPACE_DIR="/arg"), 'echo "$TOPDIR"')
+        assert r.stdout.strip() == "/arg"
+
+    def test_an_installer_refuses_to_guess(self, tmp_path):
+        """Installers used to default to /home/cmsupport/workspace -- installing where nothing reads."""
+        r = subprocess.run(["bash", str(SCRIPTS / "install-hpcx-workspace.sh")], capture_output=True,
+                           text=True, env=_clean_env(), cwd=tmp_path, check=False, timeout=60)
+        assert r.returncode == 2
+        assert "no workspace configured" in r.stderr
+
+
+def _llmb(env, extra=""):
+    script = f'. "{LLMB}" || exit $?; {extra}'
+    return subprocess.run(["bash", "-c", script], capture_output=True, text=True, env=env, check=False)
+
+
+class TestTheLlmbResolver:
+    def test_llmb_paths_derive_from_the_workspace(self):
+        r = _llmb(_clean_env(NVIS_WORKSPACE_DIR="/home/cmods/workspace/"), 'echo "$LLMB_INSTALL|$LLMB_VENV"')
+        assert r.returncode == 0, r.stderr
+        assert r.stdout.strip() == "/home/cmods/workspace/llmb|/home/cmods/workspace/llmb_venv"
+
+    def test_an_explicit_install_is_complete_without_a_workspace(self):
+        """A collector told exactly where LLMB is must not demand a workspace it does not use."""
+        r = _llmb(_clean_env(LLMB_INSTALL="/elsewhere/llmb/"), 'echo "$LLMB_INSTALL|${LLMB_VENV:-<none>}"')
+        assert r.returncode == 0, r.stderr
+        assert r.stdout.strip() == "/elsewhere/llmb|<none>"
+
+    def test_neither_is_an_error_naming_the_setting(self):
+        r = _llmb(_clean_env())
+        assert r.returncode == 2
+        assert "Projects -> cluster -> Workspace" in r.stderr
+
+
+class TestTheValidationPresetsHandItOver:
+    """The workspace sits in the catalog overlay, not this process's environment: a launcher only
+    passes it on when its plan says so. Every legacy launcher's plan did; the preset plan did not, so
+    the NCCL Acceptance Sweep on Nscale NC (2026-10-09, gpu108-su21) reached its sbatch and stopped at
+    "no workspace configured for this cluster" while Stage-1 ran fine on the same cluster."""
+
+    NODE = "ink50-dh01-d01-11"
+
+    def _prepare(self, monkeypatch, tmp_path, workspace):
+        import app as app_module
+        import validation_launch
+
+        monkeypatch.setattr(validation_launch, "_nvis_workspace_dir_effective", lambda: workspace)
+        monkeypatch.setattr(validation_launch, "_resolve_log_dir", lambda _raw=None: tmp_path)
+        monkeypatch.setattr(validation_launch, "_script_exists", lambda _path: True)
+        monkeypatch.setattr(validation_launch, "_all_slurm_nodenames", lambda: [self.NODE])
+        monkeypatch.setattr(validation_launch, "_validation_node_eligibility",
+                            lambda raw: (dict.fromkeys(raw, "idle"), []))
+        with app_module.app.app_context():
+            plan, err = validation_launch._prepare_validation_preset({
+                "preset_id": "nccl-2.31.2", "scope": "node", "nodes": [self.NODE], "storage": "nfs",
+            })
+        assert err is None, err
+        return plan
+
+    def test_the_preset_plan_carries_the_cluster_workspace(self, monkeypatch, tmp_path):
+        plan = self._prepare(monkeypatch, tmp_path, "/home/cmods/workspace")
+        assert plan["env_updates"]["NVIS_WORKSPACE_DIR"] == "/home/cmods/workspace"
+        assert plan["workspace"] == "/home/cmods/workspace"
+
+    def test_no_workspace_is_left_for_the_script_to_refuse(self, monkeypatch, tmp_path):
+        """No setting means no variable, never an empty one: the script's own refusal names the setting."""
+        plan = self._prepare(monkeypatch, tmp_path, "")
+        assert "NVIS_WORKSPACE_DIR" not in plan["env_updates"]
+
+    def test_a_changed_workspace_invalidates_the_reviewed_plan(self, monkeypatch, tmp_path):
+        a = self._prepare(monkeypatch, tmp_path, "/home/cmods/workspace")
+        b = self._prepare(monkeypatch, tmp_path, "/scratch/workspace")
+        assert a["plan_hash"] != b["plan_hash"]
+
+
+# Code lines only: comments may tell the history of a path, code may not carry one. The user part
+# ends at a slash, a quote, a brace, a colon or the end -- the first version required a slash, so
+# `${OUT_DIR:-/home/cmsupport}` went through, and only scanned .sh/.sbatch/.py, so `shim/srun` did.
+_HOME_LITERAL = re.compile(r"/home/(?:\*|[a-z_][a-z0-9_-]*)(?=[/\"'}\s:]|$)")
+
+#: Files that are documentation or data rather than code; anything else in the tree is scanned.
+_NOT_CODE = {".md", ".txt", ".json", ".tsv", ".csv", ".png", ".svg", ".yaml", ".yml"}
+
+#: Site launchers: one deployment's own configuration, the way deploy/*.yml are, and allowed to name
+#: that site's paths for exactly that reason.
+_SITE_LAUNCHERS = {"run-local-nscale-tx.sh"}
+
+REPO = SCRIPTS.parents[1]
+
+
+def _code_lines(path: Path):
+    for number, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+        if line.lstrip().startswith("#"):
+            continue
+        yield number, line
+
+
+def _offenders(paths) -> list[str]:
+    return [
+        f"{path.relative_to(REPO)}:{n}: {line.strip()[:120]}"
+        for path in paths
+        if path.is_file() and path.suffix not in _NOT_CODE and path.name not in _SITE_LAUNCHERS
+        for n, line in _code_lines(path)
+        if _HOME_LITERAL.search(line)
+    ]
+
+
+def test_no_script_carries_a_user_home():
+    offenders = _offenders(sorted(SCRIPTS.rglob("*")))
+    assert not offenders, (
+        "scripts must derive cluster paths from project settings (workspace-dir-common.sh, "
+        "node_images.inc.sh, NVIS_SCRIPTS_DIR), not carry a site's /home:\n" + "\n".join(offenders)
+    )
+
+
+def test_no_operator_tool_carries_a_user_home():
+    """bin/ tools run on an operator's machine; they take the cluster's root, never a site's home."""
+    offenders = _offenders(sorted(p for p in (REPO / "bin").iterdir()))
+    assert not offenders, "derive from NVIS_CLUSTER_ROOT, never a site's /home:\n" + "\n".join(offenders)
+
+
+def test_no_backend_code_carries_a_user_home():
+    """A string the backend acts on may not name a site's home. Docstrings and comments may tell
+    the history of a path; values may not carry one -- that is how a dead default outlives its site."""
+    import ast
+
+    offenders = []
+    for path in sorted((REPO / "backend").rglob("*.py")):
+        if "tests" in path.parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        docstrings = {
+            id(node.body[0].value)
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+            and node.body and isinstance(node.body[0], ast.Expr)
+            and isinstance(node.body[0].value, ast.Constant) and isinstance(node.body[0].value.value, str)
+        }
+        offenders += [
+            f"{path.relative_to(REPO)}:{node.lineno}: {node.value[:100]!r}"
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Constant) and isinstance(node.value, str)
+            and id(node) not in docstrings and _HOME_LITERAL.search(node.value)
+        ]
+    assert not offenders, "derive from the cluster's root (cluster_paths), never a site's /home:\n" + "\n".join(offenders)
+
+
+@pytest.mark.parametrize("name", [
+    "run_llmb_nccl.sh", "run_llmb_nemo.sh", "nccl_campaign.sh", "collect_llmb_nccl_log.sh",
+    "collect_llmb_nemo_log.sh", "run-exemplar-system-info.sh", "run-exemplar-llama.sh",
+    "run-llmb-nccl-container.sh", "run-validation-preset.sh", "llama405b_fp8_1024.sbatch",
+    "llama405b_fp8_4096.sbatch",
+])
+def test_every_llmb_consumer_uses_the_one_resolver(name):
+    assert "lib/llmb_paths.inc.sh" in (SCRIPTS / name).read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("name", [
+    "nccl_allreduce.sbatch", "nccl_fullrack_rounds.sh", "build_nccl_host.sh", "install-hpcx-workspace.sh",
+    "install-dgxc-benchmarking-workspace.sh", "install-cuda-nccl-workspace.sh",
+])
+def test_every_workspace_consumer_uses_the_one_resolver(name):
+    assert "workspace-dir-common.sh" in (SCRIPTS / name).read_text(encoding="utf-8")

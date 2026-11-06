@@ -1,0 +1,19 @@
+[Unit]
+Description=NVIS 16K core observability services
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/observability/iren_mkz/deploy/16k-core
+ExecStart=/usr/local/bin/docker compose --env-file /etc/nvis-observability/core.env -f /opt/observability/iren_mkz/deploy/16k-core/docker-compose.yml up -d
+ExecReload=/usr/local/bin/docker compose --env-file /etc/nvis-observability/core.env -f /opt/observability/iren_mkz/deploy/16k-core/docker-compose.yml up -d
+TimeoutStartSec=600
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,856 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Fleet and selected-node analysis of llm-pretrain-solo per-rank median step times.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "targetBlank": false,
+      "title": "Single-node health heatmap",
+      "type": "link",
+      "url": "/d/iren_mkz-single-node-health"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "Selected node: <b>$node</b>. Production gate is population coefficient of variation across four per-rank medians: <b>FAIL &gt; 2.00%</b>; near-limit band is 1.80\u20132.00%. <b>Max/min spread is shown separately</b> and must not be confused with CoV. Change the Node textbox above for A/B comparison.",
+        "mode": "html"
+      },
+      "title": "Verdict model",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1.8
+              },
+              {
+                "color": "red",
+                "value": 2.0
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "CoV",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+cov_pct+FROM+single_node+WHERE+node=%27${node}%27",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Selected node CoV",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 6
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 3
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "max/min",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+relative_spread_pct+FROM+single_node+WHERE+node=%27${node}%27",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Selected max/min spread",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 3
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "GPU",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+slowest_gpu+FROM+single_node+WHERE+node=%27${node}%27",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Selected slowest GPU",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 3
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "median",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+overall_median_ms+FROM+single_node+WHERE+node=%27${node}%27",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Selected overall median",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "max": 7,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 2
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "id": 6,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "GPU",
+              "type": "string"
+            },
+            {
+              "selector": "1",
+              "text": "relative_pct",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+%27GPU+%27%7C%7Cgpu+AS+gpu,relative_to_fastest_pct+FROM+solo_gpu+WHERE+node=%27${node}%27+ORDER+BY+gpu",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Selected node \u2014 each GPU relative to fastest",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "median_ms"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "relative_pct"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "gpu",
+              "type": "number"
+            },
+            {
+              "selector": "1",
+              "text": "iterations",
+              "type": "number"
+            },
+            {
+              "selector": "2",
+              "text": "median_ms",
+              "type": "number"
+            },
+            {
+              "selector": "3",
+              "text": "relative_pct",
+              "type": "number"
+            },
+            {
+              "selector": "4",
+              "text": "cov_pct",
+              "type": "number"
+            },
+            {
+              "selector": "5",
+              "text": "verdict",
+              "type": "string"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+gpu,iterations,median_ms,relative_to_fastest_pct,cov_pct,solo_status+FROM+solo_gpu+WHERE+node=%27${node}%27+ORDER+BY+gpu",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Selected node \u2014 exact per-GPU medians",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cov_pct"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1.8
+                    },
+                    {
+                      "color": "red",
+                      "value": 2.0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "node",
+              "type": "string"
+            },
+            {
+              "selector": "1",
+              "text": "status",
+              "type": "string"
+            },
+            {
+              "selector": "2",
+              "text": "cov_pct",
+              "type": "number"
+            },
+            {
+              "selector": "3",
+              "text": "max_min_pct",
+              "type": "number"
+            },
+            {
+              "selector": "4",
+              "text": "fastest_ms",
+              "type": "number"
+            },
+            {
+              "selector": "5",
+              "text": "slowest_ms",
+              "type": "number"
+            },
+            {
+              "selector": "6",
+              "text": "slowest_gpu",
+              "type": "number"
+            },
+            {
+              "selector": "7",
+              "text": "result_time",
+              "type": "string"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+node,solo_status,round(cov_pct,4),round(relative_spread_pct,3),fastest_ms,slowest_ms,slowest_gpu,solo_mtime+FROM+single_node+WHERE+rack_id=(SELECT+rack_id+FROM+single_node+WHERE+node=%27${node}%27)+ORDER+BY+cov_pct+DESC+NULLS+LAST",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Rack peer A/B comparison for selected node",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 14,
+        "x": 0,
+        "y": 26
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": true
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "node",
+              "type": "string"
+            },
+            {
+              "selector": "1",
+              "text": "rack",
+              "type": "string"
+            },
+            {
+              "selector": "2",
+              "text": "status",
+              "type": "string"
+            },
+            {
+              "selector": "3",
+              "text": "cov_pct",
+              "type": "number"
+            },
+            {
+              "selector": "4",
+              "text": "max_min_pct",
+              "type": "number"
+            },
+            {
+              "selector": "5",
+              "text": "fastest_ms",
+              "type": "number"
+            },
+            {
+              "selector": "6",
+              "text": "slowest_ms",
+              "type": "number"
+            },
+            {
+              "selector": "7",
+              "text": "slowest_gpu",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+node,rack_id,solo_status,round(cov_pct,4),round(relative_spread_pct,3),fastest_ms,slowest_ms,slowest_gpu+FROM+single_node+WHERE+cov+IS+NOT+NULL+ORDER+BY+cov+DESC+LIMIT+100",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Fleet outliers \u2014 highest CoV",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 10,
+        "x": 14,
+        "y": 26
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": true
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "cov_bucket_pct",
+              "type": "number"
+            },
+            {
+              "selector": "1",
+              "text": "nodes",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+round(floor(cov_pct*10)/10,1)+AS+cov_bucket_pct,count(*)+AS+nodes+FROM+single_node+WHERE+cov+IS+NOT+NULL+GROUP+BY+1+ORDER+BY+1",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Fleet CoV distribution (0.1 percentage-point buckets)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "nvis-datalake"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "0",
+              "text": "gpu",
+              "type": "number"
+            },
+            {
+              "selector": "1",
+              "text": "nodes",
+              "type": "number"
+            },
+            {
+              "selector": "2",
+              "text": "mean_median_ms",
+              "type": "number"
+            },
+            {
+              "selector": "3",
+              "text": "p50_ms",
+              "type": "number"
+            },
+            {
+              "selector": "4",
+              "text": "p95_ms",
+              "type": "number"
+            },
+            {
+              "selector": "5",
+              "text": "min_ms",
+              "type": "number"
+            },
+            {
+              "selector": "6",
+              "text": "max_ms",
+              "type": "number"
+            }
+          ],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "/api?q=SELECT+gpu,count(*)+AS+nodes,round(avg(median_ms),2)+AS+mean_median_ms,round(quantile_cont(median_ms,0.5),2)+AS+p50_ms,round(quantile_cont(median_ms,0.95),2)+AS+p95_ms,round(min(median_ms),2)+AS+min_ms,round(max(median_ms),2)+AS+max_ms+FROM+solo_gpu+GROUP+BY+1+ORDER+BY+1",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "Fleet GPU-position baselines",
+      "type": "table"
+    }
+  ],
+  "refresh": "10m",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "llmb",
+    "gpu",
+    "variance",
+    "single-node"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "example50-dh01-a03-15",
+          "value": "example50-dh01-a03-15"
+        },
+        "label": "Node",
+        "name": "node",
+        "options": [],
+        "query": "example50-dh01-a03-15",
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "IREN_MKZ \u2014 LLM Solo Per-GPU Variance",
+  "uid": "iren_mkz-llm-solo-variance",
+  "version": 2
+}

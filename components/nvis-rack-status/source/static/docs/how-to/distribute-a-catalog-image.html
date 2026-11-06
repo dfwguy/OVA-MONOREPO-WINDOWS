@@ -1,0 +1,625 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>How to distribute a catalog image to the fleet &#8212; NVIS Greenlight</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/local-fonts.css?v=64a3f04a" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f6167d25" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=1657e09f"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/distribute-a-catalog-image';</script>
+
+    <link rel="icon" href="../_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="How to bring P2P peers up on new or reimaged nodes" href="recover-p2p-peers-after-a-reimage.html" />
+    <link rel="prev" title="How to connect a PythonCM (BCM) cluster" href="connect-a-pythoncm-cluster.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.1" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials — learning by doing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/distribute-your-first-image.html">Distribute your first image with NVIS-P2P</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides — getting something done</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="configure-a-deployment.html">How to configure a deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authenticate-to-the-api.html">How to authenticate to the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grant-a-team-access.html">How to grant a team access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diagnose-a-refused-request.html">How to diagnose a refused request</a></li>
+<li class="toctree-l1"><a class="reference internal" href="add-your-own-script.html">How to add your own script and register it as a tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use-the-terminal.html">How to use the terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stage-observability-agents.html">How to stage the observability node-agents to a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connect-a-pythoncm-cluster.html">How to connect a PythonCM (BCM) cluster</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">How to distribute a catalog image to the fleet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recover-p2p-peers-after-a-reimage.html">How to bring P2P peers up on new or reimaged nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publish-the-deployment-tracker.html">How to publish the deployment tracker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast-cluster-completion.html">How to forecast when the cluster finishes validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="write-a-rack-handover-report.html">How to write a rack handover report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="place-a-multirack-job.html">How to place a multi-rack job for best collective performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="list-bcm-racks-without-templates.html">How to list saved BCM racks without naming templates</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference — the machinery, described</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/configuration/settings.html">Configuration settings — every setting, generated</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/projects-and-clusters.html">Projects and clusters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/tools.html">Tool documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/actions-by-scope.html">Actions by scope — node, rack, multirack</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/identity/index.html">Identity and authorization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/actions-and-resources.html">Actions and resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/policy-schema.html">Policy schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/evaluation.html">How a decision is made</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/action-vocabulary.html">Action vocabulary — every service and action</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/p2p-catalog-distribution.html">P2P catalog distribution — components, parameters, scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/collective-settings-by-job-size.html">Collective settings by job size</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation — why it is like this</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../explanation/the-parametric-platform.html">The parametric platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/why-authorization-is-default-deny.html">Why authorization is default-deny</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/how-a-script-path-is-chosen.html">How a script path is chosen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/the-cluster-home-directory.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/how-cluster-paths-reach-scripts.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/geometry-and-hostnames.html">Geometry and hostnames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/which-storage-engine.html">Which storage engine, and why</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/why-no-pythoncm-broker.html">Why there is no PythonCM broker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/porting-the-pythoncm-fork.html">Porting the PythonCM fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/p2p-module-integration.html">NVIS-P2P as a per-cluster capability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/active-passive-and-blue-green.html">Active/passive and blue/green (roadmap)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/p2p-catalog-distribution.html">How catalog images reach every node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/rack-placement-and-collective-performance.html">Rack placement and collective performance</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">How to distribute a catalog image to the fleet</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="how-to-distribute-a-catalog-image-to-the-fleet">
+<h1>How to distribute a catalog image to the fleet<a class="headerlink" href="#how-to-distribute-a-catalog-image-to-the-fleet" title="Link to this heading">#</a></h1>
+<div class="nvis-diataxis nvis-diataxis-how-to docutils">
+<p>How-to guide — steps to a goal. Assumes you know the basics.</p>
+</div>
+<p>Get one image onto a roster of nodes using the campaign tooling, in bounded waves so the seeds are
+not overwhelmed. For the model behind these steps see
+<a class="reference internal" href="../explanation/p2p-catalog-distribution.html"><span class="std std-doc">How catalog images reach every node</span></a>.</p>
+<p>In Rack Status the same thing is one action: pin the image under <strong>Artifact Distribution →
+Catalog</strong>, then launch a campaign under <strong>Campaigns</strong>. For a large image, set the campaign’s wave
+plan to <strong>Rack-staged</strong>: it gives every rack one copy before growing each rack, so most nodes pull
+from rack-mates instead of the seeds (see
+<a class="reference internal" href="../reference/p2p-catalog-distribution.html#wave-plan-operations-worker"><span class="std std-ref">Wave plan</span></a>). The operations worker runs steps 3–4 for you,
+and before it preheats it checks that the cluster’s manifest pins the image as the catalog does —
+syncing first when it does not. Use the steps below when you need to drive a rollout by hand.</p>
+<p>All commands run on the appserver as a member of the <code class="docutils literal notranslate"><span class="pre">cmods</span></code> group (no <code class="docutils literal notranslate"><span class="pre">sudo</span></code> needed for P2P
+operations).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">NVIS_P2P_ROOT</span><span class="o">=</span>/opt/nvis-p2p/current
+<span class="nb">cd</span><span class="w"> </span><span class="s2">"</span><span class="nv">$NVIS_P2P_ROOT</span><span class="s2">/scripts"</span>
+</pre></div>
+</div>
+<section id="confirm-the-image-is-on-the-origin-and-pinned">
+<h2>1. Confirm the image is on the origin and pinned<a class="headerlink" href="#confirm-the-image-is-on-the-origin-and-pinned" title="Link to this heading">#</a></h2>
+<p>The origin only serves what is in <code class="docutils literal notranslate"><span class="pre">/cluster/containers</span></code>, and nodes verify against the catalog
+<code class="docutils literal notranslate"><span class="pre">sha</span></code>. Check both:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-sI<span class="w"> </span><span class="s2">"http://&lt;appserver&gt;:12130/&lt;image&gt;.sqsh"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1<span class="w">          </span><span class="c1"># expect 200</span>
+awk<span class="w"> </span>-F<span class="s1">'\t'</span><span class="w"> </span><span class="s1">'$3=="&lt;image&gt;.sqsh"{print $5}'</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>/cluster/containers/.nvis-p2p/catalog/images.tsv<span class="w">                  </span><span class="c1"># the pinned sha</span>
+sha256sum<span class="w"> </span>/cluster/containers/&lt;image&gt;.sqsh<span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-c1-64<span class="w">             </span><span class="c1"># must match the pin</span>
+</pre></div>
+</div>
+<p>If the pin does not match the file (for example after re-importing an image — a rebuilt image never
+reproduces an earlier hash), re-pin it under <strong>Artifact Distribution → Catalog</strong> and run <strong>Sync</strong>.
+Do not edit <code class="docutils literal notranslate"><span class="pre">images.tsv</span></code> or <code class="docutils literal notranslate"><span class="pre">images.json</span></code> on the cluster by hand: Rack Status is the catalog’s
+source of truth, and the next sync rewrites both files from it.</p>
+</section>
+<section id="make-sure-the-nodes-carry-the-new-pin">
+<h2>2. Make sure the nodes carry the new pin<a class="headerlink" href="#make-sure-the-nodes-carry-the-new-pin" title="Link to this heading">#</a></h2>
+<p>A node resolves the expected <code class="docutils literal notranslate"><span class="pre">sha</span></code> from its <em>own</em> catalog copy. If that copy is stale, the node
+pulls the correct bytes and rejects them as a digest mismatch (or refuses the image outright as
+<code class="docutils literal notranslate"><span class="pre">CATALOG_IMAGE_UNKNOWN</span></code>). Every peer refreshes its copy from the origin every 15 minutes
+(<code class="docutils literal notranslate"><span class="pre">nvis-p2p-catalog-refresh.timer</span></code>), so after a sync you can simply wait one interval. To push it now
+instead, run the same validated refresh on every node, then verify the count:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>xargs<span class="w"> </span>-P50<span class="w"> </span>-I<span class="o">{}</span><span class="w"> </span>ssh<span class="w"> </span>-o<span class="w"> </span><span class="nv">ConnectTimeout</span><span class="o">=</span><span class="m">10</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">BatchMode</span><span class="o">=</span>yes<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="s1">'sudo -n systemctl start nvis-p2p-catalog-refresh.service'</span><span class="w"> </span>&lt;<span class="w"> </span>roster.txt
+
+<span class="c1"># verify: how many carry the new pin</span>
+xargs<span class="w"> </span>-P50<span class="w"> </span>-I<span class="o">{}</span><span class="w"> </span>ssh<span class="w"> </span><span class="o">{}</span><span class="w"> </span>grep<span class="w"> </span>-l<span class="w"> </span>&lt;new-sha&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>/opt/containers/.nvis-p2p/catalog/images.tsv<span class="w"> </span>&lt;<span class="w"> </span>roster.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+</pre></div>
+</div>
+<p>Do not proceed until the count equals the roster size. A missed block here becomes a block of
+deferred nodes later. A node without the timer (<code class="docutils literal notranslate"><span class="pre">systemctl</span> <span class="pre">is-active</span> <span class="pre">nvis-p2p-catalog-refresh.timer</span></code>) never catches up on its own — re-deploy its peer.</p>
+</section>
+<section id="preheat-the-seeds">
+<h2>3. Preheat the seeds<a class="headerlink" href="#preheat-the-seeds" title="Link to this heading">#</a></h2>
+<p>Make both seeds hold the image before the fleet asks for it, so the first wave pulls from a warm
+mesh rather than racing the origin:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash<span class="w"> </span>preheat-catalog-image.sh<span class="w"> </span>&lt;image&gt;.sqsh
+<span class="c1"># expect: PREHEAT_READY seed=seed … and PREHEAT_READY seed=seed2 …</span>
+</pre></div>
+</div>
+</section>
+<section id="run-the-campaign-in-waves">
+<h2>4. Run the campaign in waves<a class="headerlink" href="#run-the-campaign-in-waves" title="Link to this heading">#</a></h2>
+<p>Split the roster into waves and run the rollout per wave, so each completed wave seeds the next:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>split<span class="w"> </span>-l<span class="w"> </span><span class="m">50</span><span class="w"> </span>-d<span class="w"> </span>roster.txt<span class="w"> </span>wave_
+<span class="k">for</span><span class="w"> </span>f<span class="w"> </span><span class="k">in</span><span class="w"> </span>wave_*<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="nv">NVIS_P2P_ROLLOUT_PARALLELISM</span><span class="o">=</span><span class="m">50</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="nv">NVIS_P2P_ROLLOUT_POLL_SECONDS</span><span class="o">=</span><span class="m">20</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="nv">NVIS_P2P_ROLLOUT_TIMEOUT_SECONDS</span><span class="o">=</span><span class="m">1800</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>bash<span class="w"> </span>rollout-catalog-image-fleet.sh<span class="w"> </span>&lt;image&gt;.sqsh<span class="w"> </span><span class="s2">"</span><span class="nv">$f</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">"</span><span class="nv">$f</span><span class="s2">"</span><span class="k">)</span><span class="s2">"</span>
+<span class="k">done</span>
+</pre></div>
+</div>
+<p>Each run prints <code class="docutils literal notranslate"><span class="pre">ROLLOUT_BEGIN</span></code>, the two <code class="docutils literal notranslate"><span class="pre">PREHEAT_READY</span></code> lines (instant once warm), <code class="docutils literal notranslate"><span class="pre">ROLLOUT_PROGRESS</span></code>
+per poll, and <code class="docutils literal notranslate"><span class="pre">ROLLOUT_COMPLETE</span> <span class="pre">total=N</span> <span class="pre">ready=R</span> <span class="pre">deferred=D</span></code>.</p>
+</section>
+<section id="read-the-result-and-the-offload">
+<h2>5. Read the result and the offload<a class="headerlink" href="#read-the-result-and-the-offload" title="Link to this heading">#</a></h2>
+<p>The per-wave ledger is in the run directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">RD</span><span class="o">=</span><span class="k">$(</span>ls<span class="w"> </span>-dt<span class="w"> </span><span class="s2">"</span><span class="nv">$NVIS_P2P_ROOT</span><span class="s2">"</span>/state/rollout-&lt;label&gt;-*<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1<span class="k">)</span>
+cut<span class="w"> </span>-f1<span class="w"> </span><span class="s2">"</span><span class="nv">$RD</span><span class="s2">/ready.tsv"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-n<span class="w"> </span>+2<span class="w">         </span><span class="c1"># nodes that got it</span>
+cut<span class="w"> </span>-f2<span class="w"> </span><span class="s2">"</span><span class="nv">$RD</span><span class="s2">/deferred.tsv"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-n<span class="w"> </span>+2<span class="w">       </span><span class="c1"># failures, with reasons</span>
+</pre></div>
+</div>
+<p>To confirm the mesh is doing the work, watch seed upload against bytes delivered:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>p<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">12114</span><span class="w"> </span><span class="m">12124</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span>curl<span class="w"> </span>-s<span class="w"> </span><span class="s2">"http://127.0.0.1:</span><span class="nv">$p</span><span class="s2">/metrics"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">'/^dragonfly_client_upload_traffic /{print $2}'</span>
+<span class="k">done</span>
+</pre></div>
+</div>
+<p>A small seed-upload delta against a large delivered volume is the win. After the first (cold) wave,
+later waves should add almost nothing to the seed total.</p>
+</section>
+<section id="repair-stragglers">
+<h2>6. Repair stragglers<a class="headerlink" href="#repair-stragglers" title="Link to this heading">#</a></h2>
+<p>Deferred nodes fall into two buckets: <code class="docutils literal notranslate"><span class="pre">launch_limit_N</span></code> (pulled but never verified — usually a stale
+catalog, so go back to step 2 for them; <code class="docutils literal notranslate"><span class="pre">launch_limit_N:not_started</span></code> means the peer itself is not
+running, see <a class="reference internal" href="recover-p2p-peers-after-a-reimage.html"><span class="std std-doc">How to bring P2P peers up on new or reimaged nodes</span></a>)
+and <code class="docutils literal notranslate"><span class="pre">unreachable_after_N_checks</span></code> (down or unreachable).
+Collect them into a new roster and re-run — the campaign is idempotent, so nodes that already have
+the image short-circuit instantly:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cut<span class="w"> </span>-f1<span class="w"> </span><span class="s2">"</span><span class="nv">$RD</span><span class="s2">/deferred.tsv"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-n<span class="w"> </span>+2<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-u<span class="w"> </span>&gt;<span class="w"> </span>repair.txt
+<span class="nv">NVIS_P2P_ROLLOUT_PARALLELISM</span><span class="o">=</span><span class="m">25</span><span class="w"> </span>bash<span class="w"> </span>rollout-catalog-image-fleet.sh<span class="w"> </span>&lt;image&gt;.sqsh<span class="w"> </span>repair.txt<span class="w"> </span>repair
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="connect-a-pythoncm-cluster.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">How to connect a PythonCM (BCM) cluster</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="recover-p2p-peers-after-a-reimage.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">How to bring P2P peers up on new or reimaged nodes</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#confirm-the-image-is-on-the-origin-and-pinned">1. Confirm the image is on the origin and pinned</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#make-sure-the-nodes-carry-the-new-pin">2. Make sure the nodes carry the new pin</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#preheat-the-seeds">3. Preheat the seeds</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-campaign-in-waves">4. Run the campaign in waves</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#read-the-result-and-the-offload">5. Read the result and the offload</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#repair-stragglers">6. Repair stragglers</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

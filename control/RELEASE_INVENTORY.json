@@ -1,0 +1,226 @@
+{
+  "release_id": "20261106-windows-monorepo-sanitized-01",
+  "created_utc": "2026-11-05T05:17:16.627357+00:00",
+  "status": "SIX_TOOLKITS_AND_STAGED_CORE_ASSETS_REQUIRES_SITE_PREREQUISITES_AND_COMMISSIONING",
+  "control_host": "Native Windows PowerShell; Codex already installed; WSL/Hyper-V unavailable",
+  "target": "User-specified IREN Linux management hosts and scoped nodes over user-configured Fortinet VPN",
+  "live_target_contacted": false,
+  "windows_target_tested": false,
+  "all_six_dependency_complete": false,
+  "bundle_filename": "OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip",
+  "remote_directory": "/nvidia-space/shared/IREN_MKZ/bundles/20261105-windows-native-02",
+  "tools": [
+    {
+      "name": "auto-action-trigger",
+      "group": "automation",
+      "zip": "auto-action-trigger.zip",
+      "commit": "6ebd106928aa08db455c0cfd122ad9ddc6d130e5",
+      "status": "SOURCE_OFFLINE_CHECKED_WORKLOADS_EXTERNAL",
+      "placement": "Windows stages; Linux Bash/systemd/Slurm runtime",
+      "gates": [
+        "OS/Slurm/Enroot/Pyxis prerequisites",
+        "Selected workload image closure",
+        "Explicit approved nodes and paused settings before arming"
+      ],
+      "handoff": "tools/auto-action-trigger/agent_handoff.md",
+      "artifacts": [
+        {
+          "path": "tools/auto-action-trigger/auto-action-trigger.zip",
+          "bytes": 987133,
+          "sha256": "75ff6ddcea4f9c0fdd5e133b7a71d106de1551b7b1d9e19702a3b8ced57eaf59"
+        }
+      ]
+    },
+    {
+      "name": "OVA_Collection_Framework",
+      "group": "automation",
+      "zip": "OVA_Collection_Framework.zip",
+      "commit": "7e66c24a0b475cb81610037809833f51e42df03b",
+      "status": "SOURCE_AND_CP312_WHEELS_STAGED",
+      "placement": "Linux Python3.12+ systemd service; Windows browser via SSH",
+      "gates": [
+        "Target Python/OS/systemd/Slurm prerequisites",
+        "Persistent local Linux SQLite state",
+        "Explicit sources configured before apply starts collection"
+      ],
+      "handoff": "tools/OVA_Collection_Framework/agent_handoff.md",
+      "artifacts": [
+        {
+          "path": "tools/OVA_Collection_Framework/OVA_Collection_Framework.zip",
+          "bytes": 138220636,
+          "sha256": "820abcb7d8509ca8416df1f6e6ecf3e7ca91aa1ef7bfd38c96459ab4f3721136"
+        }
+      ]
+    },
+    {
+      "name": "nvisova-exemplar_recipe",
+      "group": "automation",
+      "zip": "nvisova-exemplar_recipe.zip",
+      "commit": "398a99df777559333ab906558d826a210b588f48",
+      "status": "SOURCE_OFFLINE_CHECKED_RECIPE_PAYLOADS_EXTERNAL",
+      "placement": "Windows native stdlib preparation where supported; Linux Slurm/Enroot GPU execution",
+      "gates": [
+        "Hardware/workload/model/precision/scale matrix",
+        "Matched connected Linux image-conversion builder",
+        "Selected image/model assets and credentials",
+        "Approved canary scope"
+      ],
+      "handoff": "tools/nvisova-exemplar_recipe/agent_handoff.md",
+      "artifacts": [
+        {
+          "path": "tools/nvisova-exemplar_recipe/nvisova-exemplar_recipe.zip",
+          "bytes": 56451,
+          "sha256": "fab35c5f7774e98fe53562cb04581485a462f85f4b30e9e3f50bf094ab1d4dd7"
+        }
+      ]
+    },
+    {
+      "name": "nvis-rack-status",
+      "group": "p2p-rack",
+      "zip": "nvis-rack-status.zip",
+      "commit": "337a25615c083a09f567aed3cf7e848e766b6e84",
+      "status": "SOURCE_SPA_CP312_WHEELS_AND_WINDOWS_CLIENT_STAGED",
+      "placement": "Windows browser/optional desktop shell; Linux x86_64/aarch64 backend",
+      "gates": [
+        "CPython3.12/glibc>=2.28 and OS tools",
+        "TLS/auth/SSH known-host configuration",
+        "IREN catalog and source endpoints",
+        "Target offline install/acceptance"
+      ],
+      "handoff": "tools/nvis-rack-status/agent_handoff.md",
+      "artifacts": [
+        {
+          "path": "tools/nvis-rack-status/nvis-rack-status.zip",
+          "bytes": 167661867,
+          "sha256": "5127df871cd19b44cda4941397da8e1ba2db47870ac98017287d17ff2f0ce055",
+          "original_sha256": "1e42423d7737aa6f77acbc8864ab7eb38086a09106a4d345eba6698a52fb3ae7"
+        }
+      ],
+      "sanitized_derivative": true
+    },
+    {
+      "name": "nvis-p2p",
+      "group": "p2p-rack",
+      "zip": "nvis-p2p.zip",
+      "commit": "229032db49b40ea011c755f972f4900207473720",
+      "status": "MINIMAL_CORE_STAGED_WITH_LOCAL_RUNTIME_EVIDENCE_REQUIRES_SITE_COMMISSIONING",
+      "placement": "Windows staging/control; Linux x86_64 core; supported x86_64/ARM64-64K clients",
+      "gates": [
+        "Target Linux x86_64 OS/Docker/systemd/storage and approved peer scope",
+        "Live Windows/Fortinet/IREN acceptance"
+      ],
+      "handoff": "tools/nvis-p2p/agent_handoff.md",
+      "artifacts": [
+        {
+          "path": "tools/nvis-p2p/nvis-p2p.zip",
+          "bytes": 314579747,
+          "sha256": "5124c5799237f21d6fa2a90f27d0b4e51f265be398814a73623ac757d8ef0fa8"
+        }
+      ],
+      "default_profile": "minimal Dragonfly core and console; optional full-stack object-store profile is separate",
+      "console": "HTTPS localhost:4301 through SSH; documented upstream bootstrap root / dragonfly",
+      "registry_credentials_required_for_public_core": false,
+      "ngc_required_for_core": false,
+      "optional_workload_gates": [
+        "Actual selected GPU/workload payload hashes before using historical workload catalogs; not required for basic Dragonfly"
+      ],
+      "optional_advanced_profile_gates": [
+        "Original MinIO/full dfstore path has independent image/integrity prerequisites; not a basic Dragonfly prerequisite"
+      ]
+    },
+    {
+      "name": "observability",
+      "group": "observability",
+      "zip": "observability-source.zip",
+      "source_sha256": "2066a00595ce140d9e35f719aaf7b6dc7c3a7f28abc2f8a9a7673e26e5a48624",
+      "status": "SOURCE_CORE_IMAGES_BINARY_PLUGIN_AND_WHEEL_PAYLOADS_STAGED",
+      "placement": "Windows browser/control; Linux amd64/arm64 Docker core and scoped Linux collectors",
+      "gates": [
+        "Target Docker Engine and OS prerequisite packages",
+        "Hardware/driver-matched GPU/DCGM collectors",
+        "IREN topology/discovery mapping",
+        "Storage/permissions/auth and telemetry acceptance"
+      ],
+      "handoff": "tools/observability/agent_handoff.md",
+      "artifacts": [
+        {
+          "path": "tools/observability/observability-source.zip",
+          "bytes": 1813105,
+          "sha256": "5dfe9c3b751817e0a1e871976fda768347c42a166e3a34dbd040211c9dc620d4"
+        }
+      ]
+    }
+  ],
+  "root_validation": {
+    "checked_utc": "2026-11-05T04:22:59.147837+00:00",
+    "python_helpers": {
+      "syntax": "PASS",
+      "integrity_valid_payload": "PASS",
+      "tampering_rejected": "PASS",
+      "unlisted_file_rejected": "PASS",
+      "zip_executable_mode_preserved_on_linux": "PASS",
+      "existing_extraction_root_rejected": "PASS",
+      "path_traversal_absolute_windows_path_symlink_rejected": "PASS",
+      "normalized_alias_reserved_device_trailing_dot_space_case_collision_rejection": "PASS"
+    },
+    "powershell": {
+      "parser_version": "7.6.9 Linux x64 official PowerShell release",
+      "all_five_script_parsers": "PASS",
+      "mocked_transport_staging_commands": "PASS",
+      "local_checksum_failure_before_remote_contact": "PASS",
+      "ssh_alias_injection_rejected": "PASS",
+      "loopback_tunnel_binding": "PASS",
+      "windows_execution": "NOT_RUN",
+      "powershell_5_1_runtime": "NOT_RUN; syntax independently inspected",
+      "sftp_batch_download_with_mock_transport": "PASS"
+    },
+    "independent_review": "Root docs/scripts reviewed by automation agent; Collection activation behavior, disk/ABI preflight and ZIP path checks corrected. P2P installer separately reviewed.",
+    "target_checks": {
+      "windows_vm": "NOT_CONTACTED",
+      "fortinet": "NOT_CONFIGURED",
+      "iren_linux_hosts": "NOT_CONTACTED",
+      "gpu_or_slurm_jobs": "NOT_RUN"
+    },
+    "limits": [
+      "Root scripts verified on packaging Linux with PowerShell7 parser/mocked transports, not on actual Windows.",
+      "Source/dependency checks are recorded separately in per-tool evidence.",
+      "No six-tool live integration acceptance."
+    ]
+  },
+  "notes": [
+    "No WSL or Hyper-V. Windows native control, remote Linux runtime.",
+    "Control ZIP contains six toolkits; Observability architecture-specific dependency pack must be downloaded separately.",
+    "Tool runtime preparation is distinct from selected benchmark/model asset closure or IREN live acceptance.",
+    "Revision01 full-object-storage P2P instructions are superseded for the default basic P2P deployment."
+  ],
+  "external_dependencies": [
+    {
+      "path": "tools/observability/observability-dependencies-linux-amd64.zip",
+      "bytes": 680949898,
+      "sha256": "914991007abbbef5a66f00a01864c8c8715ed4ef5bfc110c964bc66e46fe4519",
+      "platform": "linux/amd64",
+      "remote": "/nvidia-space/shared/IREN_MKZ/bundles/20261105-windows-native-01/tools/observability/observability-dependencies-linux-amd64.zip",
+      "included_in_control_zip": false,
+      "required_for": "Observability on a matching Linux backend; select exactly one architecture",
+      "full_nvftp_readback_verified": true
+    },
+    {
+      "path": "tools/observability/observability-dependencies-linux-arm64.zip",
+      "bytes": 634417483,
+      "sha256": "1386ed791e5879d5071f0d1c97a912255c91b36052e47ec1481bc2c07a5904e3",
+      "platform": "linux/arm64",
+      "remote": "/nvidia-space/shared/IREN_MKZ/bundles/20261105-windows-native-01/tools/observability/observability-dependencies-linux-arm64.zip",
+      "included_in_control_zip": false,
+      "required_for": "Observability on a matching Linux backend; select exactly one architecture",
+      "full_nvftp_readback_verified": true
+    }
+  ],
+  "p2p_default": "Basic Dragonfly; MinIO/dfstore optional; root/dragonfly is application bootstrap login, not registry auth",
+  "original_release_id": "20261105-windows-native-02",
+  "sanitization": {
+    "derivative": true,
+    "removed_generated_runtime_files": 6,
+    "evidence": "evidence/sanitization-removals.json",
+    "original_control_sha256": "28765b63d5331dc1413a43152c433af288897059960d7f636385bb78247607e7"
+  }
+}

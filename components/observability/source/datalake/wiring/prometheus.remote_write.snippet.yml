@@ -1,0 +1,32 @@
+# ---------------------------------------------------------------------------
+# Data-lake fan-out for the federated Prometheus shards (IREN_MKZ).
+# Paste this SECOND remote_write entry into every shard's prometheus.yml, keeping
+# the VictoriaMetrics entry exactly as-is. The lake gets a full-fidelity copy of
+# the same samples already in flight => ZERO extra scrape load on the fleet.
+#
+# Independent per-remote queues mean a slow/down lake backs up ONLY its own queue
+# (with its own WAL); the VictoriaMetrics remote and all scrapes are unaffected.
+# The lake side is allowed to drop under pressure (VM holds the SoR) — the writer
+# returns 429 on backpressure so Prometheus throttles just this remote.
+#
+# Shards run on the ObsVM alongside the writer, so target loopback :9410.
+# ---------------------------------------------------------------------------
+remote_write:
+  - url: http://127.0.0.1:8428/api/v1/write        # VictoriaMetrics (system of record) — UNCHANGED
+    name: victoriametrics
+
+  - url: http://127.0.0.1:9410/api/v1/write        # nvis-lakewriter (Parquet lane)
+    name: datalake
+    remote_timeout: 30s
+    send_exemplars: false
+    write_relabel_configs: []                      # send everything; lake is the full copy
+    queue_config:
+      capacity: 20000
+      max_shards: 50
+      min_shards: 1
+      max_samples_per_send: 5000
+      batch_send_deadline: 5s
+      # bounded retry — never let lake backpressure stall the shard's WAL GC
+      min_backoff: 250ms
+      max_backoff: 5s
+      retry_on_http_429: false                     # drop rather than block; VM has the copy

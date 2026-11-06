@@ -1,0 +1,1095 @@
+{
+  "description": "Every GPU on one tray, with utilisation, temperature, power, clocks, ECC and NVLink.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "content": "<div style='padding:14px 18px;border-left:4px solid #3D71D9;background:#181B1F;border-radius:3px'><div style='font-size:20px;font-weight:600;color:#D8D9DA;letter-spacing:.3px'>GPUs \u2014 $node</div><div style='font-size:13px;color:#8E9297;margin-top:4px'>$rack \u00b7 $su \u00b7 per-GPU utilisation, temperature, power, clocks, ECC and NVLink</div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 3
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "up{job=~\"node|node-exporter\", instance=~\"example50.*\", node=\"$node\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "node_exporter",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 3
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "up{job=~\"dcgm|dcgm-exporter\", instance=~\"example50.*\", node=\"$node\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "DCGM",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 3
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "up{job=~\"cgroup|cgroup-exporter\", instance=~\"example50.*\", node=\"$node\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "cgroup",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 3
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "node_time_seconds{instance=~\"example50.*\", node=\"$node\"} - node_boot_time_seconds{instance=~\"example50.*\", node=\"$node\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Uptime",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 100
+              },
+              {
+                "color": "dark-red",
+                "value": 200
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 12,
+        "y": 3
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "node_load1{instance=~\"example50.*\", node=\"$node\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Load1",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 3
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "node_memory_MemAvailable_bytes{instance=~\"example50.*\", node=\"$node\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Mem available",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 18,
+        "y": 3
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE{instance=~\"example50.*\", node=\"$node\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Tray power",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 3
+      },
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Back to trays",
+          "url": "/d/nvis-l3-fleet-trays/?var-su=$su&var-rack=$rack"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "vector(0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "\u2190 Back to $rack",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "panels": [],
+      "title": "GPUs on $node",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPU core temperature. Green below 80 C, amber 80-88 C, red above 88 C.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 80
+              },
+              {
+                "color": "dark-red",
+                "value": 88
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 8
+      },
+      "maxPerRow": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "repeat": "gpu",
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "expr": "DCGM_FI_DEV_GPU_TEMP{instance=~\"example50.*\", node=\"$node\", gpu=\"$gpu\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPU $gpu",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "panels": [],
+      "title": "Per-GPU detail \u2014 $node",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Util %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "min",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "GPU \u00b0C|Mem \u00b0C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 80
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 88
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Power W"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FB used"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decmbytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "ECC SBE|ECC DBE|XID"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "DCGM_FI_DEV_GPU_UTIL{instance=~\"example50.*\", node=\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "expr": "DCGM_FI_DEV_GPU_TEMP{instance=~\"example50.*\", node=\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "expr": "DCGM_FI_DEV_MEMORY_TEMP{instance=~\"example50.*\", node=\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "expr": "DCGM_FI_DEV_POWER_USAGE{instance=~\"example50.*\", node=\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "expr": "DCGM_FI_DEV_SM_CLOCK{instance=~\"example50.*\", node=\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "expr": "DCGM_FI_DEV_FB_USED{instance=~\"example50.*\", node=\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        },
+        {
+          "expr": "DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{instance=~\"example50.*\", node=\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "G"
+        },
+        {
+          "expr": "DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{instance=~\"example50.*\", node=\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "H"
+        },
+        {
+          "expr": "DCGM_FI_DEV_ROW_REMAP_FAILURE{instance=~\"example50.*\", node=\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "I"
+        }
+      ],
+      "title": "GPU detail",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "gpu",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Hostname 1": true,
+              "Hostname 2": true,
+              "Hostname 3": true,
+              "Hostname 4": true,
+              "Hostname 5": true,
+              "Hostname 6": true,
+              "Hostname 7": true,
+              "Hostname 8": true,
+              "Hostname 9": true,
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Time 5": true,
+              "Time 6": true,
+              "Time 7": true,
+              "Time 8": true,
+              "Time 9": true,
+              "UUID": true,
+              "UUID 1": true,
+              "UUID 2": true,
+              "UUID 3": true,
+              "UUID 4": true,
+              "UUID 5": true,
+              "UUID 6": true,
+              "UUID 7": true,
+              "UUID 8": true,
+              "UUID 9": true,
+              "__name__": true,
+              "__name__ 1": true,
+              "__name__ 2": true,
+              "__name__ 3": true,
+              "__name__ 4": true,
+              "__name__ 5": true,
+              "__name__ 6": true,
+              "__name__ 7": true,
+              "__name__ 8": true,
+              "__name__ 9": true,
+              "cluster": true,
+              "cluster 1": true,
+              "cluster 2": true,
+              "cluster 3": true,
+              "cluster 4": true,
+              "cluster 5": true,
+              "cluster 6": true,
+              "cluster 7": true,
+              "cluster 8": true,
+              "cluster 9": true,
+              "datahall": true,
+              "datahall 1": true,
+              "datahall 2": true,
+              "datahall 3": true,
+              "datahall 4": true,
+              "datahall 5": true,
+              "datahall 6": true,
+              "datahall 7": true,
+              "datahall 8": true,
+              "datahall 9": true,
+              "device": true,
+              "device 1": true,
+              "device 2": true,
+              "device 3": true,
+              "device 4": true,
+              "device 5": true,
+              "device 6": true,
+              "device 7": true,
+              "device 8": true,
+              "device 9": true,
+              "dgx_flavor": true,
+              "dgx_flavor 1": true,
+              "dgx_flavor 2": true,
+              "dgx_flavor 3": true,
+              "dgx_flavor 4": true,
+              "dgx_flavor 5": true,
+              "dgx_flavor 6": true,
+              "dgx_flavor 7": true,
+              "dgx_flavor 8": true,
+              "dgx_flavor 9": true,
+              "instance": true,
+              "instance 1": true,
+              "instance 2": true,
+              "instance 3": true,
+              "instance 4": true,
+              "instance 5": true,
+              "instance 6": true,
+              "instance 7": true,
+              "instance 8": true,
+              "instance 9": true,
+              "job": true,
+              "job 1": true,
+              "job 2": true,
+              "job 3": true,
+              "job 4": true,
+              "job 5": true,
+              "job 6": true,
+              "job 7": true,
+              "job 8": true,
+              "job 9": true,
+              "modelName": true,
+              "modelName 1": true,
+              "modelName 2": true,
+              "modelName 3": true,
+              "modelName 4": true,
+              "modelName 5": true,
+              "modelName 6": true,
+              "modelName 7": true,
+              "modelName 8": true,
+              "modelName 9": true,
+              "node": true,
+              "node 1": true,
+              "node 2": true,
+              "node 3": true,
+              "node 4": true,
+              "node 5": true,
+              "node 6": true,
+              "node 7": true,
+              "node 8": true,
+              "node 9": true,
+              "pci_bus_id": true,
+              "pci_bus_id 1": true,
+              "pci_bus_id 2": true,
+              "pci_bus_id 3": true,
+              "pci_bus_id 4": true,
+              "pci_bus_id 5": true,
+              "pci_bus_id 6": true,
+              "pci_bus_id 7": true,
+              "pci_bus_id 8": true,
+              "pci_bus_id 9": true,
+              "rack": true,
+              "rack 1": true,
+              "rack 2": true,
+              "rack 3": true,
+              "rack 4": true,
+              "rack 5": true,
+              "rack 6": true,
+              "rack 7": true,
+              "rack 8": true,
+              "rack 9": true,
+              "rack_ordinal": true,
+              "rack_ordinal 1": true,
+              "rack_ordinal 2": true,
+              "rack_ordinal 3": true,
+              "rack_ordinal 4": true,
+              "rack_ordinal 5": true,
+              "rack_ordinal 6": true,
+              "rack_ordinal 7": true,
+              "rack_ordinal 8": true,
+              "rack_ordinal 9": true,
+              "racktype": true,
+              "racktype 1": true,
+              "racktype 2": true,
+              "racktype 3": true,
+              "racktype 4": true,
+              "racktype 5": true,
+              "racktype 6": true,
+              "racktype 7": true,
+              "racktype 8": true,
+              "racktype 9": true,
+              "service": true,
+              "service 1": true,
+              "service 2": true,
+              "service 3": true,
+              "service 4": true,
+              "service 5": true,
+              "service 6": true,
+              "service 7": true,
+              "service 8": true,
+              "service 9": true,
+              "su": true,
+              "su 1": true,
+              "su 2": true,
+              "su 3": true,
+              "su 4": true,
+              "su 5": true,
+              "su 6": true,
+              "su 7": true,
+              "su 8": true,
+              "su 9": true,
+              "su_letter": true,
+              "su_letter 1": true,
+              "su_letter 2": true,
+              "su_letter 3": true,
+              "su_letter 4": true,
+              "su_letter 5": true,
+              "su_letter 6": true,
+              "su_letter 7": true,
+              "su_letter 8": true,
+              "su_letter 9": true,
+              "tray_index": true,
+              "tray_index 1": true,
+              "tray_index 2": true,
+              "tray_index 3": true,
+              "tray_index 4": true,
+              "tray_index 5": true,
+              "tray_index 6": true,
+              "tray_index 7": true,
+              "tray_index 8": true,
+              "tray_index 9": true
+            },
+            "renameByName": {
+              "Value #A": "Util %",
+              "Value #B": "GPU \u00b0C",
+              "Value #C": "Mem \u00b0C",
+              "Value #D": "Power W",
+              "Value #E": "SM MHz",
+              "Value #F": "FB used",
+              "Value #G": "ECC SBE",
+              "Value #H": "ECC DBE",
+              "Value #I": "Row-remap fail",
+              "gpu": "GPU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "fleet",
+    "drilldown"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "nvis-victoriametrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 2,
+        "name": "datasource",
+        "query": "prometheus",
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "SU",
+        "multi": false,
+        "name": "su",
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", instance=~\"example50.*\"}, su)",
+          "refId": "su"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query",
+        "options": []
+      },
+      {
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Rack",
+        "multi": false,
+        "name": "rack",
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", instance=~\"example50.*\", su=\"$su\"}, rack)",
+          "refId": "rack"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query",
+        "options": []
+      },
+      {
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Tray",
+        "multi": false,
+        "name": "node",
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", instance=~\"example50.*\", rack=\"$rack\"}, node)",
+          "refId": "node"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query",
+        "options": []
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "hide": 2,
+        "includeAll": true,
+        "label": "GPU",
+        "multi": true,
+        "name": "gpu",
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_UTIL{instance=~\"example50.*\", node=\"$node\"}, gpu)",
+          "refId": "gpu"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query",
+        "options": []
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "utc",
+  "title": "GPUs \u2014 $node (L4)",
+  "uid": "nvis-l4-tray-gpus",
+  "version": 1
+}

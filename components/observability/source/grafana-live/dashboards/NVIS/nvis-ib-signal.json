@@ -1,0 +1,1494 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Physical-layer link quality measured at the tray channel adapters: symbol errors, link-error recovery and receive errors. Source: ib_hca_* counters read from every DGX tray's channel adapters (job=node / node-exporter, four rails per tray). IB byte counters are reported in 32-bit words and are multiplied by 4 to give bytes.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "ib-fabric"
+      ],
+      "targetBlank": false,
+      "title": "InfiniBand boards",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 50,
+      "options": {
+        "code": {
+          "language": "plaintext"
+        },
+        "content": "<div style=\"font:13px/1.6 Inter,Roboto,sans-serif;color:#9aa2ad;padding:2px 4px 0 4px\"><b style=\"color:#d8dde3\">Host-HCA InfiniBand boards</b> &nbsp;|&nbsp; <a style=\"color:#6e9fd8\" href=\"/d/nvis-ib-cable-audit\">Rail State &amp; Cabling</a> &nbsp;\u00b7&nbsp; <a style=\"color:#6e9fd8\" href=\"/d/nvis-ib-blast-radius\">Blast Radius</a> &nbsp;\u00b7&nbsp; <a style=\"color:#6e9fd8\" href=\"/d/nvis-ib-flaps\">Link Flaps</a> &nbsp;\u00b7&nbsp; <a style=\"color:#6e9fd8\" href=\"/d/nvis-ib-drops\">Port Errors</a> &nbsp;\u00b7&nbsp; <a style=\"color:#6e9fd8\" href=\"/d/nvis-ib-congestion\">Congestion &amp; Throughput</a> &nbsp;\u00b7&nbsp; <a style=\"color:#6e9fd8\" href=\"/d/nvis-ib-signal\">Signal Quality</a> &nbsp;\u00b7&nbsp; <a style=\"color:#6e9fd8\" href=\"/d/nvis-ib-offenders\">Worst Offenders</a><br><span style=\"color:#7c848e\">Source: <code>ib_hca_*</code> counters read on every DGX tray by node-exporter, four rails per tray. Every number on the left of a band is backed by the table beside it, built from the identical selector \u2014 the table footer prints the row count.</span></div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 1,
+      "panels": [],
+      "title": "Physical-layer link quality",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Distinct rails reporting a symbol error, a link-error recovery or a receive error \u2014 the three host-side counters that describe wire quality. Per-counter totals are itemised on the Port Errors and Link Flaps boards; this board owns the physical-layer picture. The table beside this number is built from the identical selector, so its row count equals the number shown.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              },
+              {
+                "color": "dark-red",
+                "value": 25
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 5,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {
+          "valueSize": 44
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "count(count by(instance,hca)(ib_hca_symbol_error{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_link_error_recovery{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_port_rcv_errors{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0)) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Rails with a physical-layer error",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "One row per rail, with the three physical-layer counters behind it. Built from the identical selector as the number on the left, so the row count equals it.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 60
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tray"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 190
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 95
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 55
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rail (HCA)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 95
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "dark-red",
+                        "index": 0,
+                        "text": "NO STATE"
+                      },
+                      "1": {
+                        "color": "dark-red",
+                        "index": 1,
+                        "text": "DOWN"
+                      },
+                      "2": {
+                        "color": "#B77D34",
+                        "index": 2,
+                        "text": "INIT"
+                      },
+                      "3": {
+                        "color": "#B77D34",
+                        "index": 3,
+                        "text": "ARMED"
+                      },
+                      "4": {
+                        "color": "dark-green",
+                        "index": 4,
+                        "text": "ACTIVE"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Symbol"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 95
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 100
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Recovery"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 95
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 100
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rcv err"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 95
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 100
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 19,
+        "x": 5,
+        "y": 4
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": true,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Rcv err"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su,hca)(ib_hca_port_state{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} and on(node,hca) (ib_hca_symbol_error{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_link_error_recovery{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_port_rcv_errors{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su,hca)(ib_hca_symbol_error{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} and on(node,hca) (ib_hca_symbol_error{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_link_error_recovery{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_port_rcv_errors{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su,hca)(ib_hca_link_error_recovery{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} and on(node,hca) (ib_hca_symbol_error{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_link_error_recovery{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_port_rcv_errors{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max by(node,rack,su,hca)(ib_hca_port_rcv_errors{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} and on(node,hca) (ib_hca_symbol_error{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_link_error_recovery{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_port_rcv_errors{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "D"
+        }
+      ],
+      "title": "Rails with a physical-layer error \u2014 the exact rails and their counters",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time #A": true,
+              "Time #B": true,
+              "Time #C": true,
+              "Time #D": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value #A": "State",
+              "Value #B": "Symbol",
+              "Value #C": "Recovery",
+              "Value #D": "Rcv err",
+              "hca": "Rail (HCA)",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU",
+              "tray_index": "Tray idx"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Rails whose receive-data counter did not move in the last 5 minutes. A rail that is ACTIVE but dark is a silent failure; a rail that is dark because it is down also appears on the Rail State &amp; Cabling board. The table beside this number is built from the identical selector, so its row count equals the number shown.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              },
+              {
+                "color": "dark-red",
+                "value": 250
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 5,
+        "x": 0,
+        "y": 13
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {
+          "valueSize": 44
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "count(rate(ib_hca_port_rcv_data{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"}[5m]) == 0) or vector(0)",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Rails passing no receive traffic",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "One row per dark rail, with the port state that rail is reporting. Row count equals the number on the left.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Port state"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 170
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "dark-red",
+                        "index": 0,
+                        "text": "NO STATE"
+                      },
+                      "1": {
+                        "color": "dark-red",
+                        "index": 1,
+                        "text": "DOWN"
+                      },
+                      "2": {
+                        "color": "#B77D34",
+                        "index": 2,
+                        "text": "INIT"
+                      },
+                      "3": {
+                        "color": "#B77D34",
+                        "index": 3,
+                        "text": "ARMED"
+                      },
+                      "4": {
+                        "color": "dark-green",
+                        "index": 4,
+                        "text": "ACTIVE"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Tray"
+              },
+              {
+                "id": "custom.width",
+                "value": 220
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rack"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Rack"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "su"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SU"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hca"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Rail (HCA)"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 19,
+        "x": 5,
+        "y": 13
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": true,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Tray"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "ib_hca_port_state{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} and on(instance,hca) (rate(ib_hca_port_rcv_data{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"}[5m]) == 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Rails passing no receive traffic \u2014 the exact rails and their port state",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "su_letter": true,
+              "tray_index": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 8,
+      "panels": [],
+      "title": "Trend and concentration",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Rising lines mean the physical layer is degrading.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "symbol errors"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#B77D34",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "link error recovery"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "receive errors"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(ib_hca_symbol_error{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"})",
+          "instant": false,
+          "legendFormat": "symbol errors",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(ib_hca_link_error_recovery{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"})",
+          "instant": false,
+          "legendFormat": "link error recovery",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(ib_hca_port_rcv_errors{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"})",
+          "instant": false,
+          "legendFormat": "receive errors",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Physical-layer error totals \u2014 fleet",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Same selector as the stat above, counted as distinct rails per SU.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 23
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "count by(su)(count by(su,node,hca)(ib_hca_symbol_error{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_link_error_recovery{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_port_rcv_errors{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0))",
+          "instant": false,
+          "legendFormat": "{{su}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Rails with a physical-layer error \u2014 by SU",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Total symbol + link-error-recovery + receive errors summed per rack, racks with a non-zero total only. Concentration in one rack points at a shared cable bundle or panel.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "#B77D34",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 15,
+      "options": {
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": -45,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "topk(15, sum by(rack)(ib_hca_symbol_error{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} + ib_hca_link_error_recovery{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} + ib_hca_port_rcv_errors{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"}) > 0)",
+          "instant": true,
+          "legendFormat": "{{rack}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Physical-layer errors by rack \u2014 worst 15",
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ]
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Last *"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Same selector as the stat above, counted as distinct rails per HCA slot. A spike on one slot points at a systematic wiring or transceiver fault.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "#B77D34",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              },
+              {
+                "color": "dark-red",
+                "value": 40
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 16,
+      "options": {
+        "displayMode": "basic",
+        "legend": {
+          "showLegend": false
+        },
+        "maxVizHeight": 26,
+        "minVizHeight": 14,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 14,
+          "valueSize": 22
+        },
+        "valueMode": "text"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "count by(hca)(count by(hca,node)(ib_hca_symbol_error{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_link_error_recovery{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0 or ib_hca_port_rcv_errors{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",hca=~\"$hca\"} > 0))",
+          "instant": true,
+          "legendFormat": "{{hca}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Rails with a physical-layer error \u2014 by rail slot (mlx5_0 \u2013 mlx5_3)",
+      "type": "bargauge"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "infiniband",
+    "ib-fabric",
+    "iren_mkz",
+    "host-hca",
+    "signal"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(ib_hca_port_state, cluster)",
+        "description": "Cluster label carried on every tray HCA series.",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(ib_hca_port_state, cluster)",
+          "refId": "clusterQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(ib_hca_port_state{cluster=~\"$cluster\"}, su)",
+        "description": "Scalable Unit (SU1=WH1D .. SU7=WH1J).",
+        "hide": 0,
+        "includeAll": true,
+        "label": "SU",
+        "multi": true,
+        "name": "su",
+        "options": [],
+        "query": {
+          "query": "label_values(ib_hca_port_state{cluster=~\"$cluster\"}, su)",
+          "refId": "suQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(ib_hca_port_state{cluster=~\"$cluster\",su=~\"$su\"}, rack)",
+        "description": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rack",
+        "multi": true,
+        "name": "rack",
+        "options": [],
+        "query": {
+          "query": "label_values(ib_hca_port_state{cluster=~\"$cluster\",su=~\"$su\"}, rack)",
+          "refId": "rackQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(ib_hca_port_state{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\"}, node)",
+        "description": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tray",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(ib_hca_port_state{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\"}, node)",
+          "refId": "nodeQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {},
+        "description": "Each GB300 tray presents four IB rails: mlx5_0 - mlx5_3.",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rail (HCA)",
+        "multi": true,
+        "name": "hca",
+        "options": [],
+        "query": "mlx5_0,mlx5_1,mlx5_2,mlx5_3",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "InfiniBand \u2014 Signal Quality (host HCA)",
+  "uid": "nvis-ib-signal",
+  "version": 1,
+  "weekStart": ""
+}

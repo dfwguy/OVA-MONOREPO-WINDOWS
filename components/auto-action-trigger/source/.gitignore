@@ -1,0 +1,21 @@
+# The site's own settings are never committed.
+#
+# SETTINGS.default is the shipped configuration and IS tracked; SETTINGS is the
+# copy a site edits. Committing one means the next tarball drop overwrites the
+# settings of whatever cluster it is unpacked on with another cluster's -- a
+# node list, a drain switch and a job set, all replaced silently by an upgrade.
+SETTINGS
+
+# Same split, for where SETTINGS itself lives: SETTINGS_HOME.default ships and
+# is tracked; SETTINGS_HOME is the site's override, naming the real path.
+SETTINGS_HOME
+
+# Per-node output, written on the cluster.
+results/
+logs/
+
+# Left behind by importing llmb_check.py, which the tests do.
+__pycache__/
+
+# Local direnv configuration.
+.envrc

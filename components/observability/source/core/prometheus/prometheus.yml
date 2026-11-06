@@ -1,0 +1,275 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+  external_labels:
+    cluster: IREN_MKZ
+    observability_host: site-management
+
+scrape_configs:
+  - job_name: nvis16k-core
+    static_configs:
+      - targets:
+          - prometheus:9090
+        labels:
+          component: prometheus
+      - targets:
+          - host.docker.internal:8428
+        labels:
+          component: victoriametrics
+      - targets:
+          - loki:3100
+        labels:
+          component: loki
+      - targets:
+          - grafana:3000
+        labels:
+          component: grafana
+      - targets:
+          - alloy:12345
+        labels:
+          component: alloy
+
+  # Strictly bounded live canary: one currently idle B300 compute node and
+  # three pre-existing read-only exporters. Do not expand this list implicitly.
+  - job_name: node-exporter
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    static_configs:
+      - targets: [192.0.2.5:9100]
+        labels:
+          instance: example50-dh01-a01-15
+          node: example50-dh01-a01-15
+          logical_rack: example50-dh01-a01
+          physical_rack: WH1A1
+          node_slot: "15"
+          partition: defq
+          inventory_state: idle
+          cpus: "144"
+          memory_mb: "1902269"
+          gpu_model: b300
+          gpu_count: "4"
+          telemetry_scope: single-node-canary
+
+  - job_name: dcgm-exporter
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    honor_timestamps: false
+    static_configs:
+      - targets: [192.0.2.5:9400]
+        labels:
+          instance: example50-dh01-a01-15
+          node: example50-dh01-a01-15
+          logical_rack: example50-dh01-a01
+          physical_rack: WH1A1
+          node_slot: "15"
+          partition: defq
+          inventory_state: idle
+          cpus: "144"
+          memory_mb: "1902269"
+          gpu_model: b300
+          gpu_count: "4"
+          telemetry_scope: single-node-canary
+
+  # Fleet-wide GPU reliability counters. Discovery verifies the 4,032 Slurm
+  # GPU nodes every minute but rewrites targets only on membership changes. A five-minute scrape of the ~26 KiB DCGM
+  # endpoint averages ~13 requests/second; metric relabeling retains only the
+  # ECC/row-remap and thermal families needed by the focused operator pages.
+  - job_name: dcgm-exporter-fleet-reliability
+    scrape_interval: 5m
+    scrape_timeout: 10s
+    honor_timestamps: false
+    body_size_limit: 1MB
+    sample_limit: 250
+    target_limit: 4096
+    file_sd_configs:
+      - files: [/etc/prometheus/active-targets/fleet-dcgm.json]
+        refresh_interval: 60s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'DCGM_FI_DEV_(ECC_(SBE|DBE)_(VOL|AGG)_TOTAL|(UN)?CORRECTABLE_REMAPPED_ROWS|ROW_REMAP_FAILURE|GPU_TEMP|MEMORY_TEMP|POWER_USAGE|THERMAL_VIOLATION|POWER_VIOLATION|BOARD_LIMIT_VIOLATION|CLOCK_THROTTLE_REASONS)'
+        action: keep
+
+  # Fleet host/HCA health. A restricted node-exporter request is ~39 KiB and
+  # ~326 source samples per node; the five-minute interval averages 13.4
+  # requests/second and metric filtering retains only launch-health and HCA
+  # fault counters. One-minute active-validation jobs remain the fast path.
+  - job_name: node-exporter-fleet-health
+    scrape_interval: 5m
+    scrape_timeout: 12s
+    body_size_limit: 256KB
+    sample_limit: 600
+    target_limit: 4096
+    params:
+      collect[]:
+        - loadavg
+        - meminfo
+        - vmstat
+        - uname
+        - infiniband
+        - textfile
+    file_sd_configs:
+      - files: [/etc/prometheus/active-targets/fleet-node.json]
+        refresh_interval: 60s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'node_load1|node_memory_Mem(Available|Total)_bytes|node_vmstat_oom_kill|node_uname_info|ib_hca_(collector_up|discovered_total|port_state|port_physical_state|port_xmit_wait|port_xmit_discards|symbol_error|link_downed|out_of_buffer)'
+        action: keep
+
+  # Job-scoped compute telemetry. The one-minute Slurm collector publishes
+  # only nodes allocated to running NCCL/NeMo/Llama validation. Restrict node
+  # collectors and metric families so an all-SU campaign remains bounded.
+  - job_name: node-exporter-active-validation
+    scrape_interval: 60s
+    scrape_timeout: 20s
+    metrics_path: /metrics
+    params:
+      collect[]:
+        - cpu
+        - meminfo
+        - loadavg
+        - vmstat
+        - textfile
+        - uname
+        - thermal_zone
+        - cooling_device
+    file_sd_configs:
+      - files: [/etc/prometheus/active-targets/active-validation-node.json]
+        refresh_interval: 30s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'ib_hca_.*|node_cpu_seconds_total|node_memory_MemAvailable_bytes|node_memory_MemTotal_bytes|node_load1|node_vmstat_oom_kill|node_boot_time_seconds|node_uname_info|node_thermal_zone_temp|node_cooling_device_cur_state'
+        action: keep
+
+  - job_name: dcgm-exporter-active-validation
+    scrape_interval: 60s
+    scrape_timeout: 20s
+    honor_timestamps: false
+    file_sd_configs:
+      - files: [/etc/prometheus/active-targets/active-validation-dcgm.json]
+        refresh_interval: 30s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'DCGM_FI_DEV_(GPU_UTIL|POWER_USAGE|GPU_TEMP|MEMORY_TEMP|ECC_DBE_VOL_TOTAL|ROW_REMAP_FAILURE|XID_ERRORS)'
+        action: keep
+
+  - job_name: cgroup-exporter
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    static_configs:
+      - targets: [192.0.2.5:9306]
+        labels:
+          instance: example50-dh01-a01-15
+          node: example50-dh01-a01-15
+          logical_rack: example50-dh01-a01
+          physical_rack: WH1A1
+          node_slot: "15"
+          partition: defq
+          inventory_state: idle
+          cpus: "144"
+          memory_mb: "1902269"
+          gpu_model: b300
+          gpu_count: "4"
+          telemetry_scope: single-node-canary
+
+  # UFM REST is healthy, but the Telemetry CSV listener is currently closed.
+  # Scrape the local bridge continuously so this is visible as
+  # ufm_telemetry_up=0 and counters begin flowing automatically when UFM opens
+  # TCP/9001.
+  - job_name: ufm-telemetry
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: [host.docker.internal:9105]
+        labels:
+          instance: ufm-active
+          component: ufm-telemetry
+
+  # The lakewriter already exposes bounded self-metrics on the host. Scrape
+  # those directly instead of starting the much heavier VM-to-Parquet export
+  # loop merely to populate Grafana's storage-health panels.
+  - job_name: nvis-lakewriter
+    scrape_interval: 60s
+    scrape_timeout: 5s
+    body_size_limit: 256KB
+    sample_limit: 500
+    static_configs:
+      - targets: [host.docker.internal:9410]
+        labels:
+          instance: nvis-16k-lakewriter
+          component: datalake
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'nvis_lake_.*'
+        action: keep
+
+  # Unauthenticated Redfish service-root reachability only. The exporter
+  # deliberately exposes SU aggregates and explicit authenticated-sensor gaps;
+  # it never probes credentials or emits per-BMC series.
+  - job_name: nvis-redfish-reachability
+    scrape_interval: 60s
+    scrape_timeout: 5s
+    body_size_limit: 64KB
+    sample_limit: 150
+    static_configs:
+      - targets: [host.docker.internal:9421]
+        labels:
+          instance: nvis-redfish-reachability
+          component: redfish-coverage
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'nvis_redfish_.*'
+        action: keep
+
+  # site-management (192.0.2.4) hosts BCM/application services; site-controller
+  # (192.0.2.2 / 192.0.2.6) is the Slurm head and NFS control-plane host.
+  # Keep host metrics separate from per-user/service attribution so a failure
+  # of either collector is visible instead of being hidden by the other.
+  - job_name: headnode
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    static_configs:
+      - targets: [host.docker.internal:9100]
+        labels:
+          instance: site-management
+          node: site-management
+          role: head
+          component: node-exporter
+      - targets: [192.0.2.6:9100]
+        labels:
+          instance: site-controller
+          node: site-controller
+          role: head
+          component: node-exporter
+
+  - job_name: headnode-attribution
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    static_configs:
+      - targets: [host.docker.internal:9106]
+        labels:
+          instance: site-management
+          node: site-management
+          role: head
+          component: user-service-attribution
+      - targets: [192.0.2.6:9106]
+        labels:
+          instance: site-controller
+          node: site-controller
+          role: head
+          component: user-service-attribution
+
+remote_write:
+  - url: http://host.docker.internal:8428/api/v1/write
+    # node_exporter protects the scrape target's `node=site-management` label by
+    # renaming the scheduler textfile collector's tray label to
+    # `exported_node`. Normalize only the job-roster metric before remote
+    # write so allocation joins in VictoriaMetrics use the real tray name.
+    write_relabel_configs:
+      - source_labels: [__name__, exported_node]
+        regex: 'nvis_slurm_job_node_info;(.+)'
+        target_label: node
+        replacement: '$1'
+    queue_config:
+      capacity: 10000
+      max_samples_per_send: 2000
+      batch_send_deadline: 5s

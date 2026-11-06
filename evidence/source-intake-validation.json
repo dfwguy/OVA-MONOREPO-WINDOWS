@@ -1,0 +1,84 @@
+{
+  "source_url": "https://nvftp.nvidia.com/file-explorer/8250a39b-4b0d-47dd-ae22-27b0db9a4618/nvidia-space/shared/IREN_MKZ",
+  "release_id": "20261105-windows-native-02",
+  "component_integrity": [
+    {
+      "component": "OVA_Collection_Framework",
+      "files": 77,
+      "errors": []
+    },
+    {
+      "component": "auto-action-trigger",
+      "files": 326,
+      "errors": []
+    },
+    {
+      "component": "nvis-p2p",
+      "files": 589,
+      "errors": []
+    },
+    {
+      "component": "nvis-rack-status",
+      "files": 2182,
+      "errors": []
+    },
+    {
+      "component": "nvisova-exemplar_recipe",
+      "files": 20,
+      "errors": []
+    }
+  ],
+  "bounded_secret_scan": {
+    "text_files_scanned": 3165,
+    "large_files_skipped": 33,
+    "patterns": [
+      "gitlab_pat",
+      "private_key",
+      "aws_access_key",
+      "github_token"
+    ],
+    "findings": [
+      {
+        "path": "components/nvis-rack-status/source/backend/ssh_key_store.py",
+        "pattern": "private_key",
+        "disposition": "Parser/test/UI text marker; no complete private key body"
+      },
+      {
+        "path": "components/nvis-rack-status/source/frontend/src/components/setup/SetupWizard.test.tsx",
+        "pattern": "private_key",
+        "disposition": "Parser/test/UI text marker; no complete private key body"
+      },
+      {
+        "path": "components/nvis-rack-status/source/frontend/src/components/setup/SetupWizard.tsx",
+        "pattern": "private_key",
+        "disposition": "Parser/test/UI text marker; no complete private key body"
+      },
+      {
+        "path": "components/nvis-rack-status/source/static/spa/assets/SetupWizard-AtEs-xX-.js",
+        "pattern": "private_key",
+        "disposition": "Parser/test/UI text marker; no complete private key body"
+      },
+      {
+        "path": "components/nvis-rack-status/source/var/secrets/oidc/s9COUc5Y-XDuEkSEfcD-CeH2id6oJRLvd9nQuddhmVY.pem",
+        "pattern": "private_key",
+        "disposition": "Removed generated credential; absent from published derivative"
+      },
+      {
+        "path": "components/nvis-rack-status/source/backend/tests/test_setup_wizard.py",
+        "pattern": "private_key",
+        "disposition": "Parser/test/UI text marker; no complete private key body"
+      }
+    ],
+    "scope": "Extracted textual files <=2MB; excludes root-owned rack-status-pythoncm; compressed/binary payloads not exhaustively scanned"
+  },
+  "phase": "original_intake_before_sanitization",
+  "sanitization_followup": "sanitized-artifact-provenance.json and recursive-secret-scan.json supersede credential findings for published derivative",
+  "original_component_checks_are_historical": true,
+  "current_control_integrity": {
+    "phase": "sanitized_derivative",
+    "file_count": 44,
+    "sha256_and_bytes": "PASS",
+    "manifest": "control/FILE_MANIFEST.json",
+    "original_control_immutable_archive_quarantined": true
+  }
+}

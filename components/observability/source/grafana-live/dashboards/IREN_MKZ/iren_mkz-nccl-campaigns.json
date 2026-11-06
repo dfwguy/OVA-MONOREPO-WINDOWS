@@ -1,0 +1,978 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Slurm-backed NCCL campaign state, geometry, log coverage and parsed performance with explicit correctness limits.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "home",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "\u2302 IREN_MKZ Home",
+      "tooltip": "Back to IREN_MKZ Home",
+      "type": "link",
+      "url": "/d/iren_mkz-home?${__url_time_range}"
+    },
+    {
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "iren_mkz"
+      ],
+      "title": "IREN_MKZ Dashboards",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "description": "Purpose, evidence semantics, and routes to adjacent IREN_MKZ dashboards.",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "# IREN_MKZ \u2014 NCCL Validation\n\n**Live and historical NCCL campaign telemetry.** Jobs come from Slurm accounting; terminal state is retained over the selected time range. Correctness acceptance still requires the sealed benchmark receipt\u2014an empty wrong-value signal is never interpreted as PASS.\n\n[Home](/d/iren_mkz-home?${__url_time_range}) \u00b7 [Command Center](/d/iren_mkz-command-center?${__url_time_range}) \u00b7 [Live Topology](/d/iren_mkz-topology?${__url_time_range}) \u00b7 [Infrastructure](/d/iren_mkz-infrastructure?${__url_time_range}) \u00b7 [GPU & NVLink](/d/iren_mkz-accelerators?${__url_time_range}) \u00b7 [Fabric, CVT & Cabling](/d/iren_mkz-fabric?${__url_time_range}) \u00b7 [Workloads, Slurm & Validation](/d/iren_mkz-workloads?${__url_time_range})",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "description": "Campaign posture",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Campaign posture",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Distinct NCCL jobs retained anywhere in the selected dashboard range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 5
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by(job_id)(last_over_time(nvis_slurm_job_info{cluster=\"IREN_MKZ\",workload=\"nccl\",job_id=~\"$nccl_job\"}[$__range])))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "NCCL jobs in range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current PENDING, CONFIGURING, RUNNING or COMPLETING NCCL jobs.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 5
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(nvis_slurm_job_info{cluster=\"IREN_MKZ\",workload=\"nccl\",job_id=~\"$nccl_job\"} and on(job_id) (nvis_slurm_job_active{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"} == 1))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Active NCCL jobs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Terminal failure states seen during the selected range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 5
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(last_over_time(nvis_slurm_job_state_code{cluster=\"IREN_MKZ\",state=~\"FAILED|TIMEOUT|NODE_FAIL|OUT_OF_MEMORY\",job_id=~\"$nccl_job\"}[$__range]) and on(job_id) last_over_time(nvis_slurm_job_info{cluster=\"IREN_MKZ\",workload=\"nccl\",job_id=~\"$nccl_job\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Failed NCCL jobs in range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Scheduler-completed NCCL jobs. This is not a correctness verdict by itself.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 5
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(last_over_time(nvis_slurm_job_state_code{cluster=\"IREN_MKZ\",state=\"COMPLETED\",job_id=~\"$nccl_job\"}[$__range]) and on(job_id) last_over_time(nvis_slurm_job_info{cluster=\"IREN_MKZ\",workload=\"nccl\",job_id=~\"$nccl_job\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Completed NCCL jobs in range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Collector-parsed NCCL test records. No value can mean the benchmark output was not ingested.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 5
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(last_over_time(nvis_slurm_job_nccl_completed_tests{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"}[$__range]) and on(job_id) last_over_time(nvis_slurm_job_info{cluster=\"IREN_MKZ\",workload=\"nccl\",job_id=~\"$nccl_job\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Completed test records",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "NCCL-looking lines in the collector's bounded log tail; coverage evidence, not correctness.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 5
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(last_over_time(nvis_slurm_job_log_tail_nccl_lines{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"}[$__range]) and on(job_id) last_over_time(nvis_slurm_job_info{cluster=\"IREN_MKZ\",workload=\"nccl\",job_id=~\"$nccl_job\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "NCCL log lines retained",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "description": "Selected campaign jobs",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 9,
+      "panels": [],
+      "title": "Selected campaign jobs",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Range-retained NCCL jobs. Click Job ID for the full flight recorder and correctness evidence.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "blue",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 3
+                    },
+                    {
+                      "color": "red",
+                      "value": 6
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "blue",
+                        "text": "UNKNOWN"
+                      },
+                      "1": {
+                        "color": "yellow",
+                        "text": "PENDING"
+                      },
+                      "10": {
+                        "color": "red",
+                        "text": "OUT OF MEMORY"
+                      },
+                      "2": {
+                        "color": "blue",
+                        "text": "CONFIGURING"
+                      },
+                      "3": {
+                        "color": "green",
+                        "text": "RUNNING"
+                      },
+                      "4": {
+                        "color": "blue",
+                        "text": "COMPLETING"
+                      },
+                      "5": {
+                        "color": "green",
+                        "text": "COMPLETED"
+                      },
+                      "6": {
+                        "color": "orange",
+                        "text": "CANCELLED"
+                      },
+                      "7": {
+                        "color": "red",
+                        "text": "FAILED"
+                      },
+                      "8": {
+                        "color": "red",
+                        "text": "TIMEOUT"
+                      },
+                      "9": {
+                        "color": "red",
+                        "text": "NODE FAIL"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "job_id"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open job flight recorder",
+                    "url": "/d/iren_mkz-job-root-cause?var-jobid=${__data.fields.job_id}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "job_id"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "last_over_time(nvis_slurm_job_info{cluster=\"IREN_MKZ\",workload=\"nccl\",job_id=~\"$nccl_job\"}[$__range])",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "last_over_time(nvis_slurm_job_state_code{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"}[$__range])",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "last_over_time(nvis_slurm_job_requested_nodes{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"}[$__range])",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "last_over_time(nvis_slurm_job_allocated_nodes{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"}[$__range])",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "last_over_time(nvis_slurm_job_requested_gpus{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"}[$__range])",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "last_over_time(nvis_slurm_job_nccl_completed_tests{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"}[$__range])",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "last_over_time(nvis_slurm_job_log_tail_error_lines{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"}[$__range])",
+          "format": "table",
+          "instant": true,
+          "refId": "G"
+        }
+      ],
+      "title": "NCCL jobs \u2014 identity, state, geometry and telemetry coverage",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "job_id",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "component": true,
+              "instance": true,
+              "job": true,
+              "node": true,
+              "observability_host": true,
+              "requested_nodelist": true,
+              "role": true,
+              "stdout_file": true
+            },
+            "renameByName": {
+              "Value #A": "Job",
+              "Value #B": "State",
+              "Value #C": "Requested nodes",
+              "Value #D": "Allocated nodes",
+              "Value #E": "Requested GPUs",
+              "Value #F": "Parsed tests",
+              "Value #G": "Error lines"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "desc": true,
+                "field": "job_id"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "Progress and performance evidence",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 11,
+      "panels": [],
+      "title": "Progress and performance evidence",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Collector coverage over time. Missing benchmark stdout can leave parsed tests at zero even when Slurm ran the job.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_nccl_completed_tests{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"}",
+          "legendFormat": "job {{job_id}} \u00b7 parsed tests",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_log_tail_nccl_lines{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"}",
+          "legendFormat": "job {{job_id}} \u00b7 NCCL tail lines",
+          "refId": "B"
+        }
+      ],
+      "title": "Parsed NCCL tests and log coverage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Average bus bandwidth only when the job collector can parse the benchmark output. No series means unavailable, never zero.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "GBs"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 23
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "nvis_slurm_job_nccl_avg_bus_bandwidth_gbps{cluster=\"IREN_MKZ\",job_id=~\"$nccl_job\"}",
+          "legendFormat": "job {{job_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Average NCCL bus bandwidth when exported",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "description": "Correctness contract",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 14,
+      "panels": [],
+      "title": "Correctness contract",
+      "type": "row"
+    },
+    {
+      "description": "Slurm, log-ingestion and NCCL correctness boundaries.",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 15,
+      "options": {
+        "content": "**Scheduler COMPLETED is not NCCL PASS.** Promotion requires the sealed receipt to show every required collective, both message sizes and zero wrong values. This dashboard exposes current/range-retained Slurm state and collector coverage. If parsed tests or bandwidth are absent, open the [Job Flight Recorder](/d/iren_mkz-job-root-cause?var-jobid=$nccl_job&${__url_time_range}) and the preserved campaign receipt; do not infer success from an empty panel.",
+        "mode": "markdown"
+      },
+      "title": "What this dashboard can prove",
+      "transparent": true,
+      "type": "text"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "specialist",
+    "observability"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "label": "Metrics",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 2,
+        "label": "Logs",
+        "name": "loki_datasource",
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(nvis_slurm_job_info{cluster=\"IREN_MKZ\",workload=\"nccl\"},job_id)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "NCCL Job ID",
+        "multi": true,
+        "name": "nccl_job",
+        "options": [],
+        "query": {
+          "query": "label_values(nvis_slurm_job_info{cluster=\"IREN_MKZ\",workload=\"nccl\"},job_id)",
+          "refId": "nccl_jobQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "30m",
+      "1h"
+    ]
+  },
+  "timezone": "utc",
+  "title": "IREN_MKZ \u2014 NCCL Validation",
+  "uid": "iren_mkz-nccl-campaigns",
+  "version": 3
+}

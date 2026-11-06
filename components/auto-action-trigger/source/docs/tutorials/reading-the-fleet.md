@@ -1,0 +1,303 @@
+# Reading the state of the fleet
+
+Three reports, and they answer three different questions. Run in the wrong
+order they contradict each other; run in the right order each one raises the
+question the next one answers.
+
+There is a fourth, `report_overall.sh`, which reads all three sources at once
+and gives each node one grouped line saying what it has outstanding — or `PASS`.
+It is the one to reach for when the question is "what do I work on", and
+`--details` expands it into the full exception list; the three below are how you
+learn what that expansion's sections mean, so read them first. It has its own
+page in
+[reference/scripts.md](../reference/scripts.md#report_overallsh--the-fleet-in-one-line-per-node).
+
+By the end of this you will know which to reach for, why two of them can
+legitimately disagree about the same node, and — the part that matters most —
+which numbers in them are trustworthy and which are only as good as the
+configuration behind them.
+
+Everything here is **read-only**. Pick a cluster with results on disk:
+
+```bash
+cd /cluster/bringup
+```
+
+## The three questions
+
+| Report | Answers | Reads |
+|---|---|---|
+| `report_job-status.sh` | What state is every benchmark in? | `results/` + `squeue` |
+| `report_benchmarks.sh` | What are the numbers? | `results/` + `sinfo` |
+| `report_health.sh` | What is wrong that is not a benchmark? | `logs/` against the baseline, plus `sinfo` for state |
+| `report_overall.sh` | One line per node: what is outstanding, or `PASS`? | all three; `--details` adds each node's trace |
+
+Note the third column, because it is where all the surprises come from. They do
+not read the same inputs, so they can be simultaneously right and different.
+
+## 1. `report_job-status.sh` — what state is everything in?
+
+```bash
+bash report_job-status.sh
+```
+
+One line per node per benchmark column, grouped by identical status so a rack
+behaving the same way is one block rather than eighteen lines. The grouping is
+`clubak`, from ClusterShell — or `dshbak`, from `pdsh`. If neither is installed the script says so and prints
+ungrouped rather than silently printing nothing.
+
+Each line reads `node: column: status`, with a reason appended when there is one:
+
+```
+allreduce-nonvlink: FAIL -- collective carried over TCP
+```
+
+Six statuses. Learn these two facts about them and the rest follows:
+
+- **`FAIL` covers two different things** — the job reported it could not run,
+  *or* it ran and the gate rejected the output. Which one is in the result file,
+  not here.
+- **A queued re-run does not change the verdict.** A column whose last attempt
+  was rejected keeps reading `FAIL` while the retry waits, off the archive on
+  disk — the reason ends `a re-run is queued`. Only `RERUNNING` means there is
+  nothing to act on: a *passing* result that `--all` asked for again.
+
+Now narrow it. The node pattern is a prefix unless you spell out a glob:
+
+```bash
+bash report_job-status.sh rack50-dh01-h20        # the whole rack
+```
+
+And the test filter, which behaves deliberately differently:
+
+```bash
+bash report_job-status.sh -t allreduce
+```
+
+**`-t` does not append a `*` the way the node pattern does.** Benchmark names
+are prefixes of each other — `allreduce` and `allreduce-nonvlink` — so an
+implicit prefix match would quietly drag the nonvlink pair into every request
+for `allreduce`. Spell the glob out when you want it:
+
+```bash
+bash report_job-status.sh -t 'allreduce*'       # both
+bash report_job-status.sh -t '*nonvlink'        # the nonvlink pair
+```
+
+Try a name that does not exist:
+
+```bash
+bash report_job-status.sh -t typo
+```
+
+It exits non-zero and lists what *is* active, rather than printing an empty
+report. That is deliberate and worth internalising early: **an empty report and
+a clean cluster look identical**, so anywhere that distinction can be made, it
+is.
+
+## 2. `report_benchmarks.sh` — what are the numbers?
+
+```bash
+bash report_benchmarks.sh | head -20
+```
+
+One row per node. The first column after the node name is its **Slurm state**,
+and that column is the reason this report exists separately from the last one.
+
+Look at a row with a `NOT_RUN` in it. On an `idle` node that is a question — why
+has nothing run? On a node that has been `drain` all week it is not a mystery at
+all: nothing could be scheduled onto it. Same cell, completely different
+meaning, and only this report puts the two next to each other.
+
+Now the thing people misread. **A cell holds a number, not a verdict.**
+
+A job that produced a figure shows the figure — GB/s for the NCCL jobs, Gflops
+for HPL — *whatever the gate made of it*. A status word appears only when there
+was no number to print: the job never ran, never finished, or died before
+printing a result.
+
+So a cell reading `41.2` might be a pass or a fail, and this report will not
+tell you which in that cell. What tells you is the block at the bottom.
+
+Scroll down to the summary. It is on **stderr**, so it is still on your screen
+even if you redirect the table — and it stays out of any file you export.
+
+```bash
+bash report_benchmarks.sh > /dev/null      # summary only
+```
+
+One thing to notice while you do that: the summary is still in aligned columns,
+on the same grid it had with the table above it. The report's layout rule —
+**aligned only for TSV at a terminal, raw separated rows for anything else** —
+is asked of each stream separately, and the redirect was on stdout. The table
+went to `/dev/null` raw; the summary is still at a terminal.
+
+Five blocks. The two worth learning now:
+
+**`job (metric)`** — `n`, `min`, `median`, `mean`, `max` per job, over the cells
+that hold a number. Per job rather than pooled, because Gflops, GB/s and MB/s
+share a table but not a scale. **Failing runs are included**, so the `min` is
+the worst node on the cluster and not the worst node that passed.
+
+**`job (pass/fail)`** — cells per job counted by status. This is the verdict
+block, and it is the only summary a pass/fail job gets at all: `dcgmi-r3`,
+`stressapptest` and `memtester` judge a node without producing a figure, so
+they have no row in the metric block.
+
+That split is the whole shape of this report: **numbers above, verdicts below.**
+
+## 3. Why the two reports disagree
+
+Run both against a node with a benchmark running right now, if you have one:
+
+```bash
+bash report_job-status.sh <node> | grep -i running
+bash report_benchmarks.sh <node>
+```
+
+`report_job-status.sh` can say `RUNNING`. `report_benchmarks.sh` never does. Neither is
+wrong.
+
+`report_job-status.sh` makes one cluster-wide `squeue` call and uses it to reclassify
+the column a live job is writing — without it, a benchmark mid-run is a partial
+file with no end marker, which reads exactly like a job that died. `RUNNING` is
+live state, and it is why that report needs `squeue` at all.
+
+`report_benchmarks.sh` reads `sinfo`, not `squeue`. It knows the node's state but not
+what is executing on it, so it cannot tell a live partial file from a dead one
+and does not claim to. It also does not report `RERUNNING`, because it does not
+look at the archives.
+
+**The general rule this teaches: when two views of this system disagree, check
+what each one read before assuming one is broken.** That is true of the reports,
+and it is true of the host-versus-container HCA lists that cost this project
+weeks.
+
+## 4. `report_health.sh` — what is wrong that is not a benchmark?
+
+```bash
+bash report_health.sh
+```
+
+This one reads **the health logs**, not the drain reasons — `logs/<node>/<check>`
+against `valid-config/default`, the same comparison `node_health.sh` drains on,
+so it is complete whether or not drains are on. It contacts no node and re-runs
+nothing; it reports what the last health run left behind.
+
+Nodes are grouped by the *exact set* of checks they failed, largest group first.
+That grouping is the point: sixty nodes failing the same thirty-eight checks are
+one out-of-spec image with one fix, and printing them as thirty-eight check
+lines over sixty node lists reads as 2,280 incidents.
+
+The report ends by naming one node to diagnose:
+
+```
+Why a node failed:  bash report_health.sh --diff rack50-dh01-h20-36
+```
+
+**One node per group is enough.** The rest of the group failed the same checks;
+sixty copies of one diff buries the answer.
+
+Now the roll-up:
+
+```bash
+bash report_health.sh --summary
+```
+
+The same failures, cut the other way: one line per check with every node under
+it, so you can see how far a single fix reaches. It ends with the nodes that
+have no `logs/<node>` at all. **A node that has never run the health checks is
+not a node that passed**, and is not counted as one.
+
+## 5. Read the banners before you trust the report
+
+This is the step people skip, and it is the one that makes the other four
+meaningful. Look at the top of that last output.
+
+If drains are off — which is how the framework ships — you will see:
+
+```
+NOTE: DRAIN_AFTER_FAILED_HEALTH_CHECK=no in SETTINGS
+      No drain was set, so jobs are still being scheduled onto 60 of the
+      64 failing nodes below.
+```
+
+The failures themselves are reported either way — both reports read
+`logs/<node>` rather than the Slurm reason field. What that banner tells you is
+that Slurm does not know: those nodes are in the queue and taking work right now.
+`bash report_health.sh --drained` answers the other half — everything Slurm has
+taken out, grouped by the reason it carries, so a rack powered off by CMDaemon
+is one line rather than eighteen.
+
+Two other banners work the same way, and all three exist for one reason — **a
+report that cannot change looks exactly like a cluster that has settled**:
+
+| Banner | Means |
+|---|---|
+| `WARNING: No baseline` | `valid-config/default` does not resolve, so there is nothing to compare against and no failure can be reported. An empty report, on a cluster nobody has checked |
+| `RUN_HEALTH_CHECKS=no` | Nothing re-runs; this is a snapshot of whenever the pause went on |
+| `RUN_JOBS=no` (in `report_job-status.sh`) | No benchmarks are being submitted, so nothing below will change |
+
+Check for a fourth, which is not a banner but a line in the body:
+
+```
+No baseline in valid-config/default — 3 checks can never pass:
+```
+
+A check added after the last `admin_set-baseline.sh` run has no baseline entry,
+so it fails on every node forever. The fix is a new baseline, not anything on
+the nodes.
+
+## 6. Putting them in order
+
+Run them in this order, because each answers a question the previous one raises:
+
+```bash
+bash report_health.sh --summary     # 1. is the hardware even in spec?
+bash report_job-status.sh               # 2. what state are the benchmarks in?
+bash report_benchmarks.sh               # 3. what are the numbers, and the spread?
+bash check_trigger-log.sh                # 4. why is nothing happening?
+```
+
+**Health checks first**, because they gate everything downstream. A node with
+the wrong BIOS or a dead HCA will fail benchmarks for reasons that have nothing
+to do with the benchmark, and diagnosing that from a bandwidth number is hours
+wasted.
+
+**`check_trigger-log.sh` last, and only if the first three are suspiciously empty.**
+It answers "why is nothing being produced", which is a different question from
+all of the above — that is
+[understanding-the-agent.md](understanding-the-agent.md).
+
+## What a good site looks like
+
+Now you can read one. In rough order, at a new site:
+
+1. **`report_health.sh` is clean, or its groups are understood.** Get the
+   baseline right first.
+2. **`report_job-status.sh` shows columns filling in**, not a wall of `NOT_RUN`. A
+   wall of `NOT_RUN` with no trace activity is a chain problem, not a hardware
+   one.
+3. **`report_benchmarks.sh` numbers cluster tightly.** The *spread* across nominally
+   identical nodes matters more than any single value. A fleet where every node
+   lands in the same narrow band is healthy even before you have confirmed the
+   band is right; a fleet scattered across a 3× range has something wrong
+   regardless of how good the best node looks.
+4. **The outliers are few and named.** A handful of nodes below a floor is a
+   hardware finding. *Every* node below a floor is the floor being wrong for
+   this platform.
+
+Point 4 is the one that has cost the most time here, in both directions, and it
+is worth carrying: **the framework fails closed**, so a bad rule condemns the
+whole fleet and looks exactly like a catastrophic hardware event.
+
+## Where to go next
+
+| Next | Guide |
+|------|-------|
+| Turn a report into a node list you can act on | [how-to/get-a-node-list.md](../how-to/get-a-node-list.md) |
+| Find the slow node when nothing has failed | [how-to/find-outlier-nodes.md](../how-to/find-outlier-nodes.md) |
+| Get a report into a spreadsheet | [how-to/export-a-report.md](../how-to/export-a-report.md) |
+| A node failed and you need the device | [how-to/diagnose-a-failed-node.md](../how-to/diagnose-a-failed-node.md) |
+| Every flag and what every column means | [reference/scripts.md](../reference/scripts.md) |
+| Why a verdict is derived on every read | [explanation/verdicts-and-the-cache.md](../explanation/verdicts-and-the-cache.md) |

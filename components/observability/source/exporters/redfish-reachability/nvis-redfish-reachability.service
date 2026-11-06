@@ -1,0 +1,28 @@
+[Unit]
+Description=NVIS low-pressure Redfish reachability coverage exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nvis-redfish
+Group=nvis-redfish
+ExecStart=/usr/local/lib/nvis-redfish-reachability/redfish_reachability_exporter.py --targets /etc/nvis-observability/redfish-targets.csv --listen host.docker.internal --port 9421 --interval 1800 --timeout 1.5 --concurrency 4
+Restart=on-failure
+RestartSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryMax=128M
+CPUQuota=20%
+TasksMax=24
+
+[Install]
+WantedBy=multi-user.target

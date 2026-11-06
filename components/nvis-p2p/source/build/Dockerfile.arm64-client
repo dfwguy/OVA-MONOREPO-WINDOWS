@@ -1,0 +1,29 @@
+FROM rust@sha256:4727898c104ecd2e22d780925832502faee9fe4e70581b8572af081370b315a0
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN dpkg --add-architecture arm64 \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+       gcc-aarch64-linux-gnu \
+       g++-aarch64-linux-gnu \
+       libc6-dev-arm64-cross \
+       protobuf-compiler \
+       libprotobuf-dev \
+       libclang-dev \
+       cmake \
+       make \
+       perl \
+       pkg-config \
+       patch \
+    && rm -rf /var/lib/apt/lists/* \
+    && rustup target add aarch64-unknown-linux-gnu
+
+ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+ENV CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
+ENV CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
+ENV AR_aarch64_unknown_linux_gnu=aarch64-linux-gnu-ar
+# NVIDIA compute nodes use 64 KiB kernel pages (2^16).
+ENV JEMALLOC_SYS_WITH_LG_PAGE=16
+
+WORKDIR /src

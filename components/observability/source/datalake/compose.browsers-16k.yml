@@ -1,0 +1,62 @@
+name: nvis-16k-lake-browsers
+
+services:
+  parquet-browser:
+    build:
+      context: .
+      dockerfile: Dockerfile.browser
+    image: nvis-16k/lake-browser:local
+    container_name: nvis-16k-parquet-browser
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:4213:4213"
+    environment:
+      BROWSER_PORT: "4213"
+      BROWSER_SURFACE: "Parquet Browser"
+      LAKE_CURATED: /lake/curated
+    volumes:
+      - ../lake-active:/lake:ro
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=512m
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4213/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  duckdb-browser:
+    image: nvis-16k/lake-browser:local
+    container_name: nvis-16k-duckdb-browser
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2222:4300"
+    environment:
+      BROWSER_PORT: "4300"
+      BROWSER_SURFACE: "DuckDB Browser"
+      LAKE_CURATED: /lake/curated
+      BROWSER_ROW_CAP: "10000"
+    volumes:
+      - ../lake-active:/lake:ro
+    networks:
+      - default
+      - nvis-observability
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=512m
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4300/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  nvis-observability:
+    external: true
+    name: nvis-observability-16k

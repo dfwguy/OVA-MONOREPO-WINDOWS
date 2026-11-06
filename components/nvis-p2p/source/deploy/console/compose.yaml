@@ -1,0 +1,32 @@
+name: nvis-p2p-console
+
+services:
+  console:
+    image: nvis-p2p-console:2.5.1-nvis.2
+    build:
+      context: ../../upstream/console
+      dockerfile: Dockerfile.nvis
+    container_name: nvis-p2p-console
+    network_mode: host
+    user: "101:101"
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    cpus: 1.0
+    mem_limit: 256m
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://192.0.2.3:4300/nvis-p2p-health"]
+      interval: 15s
+      timeout: 3s
+      retries: 4
+      start_period: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

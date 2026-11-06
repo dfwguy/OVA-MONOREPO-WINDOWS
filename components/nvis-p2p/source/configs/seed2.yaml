@@ -1,0 +1,87 @@
+console: true
+
+log:
+  level: info
+
+host:
+  idc: iren-mkz
+  location: appserver-seed2
+  hostname: nvis-p2p-seed2
+  ip: 192.0.2.10
+
+server:
+  pluginDir: /srv/nvis/NVIS-P2P/state/seed2/plugins
+  cacheDir: /srv/nvis/NVIS-P2P/state/seed2/cache
+
+download:
+  protocol: tcp
+  server:
+    socketPath: /srv/nvis/NVIS-P2P/state/seed2/dfdaemon.sock
+  bandwidthLimit: 50GB
+  backToSourceBandwidthLimit: 50GB
+  pieceTimeout: 90s
+  concurrentPieceCount: 16
+
+upload:
+  server:
+    port: 12120
+  ip: 192.0.2.10
+  disableShared: false
+  bandwidthLimit: 50GB
+
+scheduler:
+  announceInterval: 10s
+  scheduleTimeout: 3h
+  maxScheduleCount: 5
+  enableBackToSource: true
+
+manager:
+  addr: http://192.0.2.10:12003
+
+seedPeer:
+  enable: true
+  type: super
+
+dynconfig:
+  refreshInterval: 1m
+
+storage:
+  server:
+    tcpPort: 12122
+    quicPort: 12123
+  dir: /cluster/OVA/NVIS-P2P/seed2-cache
+  keep: true
+  writeBufferSize: 1048576
+  readBufferSize: 1048576
+
+gc:
+  interval: 900s
+  policy:
+    taskTTL: 86400s
+    distHighThresholdPercent: 90
+    distLowThresholdPercent: 80
+
+proxy:
+  server:
+    port: 12121
+  rules: []
+  registryMirror:
+    addr: https://index.docker.io
+  disableBackToSource: false
+  prefetch: false
+  readBufferSize: 131072
+
+metrics:
+  server:
+    port: 12124
+  ip: 192.0.2.10
+
+health:
+  server:
+    ip: 192.0.2.10
+    port: 12125
+
+stats:
+  server:
+    ip: 192.0.2.10
+    port: 12126

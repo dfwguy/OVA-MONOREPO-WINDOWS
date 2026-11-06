@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh live Slurm node state and bounded fleet targets every minute
+
+[Timer]
+OnBootSec=45
+OnUnitActiveSec=1min
+AccuracySec=5s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

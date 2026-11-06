@@ -1,0 +1,43 @@
+# /etc/systemd/system/nvis-lake-compact@.service   (template unit)
+# Instantiated as nvis-lake-compact@hourly.service / @daily.service by the two
+# timers. Install: cp this + both .timer files to /etc/systemd/system/.
+[Unit]
+Description=NVIS IREN_MKZ data-lake compaction (%i)
+After=nvis-datalake.service
+
+[Service]
+Type=oneshot
+User=nvis
+Group=nvis
+Environment=LAKE_ROOT=/data/lake
+# ── RETENTION POLICY (authoritative location) ────────────────────────────────
+# /data is ONE 7.0T /dev/nvme2n1 shared by VictoriaMetrics (/data/vm, 12-month
+# retention) + Loki (/data/loki) + this lake, so the lake's realistic share is
+# ~4T. The shipped defaults (90d raw / 180d logs) do not fit at the projected
+# full-fleet rate of ~40k samples/s (~17 GB/day curated).
+#   RAW  metrics/fabric_phy/switch_events : 30 days
+#   RAW  logs                             : 45 days
+#   1-MINUTE ROLLUP of metrics            : 365 days  (4x smaller than 15s raw)
+#   validation_runs                       : forever (handover provenance)
+# LAKE_MAX_BYTES is the HARD ceiling enforced on top of age: age bounds time,
+# not bytes, and ingest will grow ~25x when the compute plane becomes routable.
+Environment=RAW_RETENTION_DAYS=30
+Environment=LOG_RETENTION_DAYS=45
+Environment=ROLLUP_RETENTION_DAYS=365
+Environment=LAKE_MAX_BYTES=4398046511104
+Environment=COMPACT_MIN_FREE_BYTES=322122547200
+# %i = "hourly" or "daily" from the instance name.
+# Shares the writer's populated venv volume (nvis-lake-pip); default bridge net
+# lets pip resolve deps on first run (NOT --network none — that made pip fail and
+# the timer silently never compacted). Separate short-lived process => a crash
+# here can never corrupt the writer's in-flight Parquet.
+ExecStart=/usr/bin/docker run --rm \
+  -e LAKE_ROOT=/data/lake \
+  -e RAW_RETENTION_DAYS -e LOG_RETENTION_DAYS -e ROLLUP_RETENTION_DAYS \
+  -e LAKE_MAX_BYTES -e COMPACT_MIN_FREE_BYTES \
+  -v /data/lake:/data/lake \
+  -v /opt/observability/iren_mkz/datalake:/app:ro \
+  -v nvis-lake-pip:/opt/pip \
+  python:3.11-slim bash -lc \
+  "PYTHONUSERBASE=/opt/pip pip install --user -q -r /app/requirements.txt && \
+   PYTHONPATH=/opt/pip/lib/python3.11/site-packages:/app python /app/lake_compact.py %i"

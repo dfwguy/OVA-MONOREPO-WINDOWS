@@ -1,0 +1,732 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>How to stage the observability node-agents to a cluster &#8212; NVIS Greenlight</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/local-fonts.css?v=64a3f04a" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f6167d25" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=1657e09f"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/stage-observability-agents';</script>
+
+    <link rel="icon" href="../_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="How to connect a PythonCM (BCM) cluster" href="connect-a-pythoncm-cluster.html" />
+    <link rel="prev" title="How to use the terminal" href="use-the-terminal.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.1" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials — learning by doing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/distribute-your-first-image.html">Distribute your first image with NVIS-P2P</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides — getting something done</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="configure-a-deployment.html">How to configure a deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authenticate-to-the-api.html">How to authenticate to the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grant-a-team-access.html">How to grant a team access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diagnose-a-refused-request.html">How to diagnose a refused request</a></li>
+<li class="toctree-l1"><a class="reference internal" href="add-your-own-script.html">How to add your own script and register it as a tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use-the-terminal.html">How to use the terminal</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">How to stage the observability node-agents to a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connect-a-pythoncm-cluster.html">How to connect a PythonCM (BCM) cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distribute-a-catalog-image.html">How to distribute a catalog image to the fleet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recover-p2p-peers-after-a-reimage.html">How to bring P2P peers up on new or reimaged nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publish-the-deployment-tracker.html">How to publish the deployment tracker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast-cluster-completion.html">How to forecast when the cluster finishes validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="write-a-rack-handover-report.html">How to write a rack handover report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="place-a-multirack-job.html">How to place a multi-rack job for best collective performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="list-bcm-racks-without-templates.html">How to list saved BCM racks without naming templates</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference — the machinery, described</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/configuration/settings.html">Configuration settings — every setting, generated</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/projects-and-clusters.html">Projects and clusters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/tools.html">Tool documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/actions-by-scope.html">Actions by scope — node, rack, multirack</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/identity/index.html">Identity and authorization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/actions-and-resources.html">Actions and resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/policy-schema.html">Policy schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/evaluation.html">How a decision is made</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/action-vocabulary.html">Action vocabulary — every service and action</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/p2p-catalog-distribution.html">P2P catalog distribution — components, parameters, scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/collective-settings-by-job-size.html">Collective settings by job size</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation — why it is like this</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../explanation/the-parametric-platform.html">The parametric platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/why-authorization-is-default-deny.html">Why authorization is default-deny</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/how-a-script-path-is-chosen.html">How a script path is chosen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/the-cluster-home-directory.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/how-cluster-paths-reach-scripts.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/geometry-and-hostnames.html">Geometry and hostnames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/which-storage-engine.html">Which storage engine, and why</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/why-no-pythoncm-broker.html">Why there is no PythonCM broker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/porting-the-pythoncm-fork.html">Porting the PythonCM fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/p2p-module-integration.html">NVIS-P2P as a per-cluster capability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/active-passive-and-blue-green.html">Active/passive and blue/green (roadmap)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/p2p-catalog-distribution.html">How catalog images reach every node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/rack-placement-and-collective-performance.html">Rack placement and collective performance</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">How to stage the observability node-agents to a cluster</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="how-to-stage-the-observability-node-agents-to-a-cluster">
+<h1>How to stage the observability node-agents to a cluster<a class="headerlink" href="#how-to-stage-the-observability-node-agents-to-a-cluster" title="Link to this heading">#</a></h1>
+<div class="nvis-diataxis nvis-diataxis-how-to docutils">
+<p>How-to guide — steps to a goal. Assumes you know the basics.</p>
+</div>
+<p><strong>Problem this solves.</strong> The observability stack lives in <code class="docutils literal notranslate"><span class="pre">nvis-ova/nvis-observability-ncp</span></code> on
+<strong><code class="docutils literal notranslate"><span class="pre">gitlab-master.nvidia.com</span></code>, which is NVIDIA-internal</strong> — it does not resolve or route from a
+customer/air-gapped cluster (confirmed on NC: <code class="docutils literal notranslate"><span class="pre">gitlab-master.nvidia.com</span></code> fails DNS from the
+appserver). So you <strong>cannot <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> it on the cluster</strong>. You must <em>stage</em>: get the repo content
+onto the cluster from an NVIDIA-connected host, then run the staging there against the <strong>public</strong>
+internet (<a class="reference external" href="http://github.com">github.com</a> + <a class="reference external" href="http://nvcr.io">nvcr.io</a>), which the cluster’s app/obs host usually can reach.</p>
+<p>The agents (<code class="docutils literal notranslate"><span class="pre">dcgm-exporter</span></code>, <code class="docutils literal notranslate"><span class="pre">node_exporter</span></code>, <code class="docutils literal notranslate"><span class="pre">cgroup_exporter</span></code>, <code class="docutils literal notranslate"><span class="pre">alloy</span></code>) are installed on compute
+nodes by <code class="docutils literal notranslate"><span class="pre">install-node.sh</span></code>, which copies the binaries from a <strong>cluster-shared directory</strong> (<code class="docutils literal notranslate"><span class="pre">$SHARE</span></code>,
+e.g. <code class="docutils literal notranslate"><span class="pre">/cm/shared/nvis/bin</span></code> — NFS-mounted on every node) and renders the systemd units from env vars.
+Staging is the act of populating that shared directory.</p>
+<hr class="docutils" />
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Role</p></th>
+<th class="head"><p>Needs</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Connected host</strong> (your laptop / a corp box)</p></td>
+<td><p>access to <code class="docutils literal notranslate"><span class="pre">gitlab-master.nvidia.com</span></code> (token or SSH key) to get the repo</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Staging host</strong> (a cluster host)</p></td>
+<td><p><strong>public</strong> internet to <code class="docutils literal notranslate"><span class="pre">github.com</span></code> + <code class="docutils literal notranslate"><span class="pre">nvcr.io</span></code>; <code class="docutils literal notranslate"><span class="pre">docker</span></code> (root/sudo); write access to the cluster-shared FS (<code class="docutils literal notranslate"><span class="pre">/cm/shared</span></code>). On NC the <strong>appserver</strong> qualifies. It does <strong>not</strong> need internal GitLab.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Shared FS</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/cm/shared</span></code> (or equivalent) mounted on the staging host, the head, and all compute nodes</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<hr class="docutils" />
+<section id="step-a-get-the-repo-onto-the-cluster-the-internalcluster-bridge">
+<h2>Step A — Get the repo onto the cluster (the internal→cluster bridge)<a class="headerlink" href="#step-a-get-the-repo-onto-the-cluster-the-internalcluster-bridge" title="Link to this heading">#</a></h2>
+<p>The cluster can’t reach internal GitLab, so pull the content where you <em>can</em> and carry it over.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># On an NVIDIA-connected host (laptop/corp network). Either:</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://gitlab-master.nvidia.com/nvis-ova/nvis-observability-ncp.git
+<span class="c1"># …or, if you only want the agents, download just node-agents/ via the GitLab API with a token,</span>
+<span class="c1">#   or grab the repo archive from the GitLab UI. Only the node-agents/ tree is required for staging.</span>
+
+<span class="c1"># Transfer the node-agents/ tree to the staging host:</span>
+scp<span class="w"> </span>-r<span class="w"> </span>nvis-observability-ncp/node-agents<span class="w"> </span>&lt;staging-host&gt;:/home/&lt;you&gt;/ncp-node-agents
+</pre></div>
+</div>
+<blockquote>
+<div><p>Why not just run it on the connected host? Because <code class="docutils literal notranslate"><span class="pre">stage-binaries.sh</span></code> must write the <strong>cluster’s</strong>
+shared FS, which the connected host usually can’t mount. Run the content <em>on the cluster</em>.</p>
+</div></blockquote>
+</section>
+<hr class="docutils" />
+<section id="step-b-stage-for-the-compute-node-architecture-not-the-staging-host-s">
+<h2>Step B — ⚠️ Stage for the COMPUTE-NODE architecture, not the staging host’s<a class="headerlink" href="#step-b-stage-for-the-compute-node-architecture-not-the-staging-host-s" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">stage-binaries.sh</span></code> auto-detects the arch of the <strong>host it runs on</strong> — which is wrong when the
+staging host (appserver/head) differs from the compute nodes. <strong>GB300 is Grace = <code class="docutils literal notranslate"><span class="pre">arm64</span></code>, but the
+NC appserver/head are <code class="docutils literal notranslate"><span class="pre">x86_64</span></code>.</strong> Staging on the appserver without override produces useless amd64
+binaries.</p>
+<p><strong>Confirm the compute-node arch</strong> (no node SSH needed) from the BCM software images on the head:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ssh<span class="w"> </span>&lt;head&gt;<span class="w"> </span><span class="s1">'ls -d /cm/images/*/'</span><span class="w">      </span><span class="c1"># look for a *-aarch64 image or the node's dgxos image</span>
+<span class="c1"># e.g. on NC: default-image-ubuntu2404-aarch64, dgxos-7.5-dell-gb300-ib  → arm64</span>
+</pre></div>
+</div>
+<p>Then <strong>force <code class="docutils literal notranslate"><span class="pre">GOARCH</span></code></strong> when staging (the upstream script only reads <code class="docutils literal notranslate"><span class="pre">uname</span> <span class="pre">-m</span></code>; the patched copy in
+this repo’s sibling tooling accepts a <code class="docutils literal notranslate"><span class="pre">GOARCH</span></code> env override — add the same two lines if you use a
+pristine clone):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># make GOARCH overridable in stage-binaries.sh:</span>
+<span class="c1">#   if [[ -z "${GOARCH:-}" ]]; then  case "$(uname -m)" in ... esac  fi</span>
+</pre></div>
+</div>
+<p>Also extract <code class="docutils literal notranslate"><span class="pre">dcgm-exporter</span></code> for the node arch: pull/<code class="docutils literal notranslate"><span class="pre">create</span></code> the image with
+<code class="docutils literal notranslate"><span class="pre">--platform=linux/${GOARCH}</span></code> (the patched script does this).</p>
+</section>
+<hr class="docutils" />
+<section id="step-c-verify-the-binary-versions-before-running-they-go-stale">
+<h2>Step C — Verify the binary versions before running (they go stale)<a class="headerlink" href="#step-c-verify-the-binary-versions-before-running-they-go-stale" title="Link to this heading">#</a></h2>
+<p>The upstream default versions can 404 as releases move. <strong>Probe each release URL (HTTP 200) first</strong>;
+the release <em>download</em> URLs are a CDN and are <strong>not</strong> API-rate-limited (the GitHub <em>API</em> is, from the
+shared NVIDIA egress IP). Known-good as of this writing:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Binary</p></th>
+<th class="head"><p>Version</p></th>
+<th class="head"><p>arm64 asset (must return 200)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>node_exporter</p></td>
+<td><p>1.8.2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">node_exporter-1.8.2.linux-arm64.tar.gz</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>alloy</p></td>
+<td><p>1.5.1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">alloy-linux-arm64.zip</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>cgroup_exporter</strong></p></td>
+<td><p><strong>1.3.0</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cgroup_exporter-1.3.0.linux-arm64.tar.gz</span></code>  <em>(upstream default <code class="docutils literal notranslate"><span class="pre">0.10.3</span></code> 404s)</em></p></td>
+</tr>
+<tr class="row-odd"><td><p>dcgm-exporter</p></td>
+<td><p>from image</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">nvcr.io/nvidia/k8s/dcgm-exporter:3.3.9-3.6.1-ubuntu22.04</span></code> (multi-arch: amd64+arm64)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Latest <code class="docutils literal notranslate"><span class="pre">cgroup_exporter</span></code> without the API: <code class="docutils literal notranslate"><span class="pre">curl</span> <span class="pre">-sI</span> <span class="pre">https://github.com/treydock/cgroup_exporter/releases/latest</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">-i</span> <span class="pre">location</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="step-d-ngc-nvcr-io">
+<h2>Step D — NGC / <a class="reference external" href="http://nvcr.io">nvcr.io</a><a class="headerlink" href="#step-d-ngc-nvcr-io" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">dcgm-exporter</span></code> ships only inside NVIDIA’s container image. On NC it pulls <strong>unauthenticated</strong> — <strong>no
+NGC key required</strong>. If a given cluster’s <a class="reference external" href="http://nvcr.io">nvcr.io</a> path needs auth: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">login</span> <span class="pre">nvcr.io</span></code> (user
+<code class="docutils literal notranslate"><span class="pre">$oauthtoken</span></code>, password = NGC API key) once before staging.</p>
+</section>
+<hr class="docutils" />
+<section id="step-e-run-the-staging-on-the-staging-host">
+<h2>Step E — Run the staging (on the staging host)<a class="headerlink" href="#step-e-run-the-staging-on-the-staging-host" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>~/ncp-node-agents
+sudo<span class="w"> </span>env<span class="w"> </span><span class="nv">GOARCH</span><span class="o">=</span>arm64<span class="w"> </span><span class="nv">CGROUP_EXPORTER_VER</span><span class="o">=</span><span class="m">1</span>.3.0<span class="w"> </span><span class="nv">SHARE</span><span class="o">=</span>/cm/shared/nvis/bin<span class="w"> </span>bash<span class="w"> </span>stage-binaries.sh
+
+<span class="c1"># Verify the binaries are the NODE arch, not the staging host's:</span>
+<span class="k">for</span><span class="w"> </span>b<span class="w"> </span><span class="k">in</span><span class="w"> </span>node_exporter<span class="w"> </span>cgroup_exporter<span class="w"> </span>dcgm-exporter<span class="w"> </span>alloy<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="nb">printf</span><span class="w"> </span><span class="s1">'%-16s '</span><span class="w"> </span><span class="s2">"</span><span class="nv">$b</span><span class="s2">"</span><span class="p">;</span><span class="w"> </span>sudo<span class="w"> </span>file<span class="w"> </span>-b<span class="w"> </span>/cm/shared/nvis/bin/<span class="nv">$b</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-oE<span class="w"> </span><span class="s1">'aarch64|x86-64'</span>
+<span class="k">done</span><span class="w">   </span><span class="c1"># all must read aarch64 for GB300</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">stage-binaries.sh</span></code> also installs <code class="docutils literal notranslate"><span class="pre">install-node.sh</span></code>, <code class="docutils literal notranslate"><span class="pre">dcgm-counters.csv</span></code>, and the textfile collectors
+into <code class="docutils literal notranslate"><span class="pre">$SHARE</span></code>. Finally, stage the <strong>full tree</strong> so the head can run the relay + rollout from the
+shared FS:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>cp<span class="w"> </span>-a<span class="w"> </span>~/ncp-node-agents<span class="w"> </span>/cm/shared/nvis/node-agents
+</pre></div>
+</div>
+<p>Result:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>/cm/shared/nvis/
+├── bin/            node_exporter · cgroup_exporter · dcgm-exporter · alloy (node arch)
+│                   + dcgm-counters.csv · install-node.sh · textfile collectors
+└── node-agents/    rollout.sh · head-node/ · systemd/ · alloy/ · install-node.sh · uninstall-node.sh
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="step-f-relay-placement-where-the-nodes-push">
+<h2>Step F — Relay placement (where the nodes push)<a class="headerlink" href="#step-f-relay-placement-where-the-nodes-push" title="Link to this heading">#</a></h2>
+<p>The relay carries node telemetry to the obs host. Put it wherever the nodes can reach:</p>
+<ul class="simple">
+<li><p><strong>On the obs host / appserver</strong> (NC’s choice) — simplest, no head container; nodes push to the
+appserver. <code class="docutils literal notranslate"><span class="pre">RELAY_HOST</span> <span class="pre">=</span> <span class="pre">&lt;appserver&gt;</span></code>.</p></li>
+<li><p><strong>On the head</strong> — only if compute nodes cannot reach the obs host directly.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>env<span class="w"> </span><span class="nv">METRICS_TARGET</span><span class="o">=</span>&lt;obs-host&gt;<span class="w"> </span><span class="nv">RELAY_RW_PORT</span><span class="o">=</span><span class="m">19090</span><span class="w"> </span><span class="nv">RELAY_LOKI_PORT</span><span class="o">=</span><span class="m">13100</span><span class="w"> </span><span class="se">\</span>
+<span class="w">     </span>bash<span class="w"> </span>/cm/shared/nvis/node-agents/head-node/setup-relay.sh<span class="w"> </span>--docker<span class="w">   </span><span class="c1"># nginx:alpine</span>
+</pre></div>
+</div>
+<p>Rollout (<code class="docutils literal notranslate"><span class="pre">rollout.sh</span></code>) still needs <strong>SSH to the compute nodes</strong>: run it from a host whose key the
+nodes trust — on a BCM cluster that is the <strong>head</strong> (<code class="docutils literal notranslate"><span class="pre">root</span></code>→node is passwordless), or provision a
+deploy key to the nodes via the BCM image. The appserver’s key is typically <strong>not</strong> on the nodes.</p>
+</section>
+<hr class="docutils" />
+<section id="nc-quick-reference-values-used">
+<h2>NC quick reference (values used)<a class="headerlink" href="#nc-quick-reference-values-used" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>NC value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Staging host</p></td>
+<td><p>appserver <code class="docutils literal notranslate"><span class="pre">192.0.2.25</span></code> (public internet ✓, <code class="docutils literal notranslate"><span class="pre">/cm/shared</span></code> writable as root)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Node arch</p></td>
+<td><p><strong>arm64</strong> (GB300 Grace; image <code class="docutils literal notranslate"><span class="pre">default-image-ubuntu2404-aarch64</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>SHARE</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/cm/shared/nvis/bin</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>RELAY_HOST (nodes push here)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">192.0.2.25</span></code> (relay co-located on the appserver)</p></td>
+</tr>
+<tr class="row-even"><td><p>METRICS_TARGET</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">192.0.2.25</span></code> (Phase-1 obs host)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Rollout origin</p></td>
+<td><p><strong>head</strong> <code class="docutils literal notranslate"><span class="pre">nscale-nc-hn1</span></code> (<code class="docutils literal notranslate"><span class="pre">root</span></code>→node passwordless) or a node deploy key</p></td>
+</tr>
+<tr class="row-even"><td><p>NGC key</p></td>
+<td><p>not needed (<a class="reference external" href="http://nvcr.io">nvcr.io</a> pulls unauthenticated)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<hr class="docutils" />
+<section id="checklist-for-a-new-cluster">
+<h2>Checklist for a NEW cluster<a class="headerlink" href="#checklist-for-a-new-cluster" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Clone/download <code class="docutils literal notranslate"><span class="pre">nvis-observability-ncp/node-agents</span></code> on a connected host → <code class="docutils literal notranslate"><span class="pre">scp</span></code> to the staging host.</p></li>
+<li><p>Confirm the <strong>compute-node arch</strong> from <code class="docutils literal notranslate"><span class="pre">/cm/images/</span></code> on the head.</p></li>
+<li><p>Probe the binary release URLs for that arch (HTTP 200); set <code class="docutils literal notranslate"><span class="pre">GOARCH</span></code> + version overrides.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">login</span> <span class="pre">nvcr.io</span></code> only if that cluster requires it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">env</span> <span class="pre">GOARCH=&lt;arch&gt;</span> <span class="pre">SHARE=&lt;share&gt;/bin</span> <span class="pre">bash</span> <span class="pre">stage-binaries.sh</span></code>; verify <code class="docutils literal notranslate"><span class="pre">file</span></code> shows the node arch.</p></li>
+<li><p>Copy the full <code class="docutils literal notranslate"><span class="pre">node-agents/</span></code> tree to the shared FS.</p></li>
+<li><p>Deploy the relay (appserver or head); point <code class="docutils literal notranslate"><span class="pre">RELAY_HOST</span></code> at it.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">rollout.sh</span></code> from a host that can SSH the nodes (head or deploy key), canary first.</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="use-the-terminal.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">How to use the terminal</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="connect-a-pythoncm-cluster.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">How to connect a PythonCM (BCM) cluster</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a-get-the-repo-onto-the-cluster-the-internalcluster-bridge">Step A — Get the repo onto the cluster (the internal→cluster bridge)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b-stage-for-the-compute-node-architecture-not-the-staging-host-s">Step B — ⚠️ Stage for the COMPUTE-NODE architecture, not the staging host’s</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c-verify-the-binary-versions-before-running-they-go-stale">Step C — Verify the binary versions before running (they go stale)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-d-ngc-nvcr-io">Step D — NGC / nvcr.io</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-e-run-the-staging-on-the-staging-host">Step E — Run the staging (on the staging host)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-f-relay-placement-where-the-nodes-push">Step F — Relay placement (where the nodes push)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nc-quick-reference-values-used">NC quick reference (values used)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checklist-for-a-new-cluster">Checklist for a NEW cluster</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

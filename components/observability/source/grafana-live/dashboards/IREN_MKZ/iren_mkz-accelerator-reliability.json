@@ -1,0 +1,1377 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Complete live DCGM reliability surface: ECC SBE, correctable remaps, throttle, violation, memory, PCIe and energy evidence.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "home",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "\u2302 IREN_MKZ Home",
+      "tooltip": "Back to IREN_MKZ Home",
+      "type": "link",
+      "url": "/d/iren_mkz-home?${__url_time_range}"
+    },
+    {
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "iren_mkz"
+      ],
+      "title": "IREN_MKZ Dashboards",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "description": "Purpose, evidence semantics, and routes to adjacent IREN_MKZ dashboards.",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "# IREN_MKZ \u2014 Accelerator Reliability\n\n**The complete live DCGM reliability surface omitted by the original suite.** Persistent counters and selected-range counter changes are visibly separated; low utilisation is not treated as hardware failure.\n\n[Home](/d/iren_mkz-home?${__url_time_range}) \u00b7 [Command Center](/d/iren_mkz-command-center?${__url_time_range}) \u00b7 [Live Topology](/d/iren_mkz-topology?${__url_time_range}) \u00b7 [Infrastructure](/d/iren_mkz-infrastructure?${__url_time_range}) \u00b7 [GPU & NVLink](/d/iren_mkz-accelerators?${__url_time_range}) \u00b7 [Fabric, CVT & Cabling](/d/iren_mkz-fabric?${__url_time_range}) \u00b7 [Workloads, Slurm & Validation](/d/iren_mkz-workloads?${__url_time_range})",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "description": "Reliability decisions",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Reliability decisions",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPUs with one or more correctable remapped rows.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 5
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) or on() (count(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Correctable remap GPUs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPUs with aggregate single-bit ECC evidence.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 5
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) or on() (count(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Aggregate SBE GPUs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPUs whose power-violation counter increased in the selected range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 5
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(increase(DCGM_FI_DEV_POWER_VIOLATION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]) > 0) or on() (count(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Power violations \u0394",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GPUs with a DCGM throttle-reason mask beyond bit 1 (GPU idle). Idle is operating context, not a hardware fault.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 5
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 1) or on() (count(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) * 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Non-idle throttle masks",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Selected-range PCIe replay counter increase across scoped GPUs.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 5
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "PCIe replay \u0394",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Fleet/scoped framebuffer consumption derived from live used and free values.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "orange",
+                "value": 85
+              },
+              {
+                "color": "red",
+                "value": 95
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 5
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100*sum(DCGM_FI_DEV_FB_USED{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})/(sum(DCGM_FI_DEV_FB_USED{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})+sum(DCGM_FI_DEV_FB_FREE{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Framebuffer used",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "description": "Exact GPUs and counter families",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 9,
+      "panels": [],
+      "title": "Exact GPUs and counter families",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "One row per affected GPU using the node/GPU entity key. Click GPU for its L3 identity, logs and operating envelope.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "gpu"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open GPU root cause",
+                    "url": "/d/iren_mkz-gpu-root-cause?var-node=${__data.fields.node}&var-gpu=${__data.fields.gpu}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Correctable rows"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SBE aggregate"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Throttle mask"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(max by(node,rack,su,gpu)(DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} and on(node,gpu) ((DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) or (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) or (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 1))), \"entity\", \"/\", \"node\", \"gpu\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(max by(node,gpu)(DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} and on(node,gpu) ((DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) or (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) or (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 1))), \"entity\", \"/\", \"node\", \"gpu\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(max by(node,gpu)(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} and on(node,gpu) ((DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) or (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) or (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 1))), \"entity\", \"/\", \"node\", \"gpu\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(max by(node,gpu)(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} and on(node,gpu) ((DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) or (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 0) or (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"} > 1))), \"entity\", \"/\", \"node\", \"gpu\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        }
+      ],
+      "title": "ECC, remap and throttle worklist",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "entity",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "device": true,
+              "entity": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true
+            },
+            "renameByName": {
+              "Value #A": "Correctable rows",
+              "Value #B": "SBE aggregate",
+              "Value #C": "SBE volatile",
+              "Value #D": "Throttle mask"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Selected-range counter increases joined on the stable node/GPU entity. These counters are not interpreted as current state without a change in the chosen window.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "gpu"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open GPU root cause",
+                    "url": "/d/iren_mkz-gpu-root-cause?var-node=${__data.fields.node}&var-gpu=${__data.fields.gpu}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(topk(100, sum by(node,rack,su,gpu)(increase(DCGM_FI_DEV_POWER_VIOLATION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) > 0, \"entity\", \"/\", \"node\", \"gpu\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(topk(100, sum by(node,gpu)(increase(DCGM_FI_DEV_THERMAL_VIOLATION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) > 0, \"entity\", \"/\", \"node\", \"gpu\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(topk(100, sum by(node,gpu)(increase(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) > 0, \"entity\", \"/\", \"node\", \"gpu\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(topk(100, sum by(node,gpu)(increase(DCGM_FI_DEV_BOARD_LIMIT_VIOLATION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) > 0, \"entity\", \"/\", \"node\", \"gpu\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(topk(100, sum by(node,gpu)(increase(DCGM_FI_DEV_SYNC_BOOST_VIOLATION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) > 0, \"entity\", \"/\", \"node\", \"gpu\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(topk(100, sum by(node,gpu)(increase(DCGM_FI_DEV_LOW_UTIL_VIOLATION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) > 0, \"entity\", \"/\", \"node\", \"gpu\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        }
+      ],
+      "title": "Violation counters changed in selected range",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "entity",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "device": true,
+              "entity": true,
+              "instance": true,
+              "job": true,
+              "modelName": true,
+              "pci_bus_id": true
+            },
+            "renameByName": {
+              "Value #A": "Power",
+              "Value #B": "Thermal",
+              "Value #C": "Reliability",
+              "Value #D": "Board",
+              "Value #E": "Sync boost",
+              "Value #F": "Low util"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "description": "Memory, utilisation and reliability chronology",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 12,
+      "panels": [],
+      "title": "Memory, utilisation and reliability chronology",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Scoped framebuffer capacity and copy-engine utilisation on a common percentage scale.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100*sum(DCGM_FI_DEV_FB_USED{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})/(sum(DCGM_FI_DEV_FB_USED{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})+sum(DCGM_FI_DEV_FB_FREE{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}))",
+          "legendFormat": "framebuffer used",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_MEM_COPY_UTIL{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})",
+          "legendFormat": "memory copy util",
+          "refId": "B"
+        }
+      ],
+      "title": "Framebuffer and memory-copy utilisation",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Fleet/scoped DCGM violation counter rates; correlate spikes with clocks, power and jobs.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[5m]))",
+          "legendFormat": "power",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(DCGM_FI_DEV_THERMAL_VIOLATION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[5m]))",
+          "legendFormat": "thermal",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[5m]))",
+          "legendFormat": "reliability",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(DCGM_FI_DEV_BOARD_LIMIT_VIOLATION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[5m]))",
+          "legendFormat": "board limit",
+          "refId": "D"
+        }
+      ],
+      "title": "Violation counter rates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "DCGM energy-counter rate and board power. Energy units are intentionally left raw until exporter unit semantics are confirmed.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 29
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[5m]))",
+          "legendFormat": "energy-counter units/s",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})",
+          "legendFormat": "board power W",
+          "refId": "B"
+        }
+      ],
+      "title": "Energy counter rate and board power",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Largest framebuffer users joined to remaining free memory on the stable node/GPU entity.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "gpu"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open GPU root cause",
+                    "url": "/d/iren_mkz-gpu-root-cause?var-node=${__data.fields.node}&var-gpu=${__data.fields.gpu}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FB used"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decmbytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FB free"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decmbytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 29
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "label_join(topk(100, max by(node,rack,su,gpu,UUID,pci_bus_id,modelName)(DCGM_FI_DEV_FB_USED{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})), \"entity\", \"/\", \"node\", \"gpu\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by(entity)(label_join(max by(node,gpu)(DCGM_FI_DEV_FB_FREE{cluster=\"IREN_MKZ\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}), \"entity\", \"/\", \"node\", \"gpu\"))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        }
+      ],
+      "title": "GPU identity and memory envelope",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "entity",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "device": true,
+              "entity": true,
+              "instance": true,
+              "job": true
+            },
+            "renameByName": {
+              "Value #A": "FB used",
+              "Value #B": "FB free"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "specialist",
+    "observability"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "label": "Metrics",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 2,
+        "label": "Logs",
+        "name": "loki_datasource",
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\"},su)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Super Unit",
+        "multi": false,
+        "name": "su",
+        "options": [],
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\"},su)",
+          "refId": "suQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\",su=~\"$su\"},rack)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rack",
+        "multi": false,
+        "name": "rack",
+        "options": [],
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\",su=~\"$su\"},rack)",
+          "refId": "rackQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\",rack=~\"$rack\"},node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tray",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\",rack=~\"$rack\"},node)",
+          "refId": "nodeQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "30m",
+      "1h"
+    ]
+  },
+  "timezone": "utc",
+  "title": "IREN_MKZ \u2014 Accelerator Reliability",
+  "uid": "iren_mkz-accelerator-reliability",
+  "version": 3
+}

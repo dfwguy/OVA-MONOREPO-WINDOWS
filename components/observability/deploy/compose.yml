@@ -1,0 +1,111 @@
+name: iren-mkz-observability
+x-logging: &logging
+  driver: json-file
+  options: {max-size: "20m", max-file: "3"}
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.108.1
+    pull_policy: never
+    restart: unless-stopped
+    command: ["--storageDataPath=/storage", "--retentionPeriod=7d", "--memory.allowedPercent=20", "--httpListenAddr=:8428"]
+    volumes: ["${OBS_DATA_ROOT:?set OBS_DATA_ROOT}/victoriametrics:/storage"]
+    ports: ["127.0.0.1:8428:8428"]
+    logging: *logging
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    pull_policy: never
+    restart: unless-stopped
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus", "--storage.tsdb.retention.time=2d"]
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/targets:/etc/prometheus/targets:ro
+      - ${OBS_DATA_ROOT:?set OBS_DATA_ROOT}/prometheus:/prometheus
+    ports: ["127.0.0.1:9090:9090"]
+    logging: *logging
+  loki:
+    image: grafana/loki:3.5.12
+    pull_policy: never
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ../source/core/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - ${OBS_DATA_ROOT:?set OBS_DATA_ROOT}/loki:/loki
+    ports: ["127.0.0.1:3100:3100"]
+    logging: *logging
+  grafana:
+    image: grafana/grafana:11.1.4
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-nvis}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:?read approved secret into protected env file}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_INSTALL_PLUGINS: ""
+      GF_PATHS_PLUGINS: /opt/iren-plugins
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      GF_USERS_DEFAULT_THEME: dark
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+    volumes:
+      - ${OBS_DATA_ROOT:?set OBS_DATA_ROOT}/grafana:/var/lib/grafana
+      - ${PLUGIN_DIR:?set extracted architecture-specific Infinity plugin dir}:/opt/iren-plugins:ro
+      - ./grafana:/etc/grafana/provisioning/datasources:ro
+    ports: ["127.0.0.1:3001:3000"]
+    logging: *logging
+  alloy:
+    image: grafana/alloy:v1.5.1
+    pull_policy: never
+    restart: unless-stopped
+    command: ["run", "/etc/alloy/config.alloy", "--server.http.listen-addr=0.0.0.0:12345", "--storage.path=/var/lib/alloy/data"]
+    environment:
+      CLUSTER_NAME: IREN_MKZ
+      VM_REMOTE_WRITE_URL: http://victoriametrics:8428/api/v1/write
+      LOKI_PUSH_URL: http://loki:3100/loki/api/v1/push
+    volumes:
+      - ../source/core/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ${OBS_DATA_ROOT:?set OBS_DATA_ROOT}/alloy:/var/lib/alloy/data
+    ports:
+      - "127.0.0.1:12345:12345"
+      - "${OBS_INGEST_BIND:-127.0.0.1}:9099:9099"
+      - "${OBS_INGEST_BIND:-127.0.0.1}:9098:9098"
+    logging: *logging
+  lakewriter:
+    profiles: [lake]
+    image: python:3.11-slim
+    pull_policy: never
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      CLUSTER_NAME: IREN_MKZ
+      LAKE_ROOT: /lake
+      PORT: "9410"
+      MIN_FREE_BYTES: "214748364800"
+      SPOOL_MAX: "53687091200"
+      PYTHONPATH: /opt/pip:/app
+    volumes:
+      - ../source/datalake:/app:ro
+      - ${WHEELHOUSE_DIR:?set architecture-specific CPython 3.11 wheelhouse}:/wheels:ro
+      - ${OBS_DATA_ROOT:?set OBS_DATA_ROOT}/lake:/lake
+    command: ["sh", "-c", "pip install --no-index --find-links=/wheels --target=/opt/pip -r /app/requirements.txt && exec python /app/lakewriter.py"]
+    tmpfs: ["/opt/pip:rw,size=1g"]
+    ports: ["127.0.0.1:9410:9410"]
+    logging: *logging
+  lake-browser:
+    profiles: [lake]
+    image: python:3.11-slim
+    pull_policy: never
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      BROWSER_PORT: "4300"
+      BROWSER_SURFACE: DuckDB Browser
+      LAKE_CURATED: /lake/curated
+      BROWSER_ROW_CAP: "10000"
+      PYTHONPATH: /opt/pip:/app
+    volumes:
+      - ../source/datalake:/app:ro
+      - ${WHEELHOUSE_DIR:?set architecture-specific CPython 3.11 wheelhouse}:/wheels:ro
+      - ${OBS_DATA_ROOT:?set OBS_DATA_ROOT}/lake:/lake:ro
+    command: ["sh", "-c", "pip install --no-index --find-links=/wheels --target=/opt/pip duckdb==1.1.1 && exec python /app/lake_browser.py"]
+    tmpfs: ["/opt/pip:rw,size=1g", "/tmp:rw,size=512m"]
+    ports: ["127.0.0.1:4300:4300"]
+    logging: *logging

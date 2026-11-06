@@ -1,0 +1,614 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Why there is no PythonCM broker &#8212; NVIS Greenlight</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/local-fonts.css?v=64a3f04a" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f6167d25" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=1657e09f"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'explanation/why-no-pythoncm-broker';</script>
+
+    <link rel="icon" href="../_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Porting the PythonCM fork" href="porting-the-pythoncm-fork.html" />
+    <link rel="prev" title="Which storage engine, and why" href="which-storage-engine.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.1" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials — learning by doing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/distribute-your-first-image.html">Distribute your first image with NVIS-P2P</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides — getting something done</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../how-to/configure-a-deployment.html">How to configure a deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/authenticate-to-the-api.html">How to authenticate to the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/grant-a-team-access.html">How to grant a team access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/diagnose-a-refused-request.html">How to diagnose a refused request</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/add-your-own-script.html">How to add your own script and register it as a tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/use-the-terminal.html">How to use the terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/stage-observability-agents.html">How to stage the observability node-agents to a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/connect-a-pythoncm-cluster.html">How to connect a PythonCM (BCM) cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/distribute-a-catalog-image.html">How to distribute a catalog image to the fleet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/recover-p2p-peers-after-a-reimage.html">How to bring P2P peers up on new or reimaged nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/publish-the-deployment-tracker.html">How to publish the deployment tracker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/forecast-cluster-completion.html">How to forecast when the cluster finishes validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/write-a-rack-handover-report.html">How to write a rack handover report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/place-a-multirack-job.html">How to place a multi-rack job for best collective performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/list-bcm-racks-without-templates.html">How to list saved BCM racks without naming templates</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference — the machinery, described</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/configuration/settings.html">Configuration settings — every setting, generated</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/projects-and-clusters.html">Projects and clusters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/tools.html">Tool documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/actions-by-scope.html">Actions by scope — node, rack, multirack</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/identity/index.html">Identity and authorization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/actions-and-resources.html">Actions and resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/policy-schema.html">Policy schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/evaluation.html">How a decision is made</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/action-vocabulary.html">Action vocabulary — every service and action</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/p2p-catalog-distribution.html">P2P catalog distribution — components, parameters, scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/collective-settings-by-job-size.html">Collective settings by job size</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation — why it is like this</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="the-parametric-platform.html">The parametric platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-authorization-is-default-deny.html">Why authorization is default-deny</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-a-script-path-is-chosen.html">How a script path is chosen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="the-cluster-home-directory.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-cluster-paths-reach-scripts.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry-and-hostnames.html">Geometry and hostnames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="which-storage-engine.html">Which storage engine, and why</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Why there is no PythonCM broker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="porting-the-pythoncm-fork.html">Porting the PythonCM fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="p2p-module-integration.html">NVIS-P2P as a per-cluster capability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="active-passive-and-blue-green.html">Active/passive and blue/green (roadmap)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="p2p-catalog-distribution.html">How catalog images reach every node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rack-placement-and-collective-performance.html">Rack placement and collective performance</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Why there is no PythonCM broker</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="why-there-is-no-pythoncm-broker">
+<h1>Why there is no PythonCM broker<a class="headerlink" href="#why-there-is-no-pythoncm-broker" title="Link to this heading">#</a></h1>
+<div class="nvis-diataxis nvis-diataxis-explanation docutils">
+<p>Explanation — background and reasoning. No instructions.</p>
+</div>
+<p>The implementation this scheduler was reconstructed from runs a <strong>broker</strong>: a long-lived
+process on the BCM head that owns one connected <code class="docutils literal notranslate"><span class="pre">pythoncm</span></code> client and answers requests over a
+Unix socket. We did not take it. This records why, and — more usefully — what would make that
+the wrong answer.</p>
+<section id="the-problem-it-solves-is-real">
+<h2>The problem it solves is real<a class="headerlink" href="#the-problem-it-solves-is-real" title="Link to this heading">#</a></h2>
+<p>Connecting a <code class="docutils literal notranslate"><span class="pre">pythoncm</span></code> client is expensive. The broker’s own docstring puts it at
+<strong>roughly ten CPU-seconds on the Nscale 16K controller</strong>, and nothing we have contradicts
+that. The cost is per <em>connection</em>, not per call: once connected, queries are fast.</p>
+<p>That number only hurts where connections are frequent, and there is exactly one such place.
+A submit pays it once, which is nothing next to the job. A cancel pays it once. But <strong>status
+polling</strong> pays it on every tick, and polling is unbounded: an hour-long job polled every five
+seconds is 720 connections. At ten CPU-seconds each that is two CPU-hours of controller time
+spent <em>watching</em> a job — comfortably more than most jobs cost to run, on the one machine in
+the cluster that must stay responsive.</p>
+<p>So the broker is not micro-optimisation. Left unaddressed, this makes polling unusable.</p>
+</section>
+<section id="why-we-solved-it-differently">
+<h2>Why we solved it differently<a class="headerlink" href="#why-we-solved-it-differently" title="Link to this heading">#</a></h2>
+<p>A daemon is a heavy answer to “connecting is slow”, and it brings four costs that are easy
+to overlook while looking at the latency number:</p>
+<p><strong>It is a second thing to install and keep alive.</strong> Two systemd units, a runtime directory, a
+socket group. <code class="docutils literal notranslate"><span class="pre">storage-engines.mdc</span></code> refuses a new storage engine on exactly this reasoning —
+“a service to install is a service the operator has to keep alive” — and the argument does not
+change because the service speaks a scheduler protocol instead of a query language. Several of
+our deployments are air-gapped appliances.</p>
+<p><strong>It is a second transport.</strong> Every other command in this product crosses to a host through
+<code class="docutils literal notranslate"><span class="pre">Connection</span></code> (<code class="docutils literal notranslate"><span class="pre">core-designs.mdc</span></code> §1). A Unix socket beside it is a path that knows nothing
+about the multi-hop chain, the env forwarding or the profile split, and the <em>reason</em> it can
+get away with that is that it only ever runs head-local — which means the app must already
+have a way to reach the head, and now has two.</p>
+<p><strong>It is unauthenticated.</strong> Access control is the socket mode and a Unix group. That is
+defensible for a host-local socket, but it is a different security model from everything
+else we run, on a machine where <code class="docutils literal notranslate"><span class="pre">cmods</span></code> is a shared account.</p>
+<p><strong>It needed a watchdog.</strong> The strongest signal is in the source itself: the fork ships a
+systemd timer that probes the broker every minute and restarts it when it stops answering,
+plus an hourly audit counting <code class="docutils literal notranslate"><span class="pre">broker_disconnect_timeout</span></code> in the logs. A component that needs
+a babysitter to stay up is a component whose failure modes you inherit.</p>
+<p>Against that, the saving is available another way, because <strong>the expensive question is one we
+mostly do not need to ask</strong>. The helper already writes durable per-task state: a manifest, and
+one <code class="docutils literal notranslate"><span class="pre">stdout</span></code>/<code class="docutils literal notranslate"><span class="pre">stderr</span></code>/<code class="docutils literal notranslate"><span class="pre">status</span></code> triple per node. The status file is written last and by rename,
+so <em>its existence means that node finished</em>. A job whose nodes have all written one is
+finished, and that is a fact on disk — no client, no daemon, no socket.</p>
+<p>So <code class="docutils literal notranslate"><span class="pre">nvis_pythoncm_exec.py</span></code> grew <code class="docutils literal notranslate"><span class="pre">--offline</span></code>, and the provider polls with it. A poll costs one
+SSH round trip. CMDaemon is consulted only when the files cannot answer.</p>
+</section>
+<section id="what-the-cheap-path-cannot-see-and-what-we-do-about-it">
+<h2>What the cheap path cannot see, and what we do about it<a class="headerlink" href="#what-the-cheap-path-cannot-see-and-what-we-do-about-it" title="Link to this heading">#</a></h2>
+<p>Offline, <strong>a job still running and a job whose ranks died look identical</strong>: neither has written
+all its status files. Disk can prove completion; it cannot prove liveness.</p>
+<p>The provider therefore runs one authoritative check every <code class="docutils literal notranslate"><span class="pre">_VERIFY_EVERY</span></code> polls — twelve, so
+about once a minute at the default interval. A dead job is noticed within a minute rather than
+instantly, and the controller pays one connection per minute rather than twelve. The offline
+reading carries <code class="docutils literal notranslate"><span class="pre">authoritative:</span> <span class="pre">false</span></code> so nothing downstream mistakes the guess for a finding.</p>
+<p>Two smaller decisions follow from the same reasoning. A <strong>cancel is never offline</strong>: a cancel
+that did not reach CMDaemon has not cancelled anything, and the leftover ranks are what drain
+the next job’s rack (<code class="docutils literal notranslate"><span class="pre">bcm-prolog-rogueprocess.mdc</span></code>). And <code class="docutils literal notranslate"><span class="pre">status()</span></code> — the public one-shot
+question, asked by callers about to act — is always authoritative; only the internal <code class="docutils literal notranslate"><span class="pre">wait</span></code>
+loop uses the cheap path.</p>
+</section>
+<section id="what-would-change-this-answer">
+<h2>What would change this answer<a class="headerlink" href="#what-would-change-this-answer" title="Link to this heading">#</a></h2>
+<p>This is a judgement on present evidence, not a principle. Reopen it if:</p>
+<ul class="simple">
+<li><p><strong>Inventory polling moves to PythonCM.</strong> The saving above is specific to <em>job</em> polling, where
+durable files exist. <code class="docutils literal notranslate"><span class="pre">bcm_query</span></code> has no equivalent — an inventory refresh genuinely needs a
+live client, and if the dashboard’s node inventory starts coming from <code class="docutils literal notranslate"><span class="pre">pythoncm</span></code> rather than
+<code class="docutils literal notranslate"><span class="pre">cmsh</span></code>, the ten seconds lands on a path with no cheap alternative. This is the most likely
+trigger.</p></li>
+<li><p><strong>We measure the cost ourselves and it is worse than ten seconds</strong>, or it applies to the
+helper’s startup rather than the client’s construction. The figure is one line in one
+docstring about one controller; we have not reproduced it.</p></li>
+<li><p><strong>A site needs sub-second job state.</strong> The verification cadence bounds how stale a liveness
+answer can be. A minute is fine for a validation run and wrong for an interactive scheduler.</p></li>
+</ul>
+<p>If it is reopened, the thing to preserve is the boundary rather than the daemon: keep the
+broker head-local and keep <code class="docutils literal notranslate"><span class="pre">Connection</span></code> as the way the app reaches the head, so a broker is an
+optimisation behind the existing transport rather than a second route to the cluster.</p>
+</section>
+<section id="the-watchdog-we-did-keep-and-the-one-we-did-not">
+<h2>The watchdog we did keep, and the one we did not<a class="headerlink" href="#the-watchdog-we-did-keep-and-the-one-we-did-not" title="Link to this heading">#</a></h2>
+<p>The fork’s watchdog exists <strong>only</strong> to restart the broker; that is its entire body. Without a
+broker there is nothing for it to restart, and porting it would have meant porting the remedy
+for a problem we chose not to create.</p>
+<p>What survives is the <em>observation</em> half, as <code class="docutils literal notranslate"><span class="pre">backend/scheduler_watch.py</span></code>: a periodic sample of
+whether the active cluster’s scheduler can accept work, so an operator can ask <strong>when</strong> it
+stopped answering rather than only whether it is answering now. It does not restart anything,
+and it is not called a watchdog, because a watchdog that cannot act is a monitor.</p>
+<p>It is also deliberately not PythonCM-shaped. It asks whichever provider the active cluster
+resolves to, and a provider with no cheap readiness check reports <code class="docutils literal notranslate"><span class="pre">ready:</span> <span class="pre">null</span></code> rather than
+being skipped — so a Slurm site gets an honest “not applicable” instead of a check that
+silently does nothing, and switching clusters switches what is watched.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="which-storage-engine.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Which storage engine, and why</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="porting-the-pythoncm-fork.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Porting the PythonCM fork</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-problem-it-solves-is-real">The problem it solves is real</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-we-solved-it-differently">Why we solved it differently</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-cheap-path-cannot-see-and-what-we-do-about-it">What the cheap path cannot see, and what we do about it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-would-change-this-answer">What would change this answer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-watchdog-we-did-keep-and-the-one-we-did-not">The watchdog we did keep, and the one we did not</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

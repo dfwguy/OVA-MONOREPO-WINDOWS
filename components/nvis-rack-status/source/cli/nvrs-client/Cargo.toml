@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+[package]
+name = "nvrs-client"
+description = "Transport for the Rack Status API: the JSON envelope, error mapping, 429 backoff, and TLS trust policy."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+reqwest.workspace = true
+url.workspace = true
+futures-util.workspace = true
+# Only `time`, for the 429 backoff sleep. The client stays otherwise runtime-agnostic; the binary
+# owns the multi-thread runtime.
+tokio = { workspace = true, features = ["net"] }
+bytes = "1"
+# WebSocket transport for the interactive terminal (/ws/terminal). rustls (aws-lc-rs, the same
+# provider reqwest uses) keeps the whole binary on one TLS stack with no system OpenSSL dependency.
+tokio-tungstenite = { version = "0.24", default-features = false, features = ["connect", "rustls-tls-native-roots"] }
+rustls = { version = "0.23", default-features = false, features = ["std", "aws_lc_rs", "logging"] }
+rustls-native-certs = "0.8"
+http = "1"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros"] }

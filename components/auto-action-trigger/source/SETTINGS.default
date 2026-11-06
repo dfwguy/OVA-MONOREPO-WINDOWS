@@ -1,0 +1,208 @@
+## Shipped defaults for this framework. Read by settings.sh when there is no
+## SETTINGS file next to it. See docs/settings.md for the full reference.
+##
+## To change anything here, copy this file to SETTINGS and edit that. SETTINGS
+## is git-ignored and is never written by a tarball drop, so a site's choices
+## survive an upgrade; editing this file in place does not.
+##
+##   cp SETTINGS.default SETTINGS
+
+## ── Job sets ──────────────────────────────────────────────────────────────
+JOBS=nvl72
+HEALTHCHECKS=nvl72
+PARSERS=nvl72
+
+## ── Which nodes run jobs ──────────────────────────────────────────────────
+## Space-separated shell globs; empty means every node. * to match any, otherwise specific matching.
+NODE_FILTER=""
+
+## ── Hosts that are not compute nodes ──────────────────────────────────────
+## Space-separated shell globs; the head node belongs here. Empty leaves the
+## detection to the node itself. See docs/reference/settings.md#hosts-that-are-not-compute-nodes.
+EXCLUDE_NODES=""
+
+## ── Benchmark list ────────────────────────────────────────────────────────
+BENCHMARKS="dcgmi-r1 dcgmi-r3 dcgmi-r4 nvbandwidth allreduce allreduce-forcesharp alltoall allreduce-nonvlink alltoall-nonvlink llm-pretrain llm-pretrain-solo"
+
+## ── Benchmark pass floors ─────────────────────────────────────────────────
+VERDICT_MIN_PEAK_BW_ALLREDUCE=683
+VERDICT_MIN_PEAK_BW_ALLREDUCE_FORCESHARP=665
+VERDICT_MIN_PEAK_BW_ALLTOALL=623
+VERDICT_MIN_PEAK_BW_ALLREDUCE_NONVLINK=93
+VERDICT_MIN_PEAK_BW_ALLTOALL_NONVLINK=83
+
+## Median step time ceilings for the two LLM jobs, in milliseconds. +5% of a
+## healthy GB300 tray, since confirmed against a 2013-node fleet whose medians
+## landed within 0.5% of it. 0 skips the check.
+## See docs/explanation/llmb.md#judging-the-step-time.
+VERDICT_MAX_STEP_MS_LLM_PRETRAIN=3480
+VERDICT_MAX_STEP_MS_LLM_SOLO=3510
+## 0 disables the ceiling until healthy GB300 runs establish a baseline.
+VERDICT_MAX_STEP_MS_DEEPSEEK_V3_PROXY=0
+
+## ── Burn-in ───────────────────────────────────────────────────────────────
+## RUN_BURNIN is set in Run switches, below, next to the rest -- see
+## docs/reference/settings.md#run-switches.
+BURNIN="mnubergemm"
+## Adds the pulsed waveform beside the steady one; half of each run is idle.
+## See docs/explanation/burn-in-waveform.md#two-jobs-not-one.
+#BURNIN="mnubergemm mnubergemm-pulse"
+## Shared across every job in BURNIN. 0 means "no target" -- totalRuns alone
+## still caps each job, but nothing stops scheduling on hours.
+## See docs/reference/settings.md#burn-in.
+BURNIN_HOURS=24
+
+## ── Continuous re-runs ───────────────────────────────────────────────────
+## Empty means off, same as BURNIN. A job here is re-run on this cadence
+## alone once it is DONE -- BENCHMARKS/BURNIN reclaim it immediately on a
+## failure and this cadence has no effect until they are done with it again.
+## See docs/reference/settings.md#continuous-re-runs.
+CONTINUE_RUNNING_JOBS=""
+CONTINUE_RUNNING_FREQUENCY=6
+
+## ── Container images ──────────────────────────────────────────────────────
+## Which images exist is decided by build_containers.sh, which takes them on the
+## command line -- every .sqsh in CONTAINER_DIR is cached on every node.
+##
+## The tag or ref each image is built from. The job files build the same
+## filename, so these move together. See docs/reference/settings.md#image-versions.
+HPC_BENCHMARKS_TAG=26.02
+NVBANDWIDTH_VERSION=v0.9
+NVLOOM_VERSION=v2.0.0
+MNUBERGEMM_VERSION=26.03-v1.17
+NEMO_TAG=26.04.01
+PYTORCH_TAG=26.08
+
+## ── Health-check cadence ──────────────────────────────────────────────────
+## 0 re-runs only when 'report_health.sh --refresh' asks. See
+## docs/explanation/health-cadence.md#choosing-the-two-intervals.
+HEALTH_INTERVAL_HOURS=4
+HEALTH_RETRY_INTERVAL_HOURS=1
+
+## ── Run switches ──────────────────────────────────────────────────────────
+RUN_JOBS=yes
+RUN_HEALTH_CHECKS=yes
+RUN_CONTAINER_COPY=yes
+RUN_RECOVERY=yes
+RUN_ARMING=yes
+## Opt-in, unlike the rest of this block. See docs/reference/settings.md#burn-in.
+RUN_BURNIN=no
+## Opt-in and BCM-specific. A non-BCM site must leave this off.
+REQUIRE_BCM_BOOTSTRAP_READY=no
+BCM_BOOTSTRAP_PROBE_TIMEOUT_SECS=5
+
+## ── Drains ────────────────────────────────────────────────────────────────
+DRAIN_AFTER_FAILED_HEALTH_CHECK=no
+DRAIN_AFTER_FAILED_BENCHMARK=no
+
+## ── Recovering drains Slurm set itself ────────────────────────────────────
+RECOVER_SLURM_DRAINS=yes
+RECOVER_REASONS="prolog|epilog|rogue ?process|batch job complete failure|Kill task failed|node unexpectedly rebooted|node was stopped|not responding|duplicate jobid|gres/gpu count|low socket|low cpus"
+RECOVER_EMPTY_REASON=yes
+RECOVER_SETTERS="slurm root"
+RECOVER_MAX_ATTEMPTS=3
+RECOVER_WINDOW_HOURS=24
+RECOVER_RESTART_SLURMD=yes
+RECOVER_REREGISTER=yes
+RECOVER_SLURMD_WAIT=30
+RECOVER_MIN_UPTIME_SECS=300
+RECOVER_PREJOB_LOGS=/cm/local/apps/slurm/var/pre-post-job-logs/failed-pre-jobs
+RECOVER_PREJOB_SLACK_SECS=900
+
+## ── Steps that outlive their own kill ─────────────────────────────────────
+## Off by default: marking DOWN releases the whole allocation. See
+## docs/explanation/drain-recovery.md#a-step-that-outlives-its-own-kill.
+RECOVER_DOWN_UNKILLABLE=no
+RECOVER_UNKILLABLE_REASONS="Kill task failed|unkillable"
+RECOVER_UNKILLABLE_AFTER_SECS=3600
+
+## ── Retry and drain policy ────────────────────────────────────────────────
+RETRY_INTERVAL_HOURS=1
+RETRY_BACKOFF=yes
+RETRY_BACKOFF_MAX_HOURS=12
+MAX_JOB_HOURS=7
+SUBMIT_ONLY_WHEN_IDLE=yes
+DRAIN_WINDOW_MINUTES=15
+INFLIGHT_GRACE_MINUTES=30
+DRAIN_MARKER="auto-retry"
+
+## ── The agent and the watchdog ────────────────────────────────────────────
+## Minutes. See docs/explanation/the-agent-and-the-watchdog.md.
+AGENT_INTERVAL_MINUTES=2
+SUPERVISOR_INTERVAL_MINUTES=2
+HEARTBEAT_STALE_MINUTES=10
+ARM_BATCH=200
+ARM_RETRY_MINUTES=10
+ARM_MAX_ATTEMPTS=3
+ARM_WINDOW_HOURS=24
+
+## How old the watchdog's node view may be before an agent stops deciding from
+## it. Empty is three watchdog cycles, floored at five minutes.
+## See docs/explanation/the-fleet-snapshot.md.
+SLURM_SNAPSHOT_MAX_AGE_MINUTES=
+
+## Which host arms the others. Empty means whichever claims it and keeps the
+## claim fresh. See docs/explanation/the-agent-and-the-watchdog.md#only-one-watchdog.
+SUPERVISOR_HOST=
+
+## ── Privilege ─────────────────────────────────────────────────────────────
+## sudo, or direct where JOB_USER has Slurm AdminLevel=Operator.
+## See docs/explanation/running-unprivileged.md#draining-without-root.
+PRIV_SCONTROL=sudo
+
+## ── Reaching more than one node ───────────────────────────────────────────
+## auto prefers clush and falls back to pdsh. clush or pdsh pins it.
+FANOUT_TOOL=auto
+## Seconds; 0 is no limit.
+FANOUT_CONNECT_TIMEOUT=10
+FANOUT_COMMAND_TIMEOUT=60
+
+## ── Getting out of the way (experimental) ─────────────────────────────────
+## Cancels this node's own running job when somebody else is queued for the
+## node. See docs/reference/settings.md#getting-out-of-the-way.
+GET_OUT_OF_THE_WAY=no
+GET_OUT_OF_THE_WAY_AFTER_MINUTES=5
+GET_OUT_OF_THE_WAY_POLL_MINUTES=5
+
+## ── Reporting ─────────────────────────────────────────────────────────────
+## See docs/settings.md#reporting.
+SCAN_JOBS=
+
+## ── Extra environment for every benchmark job ─────────────────────────────
+##   JOB_ENV="NCCL_DMABUF_ENABLE=0 NCCL_CUMEM_ENABLE=1"
+JOB_ENV=""
+
+## ── Accounts and paths ────────────────────────────────────────────────────
+## The three below derive from JOB_USER, so an automation account of its own
+## means changing this one name. See docs/reference/settings.md#accounts-and-paths.
+JOB_USER=cmods
+BRINGUP_HOME=/cluster/bringup
+## Where results, logs, container images and the health baseline live --
+## independent of BRINGUP_HOME so the checkout and the data it produces can
+## sit on different filesystems.
+BRINGUP_DATA=/cluster/bringup-data
+RESULTS_DIR=$BRINGUP_DATA/results
+HEALTH_LOG_DIR=$BRINGUP_DATA/logs
+## Point these at the bulk share when the images do not belong under
+## BRINGUP_DATA. Set a _HEAD one only when the head node mounts that share
+## somewhere else than the compute nodes do. See
+## docs/explanation/containers.md#one-share-two-mount-points.
+CONTAINER_DIR=$BRINGUP_DATA/containers
+CONTAINER_DIR_HEAD=$CONTAINER_DIR
+CONTAINER_STAGE_DIR=$BRINGUP_DATA/container-src
+CONTAINER_STAGE_DIR_HEAD=$CONTAINER_STAGE_DIR
+## Where file_copy.sh caches images on each node. /opt survives a reboot, so
+## the cache does not refill over NFS every time a tray comes back.
+NODE_CONTAINER_DIR=/opt/containers
+## The health baseline captured by admin_set-baseline.sh.
+VALID_CONFIG_DIR=$BRINGUP_DATA/valid-config
+LLM_HF_HOME=
+LLMB_INSTALL=/home/$JOB_USER/llmb
+LLMB_REF=v26.06.01
+
+## Empty is searched for; set one only when adopting an install laid out
+## differently. See docs/explanation/llmb.md#adopting-an-existing-install.
+LLMB_BIN=
+LLMB_CONFIG=
+LLMB_IMAGES=
+LLMB_HF=

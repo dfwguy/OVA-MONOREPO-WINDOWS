@@ -1,0 +1,240 @@
+--- a/manager/service/user.go
++++ b/manager/service/user.go
+@@ -24,6 +24,7 @@
+ 	"github.com/VividCortex/mysqlerr"
+ 	"github.com/go-sql-driver/mysql"
+ 	"golang.org/x/crypto/bcrypt"
++	"gorm.io/gorm"
+ 
+ 	manageroauth "d7y.io/dragonfly/v2/manager/auth/oauth"
+ 	"d7y.io/dragonfly/v2/manager/models"
+@@ -70,11 +71,25 @@
+ 	return users, count, nil
+ }
+ 
++// credentialUser uses the Row/Scan callback path so JSON query caches cannot
++// discard json:"-" credential fields. Public User serialization stays unchanged.
++func (s *service) credentialUser(ctx context.Context, condition *models.User) (*models.User, error) {
++	if condition == nil || (condition.ID == 0 && condition.Name == "") {
++		return nil, gorm.ErrRecordNotFound
++	}
++	user := models.User{}
++	if err := s.db.WithContext(ctx).Model(&models.User{}).Where(condition).Limit(1).Scan(&user).Error; err != nil {
++		return nil, err
++	}
++	if user.ID == 0 || user.IsDel != 0 || user.State != models.UserStateEnabled {
++		return nil, gorm.ErrRecordNotFound
++	}
++	return &user, nil
++}
++
+ func (s *service) SignIn(ctx context.Context, json types.SignInRequest) (*models.User, error) {
+-	user := models.User{}
+-	if err := s.db.WithContext(ctx).First(&user, models.User{
+-		Name: json.Name,
+-	}).Error; err != nil {
++	user, err := s.credentialUser(ctx, &models.User{Name: json.Name})
++	if err != nil {
+ 		return nil, err
+ 	}
+ 
+@@ -82,12 +97,12 @@
+ 		return nil, err
+ 	}
+ 
+-	return &user, nil
++	return user, nil
+ }
+ 
+ func (s *service) ResetPassword(ctx context.Context, id uint, json types.ResetPasswordRequest) error {
+-	user := models.User{}
+-	if err := s.db.WithContext(ctx).First(&user, id).Error; err != nil {
++	user, err := s.credentialUser(ctx, &models.User{BaseModel: models.BaseModel{ID: id}})
++	if err != nil {
+ 		return err
+ 	}
+ 
+@@ -100,7 +115,7 @@
+ 		return err
+ 	}
+ 
+-	if err := s.db.WithContext(ctx).First(&user, id).Updates(models.User{
++	if err := s.db.WithContext(ctx).Model(user).Updates(models.User{
+ 		EncryptedPassword: string(encryptedPasswordBytes),
+ 	}).Error; err != nil {
+ 		return err
+--- /dev/null
++++ b/manager/service/user_auth_cache_regression_test.go
+@@ -0,0 +1,172 @@
++package service
++
++import (
++	"context"
++	"encoding/json"
++	"os"
++	"sync"
++	"testing"
++
++	caches "github.com/go-gorm/caches/v4"
++	"golang.org/x/crypto/bcrypt"
++	"gorm.io/driver/postgres"
++	"gorm.io/gorm"
++	"gorm.io/gorm/schema"
++
++	"d7y.io/dragonfly/v2/manager/models"
++	"d7y.io/dragonfly/v2/manager/types"
++)
++
++type authTestJSONCache struct {
++	mu     sync.Mutex
++	values map[string][]byte
++	gets   int
++}
++
++func (c *authTestJSONCache) Get(_ context.Context, key string, q *caches.Query[any]) (*caches.Query[any], error) {
++	c.mu.Lock()
++	defer c.mu.Unlock()
++	c.gets++
++	data, ok := c.values[key]
++	if !ok {
++		return nil, nil
++	}
++	return q, q.Unmarshal(data)
++}
++func (c *authTestJSONCache) Store(_ context.Context, key string, q *caches.Query[any]) error {
++	data, err := q.Marshal()
++	if err != nil {
++		return err
++	}
++	c.mu.Lock()
++	defer c.mu.Unlock()
++	c.values[key] = data
++	return nil
++}
++func (c *authTestJSONCache) Invalidate(context.Context) error {
++	c.mu.Lock()
++	defer c.mu.Unlock()
++	c.values = map[string][]byte{}
++	return nil
++}
++
++func TestCredentialQueriesBypassJSONCache(t *testing.T) {
++	dsn := os.Getenv("DRAGONFLY_AUTH_TEST_DSN")
++	if dsn == "" {
++		t.Skip("set isolated PostgreSQL test DSN")
++	}
++	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{NamingStrategy: schema.NamingStrategy{SingularTable: true, TablePrefix: "authfix_"}, DisableForeignKeyConstraintWhenMigrating: true})
++	if err != nil {
++		t.Fatal(err)
++	}
++	sqlDB, err := db.DB()
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer sqlDB.Close()
++	if err = db.Migrator().DropTable(&models.User{}, &models.Config{}); err != nil {
++		t.Fatal(err)
++	}
++	if err = db.AutoMigrate(&models.User{}); err != nil {
++		t.Fatal(err)
++	}
++	c := &authTestJSONCache{values: map[string][]byte{}}
++	if err = db.Use(&caches.Caches{Conf: &caches.Config{Easer: true, Cacher: c}}); err != nil {
++		t.Fatal(err)
++	}
++	hash, err := bcrypt.GenerateFromPassword([]byte("original-pass"), bcrypt.MinCost)
++	if err != nil {
++		t.Fatal(err)
++	}
++	user := models.User{Name: "authuser", Email: "auth@example.invalid", EncryptedPassword: string(hash), State: models.UserStateEnabled}
++	if err = db.Create(&user).Error; err != nil {
++		t.Fatal(err)
++	}
++	warm := func() {
++		t.Helper()
++		var first, second models.User
++		if err := db.First(&first, models.User{Name: user.Name}).Error; err != nil {
++			t.Fatal(err)
++		}
++		if err := db.First(&second, models.User{Name: user.Name}).Error; err != nil {
++			t.Fatal(err)
++		}
++		if second.EncryptedPassword != "" {
++			t.Fatal("test did not reproduce JSON cache credential omission")
++		}
++	}
++	warm()
++	s := &service{db: db}
++	ctx := context.Background()
++	gets := c.gets
++	for i := 0; i < 10; i++ {
++		if _, err = s.SignIn(ctx, types.SignInRequest{Name: user.Name, Password: "original-pass"}); err != nil {
++			t.Fatalf("warm-cache signin %d: %v", i, err)
++		}
++	}
++	if c.gets != gets {
++		t.Fatal("credential lookup invoked Query JSON cache callback")
++	}
++	if _, err = s.SignIn(ctx, types.SignInRequest{Name: user.Name, Password: "incorrect-pass"}); err == nil {
++		t.Fatal("wrong password accepted")
++	}
++	if _, err = s.SignIn(ctx, types.SignInRequest{Name: "", Password: "original-pass"}); err == nil {
++		t.Fatal("empty account accepted")
++	}
++	if err = s.ResetPassword(ctx, 0, types.ResetPasswordRequest{OldPassword: "original-pass", NewPassword: "replacement-pass"}); err == nil {
++		t.Fatal("zero identity password reset accepted")
++	}
++	if _, err = s.SignIn(ctx, types.SignInRequest{Name: "missing", Password: "original-pass"}); err == nil {
++		t.Fatal("missing account accepted")
++	}
++	if err = s.ResetPassword(ctx, user.ID, types.ResetPasswordRequest{OldPassword: "incorrect-pass", NewPassword: "replacement-pass"}); err == nil {
++		t.Fatal("wrong old password accepted")
++	}
++	if err = s.ResetPassword(ctx, user.ID, types.ResetPasswordRequest{OldPassword: "original-pass", NewPassword: "replacement-pass"}); err != nil {
++		t.Fatal(err)
++	}
++	warm()
++	gets = c.gets
++	for i := 0; i < 10; i++ {
++		if _, err = s.SignIn(ctx, types.SignInRequest{Name: user.Name, Password: "replacement-pass"}); err != nil {
++			t.Fatalf("changed password signin %d: %v", i, err)
++		}
++	}
++	if c.gets != gets {
++		t.Fatal("changed-password credential lookup invoked cache")
++	}
++	if _, err = s.SignIn(ctx, types.SignInRequest{Name: user.Name, Password: "original-pass"}); err == nil {
++		t.Fatal("old password still accepted")
++	}
++	if err = db.Model(&user).Update("state", models.UserStateDisabled).Error; err != nil {
++		t.Fatal(err)
++	}
++	if _, err = s.SignIn(ctx, types.SignInRequest{Name: user.Name, Password: "replacement-pass"}); err == nil {
++		t.Fatal("disabled account accepted")
++	}
++	if err = s.ResetPassword(ctx, user.ID, types.ResetPasswordRequest{OldPassword: "replacement-pass", NewPassword: "third-password"}); err == nil {
++		t.Fatal("disabled reset accepted")
++	}
++	if err = db.Model(&user).Update("state", models.UserStateEnabled).Error; err != nil {
++		t.Fatal(err)
++	}
++	if err = db.Delete(&user).Error; err != nil {
++		t.Fatal(err)
++	}
++	if _, err = s.SignIn(ctx, types.SignInRequest{Name: user.Name, Password: "replacement-pass"}); err == nil {
++		t.Fatal("deleted account accepted")
++	}
++	public, err := json.Marshal(user)
++	if err != nil {
++		t.Fatal(err)
++	}
++	var fields map[string]any
++	if err = json.Unmarshal(public, &fields); err != nil {
++		t.Fatal(err)
++	}
++	for _, name := range []string{"encrypted_password", "EncryptedPassword", "private_token", "PrivateToken"} {
++		if _, ok := fields[name]; ok {
++			t.Fatal("credential exposed in public JSON")
++		}
++	}
++}

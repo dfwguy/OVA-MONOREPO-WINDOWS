@@ -1,0 +1,116 @@
+# Pylint configuration for nvis-rack-status.
+#
+# Pylint runs ALONGSIDE ruff, not instead of it, and this file exists mostly to keep the two from
+# arguing. Ruff is fast, runs on every file, and already owns imports, unused names, blind excepts,
+# comprehensions and the pyupgrade/bugbear families. Pylint is here for the handful of things it can
+# see that ruff cannot, because they need the whole-program view astroid builds:
+#
+#   duplicate-code (R0801)  cross-module copy-paste. Requested explicitly, and it earned its place
+#                           immediately: it found a 28-line pdsh runner duplicated between
+#                           api/bug_report.py and api/rack_power.py.
+#
+#   reimported (W0404)      the same object bound twice in one module. Found 8, all now fixed.
+#                           Safe to collapse because a re-import is never a second instance:
+#                           `import os` then `import os as _os` gives `os is _os` -> True, since
+#                           Python serves the cached sys.modules entry. So the 4 aliased cases
+#                           (_os, _Path, _P, and two names for core.slurm_job_base_id) were one
+#                           object under two names, and collapsing them is a rename, not a
+#                           behaviour change. Verified by identity check, not by reasoning.
+#
+# Worth distinguishing from the superficially similar `import logging.config` that ruff removed from
+# logging_config.py: `logging`, `logging.config` and `logging.handlers` are THREE distinct module
+# objects, and importing handlers does not attach `.config` (hasattr is False). That was not a
+# duplicate binding at all -- it was an unused import of a different module, and had the file
+# actually called logging.config.dictConfig, removing it would have been an AttributeError.
+#
+# cyclic-import (R0401) was tried and deliberately left off. It reports 3 cycles here --
+# transport.base <-> transport.hop, the same through transport.shellfs, and cluster_report <->
+# cluster_report_pdf -- and all 3 are ALREADY broken correctly, by a function-level import at
+# transport/base.py:503 and cluster_report.py:299/307. Pylint reports the logical cycle whether or
+# not the edge is deferred, so on this codebase the check flags the accepted fix as the defect.
+# Enabling it would mean either 3 permanent suppressions or unpicking a working pattern.
+#
+# Worth knowing what this does NOT catch, so nobody assumes it: pylint --enable=all does not flag a
+# module-level constant assigned twice with nothing reading it in between. That is what
+# backend/tests/test_no_duplicate_module_assignments.py is for.
+
+[MAIN]
+# backend/ is a flat module namespace (modules import each other as top-level names, e.g.
+# `import config_env`), so astroid needs it on the path to resolve them.
+init-hook = 'import sys; sys.path.insert(0, "backend")'
+ignore = tests
+
+# The Python the SHIPPED IMAGE runs, which is not the one pylint runs on.
+#
+# Unset, pylint assumes the interpreter executing it — 3.12 in CI and locally — while
+# `Dockerfile`'s final stage is ubuntu:22.04, whose python3 is 3.10. That silences pylint's
+# version-aware checks (`using-exception-groups-in-unsupported-version` and its siblings) for
+# exactly the gap that has already shipped two broken containers.
+#
+# Worth stating what it does not buy, so nobody mistakes this for the fix: pylint resolves imports
+# against its *own* stdlib, so `from enum import StrEnum` looks fine to it even at 3.10 —
+# measured. Only running the older interpreter catches that, which is the `runtime-python-import`
+# job. This aligns the declaration and turns on the syntax-level checks.
+# `test_ci_job_tooling.py` ties the value to the Dockerfile's base.
+py-version = 3.10
+
+# Single-process ON PURPOSE. duplicate-code is the main reason this file exists, and it is computed
+# from a cross-module index that pylint does not share correctly between workers -- with jobs > 1 it
+# silently under-reports, which is the worst failure mode for a check whose whole job is to notice
+# something. Slower and honest beats fast and quiet: the full run takes ~30s.
+jobs = 1
+persistent = no
+
+[MESSAGES CONTROL]
+# Start from nothing and name what we want. The opposite order -- enable everything and subtract --
+# means every pylint upgrade silently adds checks, which is the same trap the un-pinned, un-declared
+# ruff config fell into.
+disable = all
+
+enable =
+    duplicate-code,
+    reimported,
+
+# Not enabled, and each for a stated reason rather than because it was noisy:
+#
+#   line-too-long           deliberate project decision; see ruff.toml. 1,005 findings.
+#   broad-exception-caught  ruff BLE001 owns it, and the "degrade, never 500" paths are deliberate.
+#   missing-*-docstring     413 findings, all PEP 257. A real decision to make, not a silent one.
+#   invalid-name            conflicts with the established _eget / _JOB_ENV_* conventions.
+#   wrong-import-*          ruff I001 and E402 own import order and placement, with one opinion.
+#   import-outside-toplevel 106 findings, nearly all deliberate cycle-breaking.
+#   global-statement        used on purpose for the module-level bootstrap flags.
+#   protected-access        this codebase shares _-prefixed names across modules by design.
+#   too-many-*, too-few-*   size metrics, ~400 findings. Opinions about shape, not correctness.
+#   no-member (E1101)       astroid false positives on re.Pattern and reportlab's dynamic attrs.
+#   missing-kwoa (E1125)    false positive on **kwargs forwarding, e.g. audit.emit -> build_event.
+
+[SIMILARITIES]
+# Pylint's default is 4 lines, which reports 134 blocks here -- mostly short, unavoidable shapes
+# like a 4-line dict literal or an except/return pair. Measured on this tree, after extracting
+# host_exec.run_pdsh_job:
+#
+#   8 lines -> 40    12 -> 15    16 -> 6    20 -> 0    30 -> 0
+#
+# Set at 20, which is green and gates on any real copy-paste. It was 30 for one commit only because
+# the pdsh runner duplicated between api/bug_report and api/rack_power sat at 28 lines, and R0801
+# CANNOT be suppressed at the duplication site -- pylint attributes the message to an arbitrary
+# third module (schedulers/base.py here, whichever it processes last), so an inline disable in
+# either participant does nothing. That one is now extracted behind 15 tests, so the threshold
+# tightens instead.
+#
+# Going below 20 is a DESIGN job, not a mechanical one, which is why it is not done here. The next
+# tier is a recognisable family rather than scattered accidents: 6 blocks at 16 lines, spanning
+# api.logs (twice), api._common, api.slurm_ops, api.validation_runs, slurm_admin, slurm_query,
+# stream_exec, comments_store, cluster_metadata, naming and nvis_id_templates. They share the
+# "resolve a target, run something on the host, honour a dry run, shape a result dict" skeleton --
+# the same shape run_pdsh_job just absorbed for two of them. Consolidating the rest means deciding
+# what that skeleton IS, which is a citizen-level decision (see core-designs.mdc), not a rename.
+min-similarity-lines = 20
+ignore-comments = yes
+ignore-docstrings = yes
+ignore-imports = yes
+ignore-signatures = yes
+
+[REPORTS]
+score = no

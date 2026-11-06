@@ -1,0 +1,778 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Geometry and hostnames &#8212; NVIS Greenlight</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/local-fonts.css?v=64a3f04a" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f6167d25" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=1657e09f"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'explanation/geometry-and-hostnames';</script>
+
+    <link rel="icon" href="../_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Which storage engine, and why" href="which-storage-engine.html" />
+    <link rel="prev" title="How cluster paths reach scripts" href="how-cluster-paths-reach-scripts.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.1" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials — learning by doing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/distribute-your-first-image.html">Distribute your first image with NVIS-P2P</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides — getting something done</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../how-to/configure-a-deployment.html">How to configure a deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/authenticate-to-the-api.html">How to authenticate to the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/grant-a-team-access.html">How to grant a team access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/diagnose-a-refused-request.html">How to diagnose a refused request</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/add-your-own-script.html">How to add your own script and register it as a tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/use-the-terminal.html">How to use the terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/stage-observability-agents.html">How to stage the observability node-agents to a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/connect-a-pythoncm-cluster.html">How to connect a PythonCM (BCM) cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/distribute-a-catalog-image.html">How to distribute a catalog image to the fleet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/recover-p2p-peers-after-a-reimage.html">How to bring P2P peers up on new or reimaged nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/publish-the-deployment-tracker.html">How to publish the deployment tracker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/forecast-cluster-completion.html">How to forecast when the cluster finishes validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/write-a-rack-handover-report.html">How to write a rack handover report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/place-a-multirack-job.html">How to place a multi-rack job for best collective performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/list-bcm-racks-without-templates.html">How to list saved BCM racks without naming templates</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference — the machinery, described</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/configuration/settings.html">Configuration settings — every setting, generated</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/projects-and-clusters.html">Projects and clusters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/tools.html">Tool documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/actions-by-scope.html">Actions by scope — node, rack, multirack</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/identity/index.html">Identity and authorization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/actions-and-resources.html">Actions and resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/policy-schema.html">Policy schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/evaluation.html">How a decision is made</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/action-vocabulary.html">Action vocabulary — every service and action</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/p2p-catalog-distribution.html">P2P catalog distribution — components, parameters, scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/collective-settings-by-job-size.html">Collective settings by job size</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation — why it is like this</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="the-parametric-platform.html">The parametric platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-authorization-is-default-deny.html">Why authorization is default-deny</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-a-script-path-is-chosen.html">How a script path is chosen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="the-cluster-home-directory.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-cluster-paths-reach-scripts.html">The cluster home directory</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Geometry and hostnames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="which-storage-engine.html">Which storage engine, and why</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-no-pythoncm-broker.html">Why there is no PythonCM broker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="porting-the-pythoncm-fork.html">Porting the PythonCM fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="p2p-module-integration.html">NVIS-P2P as a per-cluster capability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="active-passive-and-blue-green.html">Active/passive and blue/green (roadmap)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="p2p-catalog-distribution.html">How catalog images reach every node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rack-placement-and-collective-performance.html">Rack placement and collective performance</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Geometry and hostnames</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="geometry-and-hostnames">
+<h1>Geometry and hostnames<a class="headerlink" href="#geometry-and-hostnames" title="Link to this heading">#</a></h1>
+<div class="nvis-diataxis nvis-diataxis-explanation docutils">
+<p>Explanation — background and reasoning. No instructions.</p>
+</div>
+<p>Two things have to be true before any action can run on a cluster: Greenlight has to know <strong>how
+many of everything there is</strong>, and it has to be able to turn a rack the operator clicked into
+<strong>hostnames that resolve</strong>. They are separate problems with separate sources, and conflating
+them is the single most common way a new deployment fails.</p>
+<section id="a-rack-id-is-not-a-hostname">
+<h2>A rack id is not a hostname<a class="headerlink" href="#a-rack-id-is-not-a-hostname" title="Link to this heading">#</a></h2>
+<p>Every cluster has two names for compute, and they are not interchangeable.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Where it comes from</p></th>
+<th class="head"><p>Example</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Rack id</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cmsh</span> <span class="pre">rack</span> <span class="pre">list</span></code> — the grouping key the floor view shows</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bos01-a05</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Compute hostname</strong></p></td>
+<td><p>Slurm and DNS — what <code class="docutils literal notranslate"><span class="pre">ssh</span></code> and <code class="docutils literal notranslate"><span class="pre">pdsh</span></code> must target</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bos01-a05-11-s1-dgx-01-c01</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The failure this causes is specific and misleading. A naive <code class="docutils literal notranslate"><span class="pre">&lt;rack&gt;-[01-NN]</span></code> derived from the
+rack id produces <code class="docutils literal notranslate"><span class="pre">bos01-a01-[01-18]</span></code>, and <code class="docutils literal notranslate"><span class="pre">pdsh</span></code> answers <code class="docutils literal notranslate"><span class="pre">Name</span> <span class="pre">or</span> <span class="pre">service</span> <span class="pre">not</span> <span class="pre">known</span></code> — which
+reads as a DNS or network fault, days after somebody configured the naming. The hostname is not
+derivable from the rack id by pattern. Its association with a rack comes from
+saved placement or a naming convention.</p>
+<p>So the ground truth is always the cluster:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sinfo<span class="w"> </span>-N<span class="w"> </span>-h<span class="w"> </span>-o<span class="w"> </span>%N<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w">     </span><span class="c1"># the real hostname pattern</span>
+getent<span class="w"> </span>hosts<span class="w"> </span>&lt;one-node&gt;<span class="w">      </span><span class="c1"># confirm it resolves from the execution host</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">cmsh</span></code> is frequently head-node-only, which is why the rack id and the hostname come from
+different commands.</p>
+</section>
+<section id="placement-without-hostname-templates">
+<h2>Placement without hostname templates<a class="headerlink" href="#placement-without-hostname-templates" title="Link to this heading">#</a></h2>
+<p>In <strong>Translate</strong> mode the cluster manager places nodes: BCM’s device rack attribute puts each
+real <code class="docutils literal notranslate"><span class="pre">NodeName</span></code> in a rack. A rack named <code class="docutils literal notranslate"><span class="pre">F41</span></code> can therefore contain <code class="docutils literal notranslate"><span class="pre">dgx-b300-01</span></code> and
+<code class="docutils literal notranslate"><span class="pre">dgx-b300-02</span></code> without either hostname containing <code class="docutils literal notranslate"><span class="pre">F41</span></code>. This holds whichever scheduler the
+cluster runs, because placement is the manager’s answer, not the scheduler’s.</p>
+<p>Where the rack ids come from depends on whether the cluster configures a rack template. With
+none, the manager’s saved rack objects are the racks, by their own names, empty racks included.
+With one, the template stays authoritative: it decides which saved racks are dashboard racks and
+how they group into rows. That keeps a stray rack object off the floor of a site whose template
+describes every real rack (Nscale NC’s BCM holds a rack named <code class="docutils literal notranslate"><span class="pre">1</span></code> beside 252 <code class="docutils literal notranslate"><span class="pre">[A-Z][\d+]</span></code> racks).</p>
+<p>Racks and nodes are separate inventories. A saved empty rack is still a rack; a node without a
+placement is still a node, shown as <strong>Unassigned</strong>. Rack capacity is geometry, and a device’s
+rack unit is physical placement. Neither is a count from which to manufacture hostnames, so
+outside <strong>Direct</strong> mode a rack-based action uses the placed members and refuses a rack with
+none, instead of inventing a <code class="docutils literal notranslate"><span class="pre">&lt;rack&gt;-ctNN</span></code> pattern.</p>
+<p><strong>Direct</strong> mode keeps hostname parsing, and <strong>Pool</strong> mode presents nodes without rack placement.
+The setup procedure is
+<a class="reference internal" href="../how-to/list-bcm-racks-without-templates.html"><span class="std std-doc">How to list saved BCM racks without naming templates</span></a>.</p>
+</section>
+<section id="what-the-templates-are">
+<h2>What the templates are<a class="headerlink" href="#what-the-templates-are" title="Link to this heading">#</a></h2>
+<p>A cluster record carries three templates. They are literal text with <strong>slots</strong> for the numeric
+and letter fields:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Token</p></th>
+<th class="head"><p>Matches</p></th>
+<th class="head"><p>Use it when</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">[01-99]</span></code></p></td>
+<td><p>a two-digit field, zero-padded</p></td>
+<td><p>the field is fixed width</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">[\d+]</span></code></p></td>
+<td><p>one or more digits</p></td>
+<td><p>the site spells it variably, as <code class="docutils literal notranslate"><span class="pre">cmsh</span></code> does</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">[a-z]</span></code> / <code class="docutils literal notranslate"><span class="pre">[A-Z]</span></code></p></td>
+<td><p>a single letter</p></td>
+<td><p>the field is a row id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NVIS_RACK_ID</span>   <span class="n">p</span><span class="p">[</span>\<span class="n">d</span><span class="o">+</span><span class="p">]</span><span class="o">-</span><span class="n">r</span><span class="p">[</span>\<span class="n">d</span><span class="o">+</span><span class="p">]</span>                 <span class="n">the</span> <span class="n">rack</span><span class="p">,</span> <span class="k">as</span> <span class="n">the</span> <span class="n">floor</span> <span class="n">view</span> <span class="n">groups</span> <span class="n">it</span>
+<span class="n">NVIS_CT_ID</span>     <span class="n">p</span><span class="p">[</span>\<span class="n">d</span><span class="o">+</span><span class="p">]</span><span class="o">-</span><span class="n">r</span><span class="p">[</span>\<span class="n">d</span><span class="o">+</span><span class="p">]</span><span class="o">-</span><span class="n">ct</span><span class="p">[</span>\<span class="n">d</span><span class="o">+</span><span class="p">]</span>         <span class="n">a</span> <span class="n">compute</span> <span class="n">node</span>
+<span class="n">NVIS_NVSW_ID</span>   <span class="n">p</span><span class="p">[</span>\<span class="n">d</span><span class="o">+</span><span class="p">]</span><span class="o">-</span><span class="n">r</span><span class="p">[</span>\<span class="n">d</span><span class="o">+</span><span class="p">]</span><span class="o">-</span><span class="n">nvsw</span><span class="o">-</span><span class="p">[</span>\<span class="n">d</span><span class="o">+</span><span class="p">]</span>      <span class="n">an</span> <span class="n">NVSwitch</span> <span class="n">tray</span>
+</pre></div>
+</div>
+<p><strong>In Direct mode, the node template must begin with the rack template.</strong> That is what lets one string answer
+both “which rack is this node in” and “what are this rack’s nodes”, and the catalog refuses a
+triplet where it does not hold.</p>
+<p><strong>Prefer <code class="docutils literal notranslate"><span class="pre">[01-99]</span></code> for a fixed-width field.</strong> Consecutive <code class="docutils literal notranslate"><span class="pre">[\d+]</span></code> slots with no separator between
+them are genuinely ambiguous — the regex is greedy, so <code class="docutils literal notranslate"><span class="pre">CN010213</span></code> could split as <code class="docutils literal notranslate"><span class="pre">01|02|13</span></code>,
+<code class="docutils literal notranslate"><span class="pre">0102|13</span></code> or <code class="docutils literal notranslate"><span class="pre">010213</span></code> and nothing in the string says which. Firmus’ <code class="docutils literal notranslate"><span class="pre">SVR-CN</span></code> suffix is exactly
+this shape, which is why its template pins the width.</p>
+</section>
+<section id="why-one-hostname-cannot-always-settle-it">
+<h2>Why one hostname cannot always settle it<a class="headerlink" href="#why-one-hostname-cannot-always-settle-it" title="Link to this heading">#</a></h2>
+<p>The setup wizard asks for a single example hostname and proposes templates from it. It proposes
+rather than decides, and the reason is worth understanding before trusting the result.</p>
+<p>Given <code class="docutils literal notranslate"><span class="pre">ink50-dh01-h15-15</span></code> the reading is clear: the last field is the tray, <code class="docutils literal notranslate"><span class="pre">h</span></code> is a row, and the
+rack is <code class="docutils literal notranslate"><span class="pre">ink50-dh01-h15</span></code>.</p>
+<p>Given <code class="docutils literal notranslate"><span class="pre">bos01-a05-11-s1-dgx-01-c01</span></code> nothing in the string says that <code class="docutils literal notranslate"><span class="pre">-s1-dgx-</span></code> is fixed
+infrastructure text rather than data. “The rack is <code class="docutils literal notranslate"><span class="pre">bos01-a05</span></code>” and “the rack is
+<code class="docutils literal notranslate"><span class="pre">bos01-a05-11-s1-dgx-01</span></code>” both parse the example perfectly. A heuristic that picked one would be
+right on this site and wrong on the next.</p>
+<p>Given <code class="docutils literal notranslate"><span class="pre">CBR01-DH01-SVR-CN010213</span></code> the tray could be <code class="docutils literal notranslate"><span class="pre">13</span></code>, <code class="docutils literal notranslate"><span class="pre">213</span></code> or <code class="docutils literal notranslate"><span class="pre">0213</span></code>.</p>
+<p>So every candidate the wizard offers has already been compiled and run against the hostname the
+operator typed, and the UI leads with what it <em>parsed</em> — rack <code class="docutils literal notranslate"><span class="pre">bos01-a05</span></code>, tray <code class="docutils literal notranslate"><span class="pre">01</span></code> — rather
+than with the regex. Confirming a parse you can read is a judgement an operator can make;
+approving a regex is not.</p>
+</section>
+<section id="what-geometry-is-and-what-it-is-not">
+<h2>What geometry is, and what it is not<a class="headerlink" href="#what-geometry-is-and-what-it-is-not" title="Link to this heading">#</a></h2>
+<p>Geometry is the count of things, and it comes from the <strong>platform</strong> with the cluster able to
+override:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gpus_per_node</span></code></p></td>
+<td><p>GPUs in one node</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nodes_per_tray</span></code></p></td>
+<td><p>nodes in one tray</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">trays_per_rack</span></code></p></td>
+<td><p>trays in a full rack</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gpus_per_rack</span></code></p></td>
+<td><p>the product, stated rather than computed, because a partly populated rack is normal</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nvlink_domain</span></code></p></td>
+<td><p>GPUs in one NVLink domain — the number that decides what “multi-rack” means for a test</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The cluster’s own <code class="docutils literal notranslate"><span class="pre">geometry</span></code> adds the floor shape: <code class="docutils literal notranslate"><span class="pre">pods</span></code>, <code class="docutils literal notranslate"><span class="pre">rows_per_pod</span></code>, <code class="docutils literal notranslate"><span class="pre">racks_per_row</span></code>,
+<code class="docutils literal notranslate"><span class="pre">trays_per_rack</span></code>.</p>
+<p><strong>Geometry is not in a hostname, and cannot be inferred from one.</strong> A site with trays
+<code class="docutils literal notranslate"><span class="pre">11-18,28-37</span></code> — Nscale’s shape — has 18 trays in two non-contiguous runs, and no hostname
+implies that. It is asked for explicitly, which is why the wizard has a question for it rather
+than a derivation.</p>
+<p><code class="docutils literal notranslate"><span class="pre">nvlink_domain</span></code> is the field with the most operational consequence. It is why <code class="docutils literal notranslate"><span class="pre">mnubergemm</span></code> runs
+as one job <strong>per rack</strong> rather than one job spanning racks: the test disables InfiniBand and
+enables MNNVL, so a single allocation covering two physical racks joins two separate NVLink
+domains and hangs. The dispatcher groups the selected nodes by rack and fans out independent
+jobs, and refuses if the groups are not a clean partition of the reviewed target.</p>
+</section>
+<section id="drawing-the-su">
+<h2>Drawing the SU<a class="headerlink" href="#drawing-the-su" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">/api/status</span></code> carries a <code class="docutils literal notranslate"><span class="pre">scalable_units</span></code> list beside the <code class="docutils literal notranslate"><span class="pre">hierarchy</span></code> tree, and the floor view
+offers <strong>By row</strong> and <strong>By SU</strong> as alternatives rather than nesting one inside the other. That
+is not a UI preference — an SU genuinely does not follow the floor. Nscale TX numbers SU1–SU14
+across two <code class="docutils literal notranslate"><span class="pre">dh</span></code> rows, so nesting rows under SUs (or SUs under rows) would misdraw one of them.
+A row is where the racks physically are; an SU is which fabric they share, and both are
+questions operators ask.</p>
+<p>The grouping is computed on the <strong>backend</strong>, from the cluster record, because an SU map is a
+site fact. The implementation this was ported from derived it in the browser from a
+fourteen-entry row-to-SU table hard-coded in TypeScript: exactly right for one customer’s floor
+and silently wrong on every other, and invisible to the cluster switcher.</p>
+<p>Two behaviours worth knowing. An empty <em>resolved</em> SU list means there is no SU grouping,
+and the floor view keeps drawing rows — it never means “one SU containing every rack”, which
+would be a confidently wrong diagram. And racks the map does not mention are collected into a
+trailing <strong>Unassigned</strong> group rather than hidden: a rack reaching the floor before the SU map
+catches up is a real bring-up state, and dropping it would make the floor view quietly disagree
+with the rack count.</p>
+</section>
+<section id="the-scalable-unit-the-level-above-a-row">
+<h2>The Scalable Unit — the level above a row<a class="headerlink" href="#the-scalable-unit-the-level-above-a-row" title="Link to this heading">#</a></h2>
+<p>A rack is not the largest unit that matters. A <strong>Scalable Unit (SU)</strong> is the group of racks that
+one set of leaf and spine switches serves: the fabric’s quantum. It is the number that decides how
+a floor is drawn, how racks are grouped for acceptance, and how much of a cluster a single fabric
+fault can take with it.</p>
+<p><strong>Its size is a property of the platform, not of the site</strong>, because it is the switch count that
+bounds it. A GB300 NVL72 SU and a VR200 SU are different sizes, and a newer generation reaches
+further — VR200 spans more racks per SU than NVL72 does. So SU sizing sits on the platform’s
+<code class="docutils literal notranslate"><span class="pre">fabric</span></code>, beside the scale-out fields, rather than in geometry:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">racks_per_su</span></code></p></td>
+<td><p>racks one leaf/spine group serves. <strong><code class="docutils literal notranslate"><span class="pre">0</span></code> means this platform has no SU model</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">leaf_switches_per_su</span></code></p></td>
+<td><p>expected leaf count in one SU; <code class="docutils literal notranslate"><span class="pre">0</span></code> is unknown</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">spine_switches_per_su</span></code></p></td>
+<td><p>expected spine count in one SU; <code class="docutils literal notranslate"><span class="pre">0</span></code> is unknown</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">gpus_per_su</span></code> is deliberately <strong>not</strong> stored — it is <code class="docutils literal notranslate"><span class="pre">racks_per_su</span> <span class="pre">×</span> <span class="pre">gpus_per_rack</span></code>, and a second
+copy of a derived number is a second thing to keep in step.</p>
+<p>The seeded NVL72 platforms carry <code class="docutils literal notranslate"><span class="pre">racks_per_su:</span> <span class="pre">8</span></code>, which is 576 GPUs. That figure is
+corroborated rather than assumed: Nscale TX 16K is 112 racks in 14 SUs. VR200 is deliberately left
+at <code class="docutils literal notranslate"><span class="pre">0</span></code> until its reference architecture settles the number, because an invented value would draw a
+floor plan that is confidently wrong, while <code class="docutils literal notranslate"><span class="pre">0</span></code> makes callers fall back to ungrouped racks.</p>
+<section id="which-racks-are-in-which-su">
+<h3>Which racks are in which SU<a class="headerlink" href="#which-racks-are-in-which-su" title="Link to this heading">#</a></h3>
+<p>The cluster answers that, and it may answer explicitly. When <code class="docutils literal notranslate"><span class="pre">scalable_units</span></code> is empty the
+mapping is <strong>derived</strong> — racks chunked in inventory order into groups of <code class="docutils literal notranslate"><span class="pre">racks_per_su</span></code>, keeping a
+partial final group, because a half-populated SU is normal mid-bring-up.</p>
+<p>Derivation is right for a tidy floor and wrong for a real one, which is why the explicit form
+exists and why it wins. Nscale TX 16K numbers SU1–SU14 across <code class="docutils literal notranslate"><span class="pre">ink50-dh01</span></code> rows a–c <em>and</em>
+<code class="docutils literal notranslate"><span class="pre">ink50-dh02</span></code> rows a–k; no chunking of one ordered list reproduces that. A site that has written
+its own mapping down knows something the arithmetic cannot compute.</p>
+<p>An explicit map must be a <strong>clean partition</strong>: a rack in two SUs is refused at the record, not
+warned about. The reason is the same one that makes <code class="docutils literal notranslate"><span class="pre">mnubergemm</span></code> one job per rack — a rack counted
+twice double-counts on the floor view, and anything that ever fans out per SU would send two jobs
+to one rack.</p>
+</section>
+</section>
+<section id="where-each-value-ends-up">
+<h2>Where each value ends up<a class="headerlink" href="#where-each-value-ends-up" title="Link to this heading">#</a></h2>
+<p>The active cluster’s naming and geometry are materialised into the environment every request, so
+scripts and launchers see them without reading the catalog:</p>
+<ul class="simple">
+<li><p>naming → <code class="docutils literal notranslate"><span class="pre">NVIS_RACK_ID</span></code>, <code class="docutils literal notranslate"><span class="pre">NVIS_CT_ID</span></code>, <code class="docutils literal notranslate"><span class="pre">NVIS_NVSW_ID</span></code>, <code class="docutils literal notranslate"><span class="pre">NVIS_CT_JOINER</span></code></p></li>
+<li><p>geometry → the platform’s low overlay, beneath anything an operator set</p></li>
+<li><p>SU shape → <code class="docutils literal notranslate"><span class="pre">NVIS_SU_RACKS</span></code>, <code class="docutils literal notranslate"><span class="pre">NVIS_SU_GPUS</span></code>, <code class="docutils literal notranslate"><span class="pre">NVIS_SU_LEAF_SWITCHES</span></code>, <code class="docutils literal notranslate"><span class="pre">NVIS_SU_SPINE_SWITCHES</span></code>,
+published <strong>only</strong> when the platform models an SU, so a script can tell “no SU model” from “an
+SU of one rack”</p></li>
+<li><p>identity → <code class="docutils literal notranslate"><span class="pre">NVIS_PROJECT_ID</span></code>, <code class="docutils literal notranslate"><span class="pre">NVIS_PLATFORM_ID</span></code>, <code class="docutils literal notranslate"><span class="pre">RACK_CLUSTER_NAME</span></code></p></li>
+</ul>
+<p>That is also why switching the active cluster changes which scripts run: the project id in that
+overlay is what selects a project’s own copy of the script tree.</p>
+</section>
+<section id="related">
+<h2>Related<a class="headerlink" href="#related" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/catalog/projects-and-clusters.html"><span class="std std-doc">Projects and clusters</span></a> — the fields these live on.</p></li>
+<li><p><a class="reference internal" href="../how-to/list-bcm-racks-without-templates.html"><span class="std std-doc">How to list saved BCM racks without naming templates</span></a>.</p></li>
+<li><p><a class="reference internal" href="how-a-script-path-is-chosen.html"><span class="std std-doc">How a script path is chosen</span></a> — what the project id selects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backend/nvis_id_templates.py</span></code> — the template syntax and the four deployment families it was
+built against.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="how-cluster-paths-reach-scripts.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">How cluster paths reach scripts</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="which-storage-engine.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Which storage engine, and why</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-rack-id-is-not-a-hostname">A rack id is not a hostname</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#placement-without-hostname-templates">Placement without hostname templates</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-templates-are">What the templates are</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-one-hostname-cannot-always-settle-it">Why one hostname cannot always settle it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-geometry-is-and-what-it-is-not">What geometry is, and what it is not</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#drawing-the-su">Drawing the SU</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-scalable-unit-the-level-above-a-row">The Scalable Unit — the level above a row</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#which-racks-are-in-which-su">Which racks are in which SU</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-each-value-ends-up">Where each value ends up</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related">Related</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

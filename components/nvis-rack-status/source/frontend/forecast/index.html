@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--
+  The cluster forecast as a static page (vite.forecast.config.ts). The backend writes the
+  dataset into #forecast-data when it renders site.html (backend/cluster_forecast.py via
+  backend/static_page.py); the element must stay exactly as written here, `null` included, or the
+  export refuses.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d0d0d" />
+    <title>Cluster Forecast</title>
+  </head>
+  <body>
+    <script id="forecast-data" type="application/json">null</script>
+    <div id="root"></div>
+    <script type="module" src="../src/features/cluster-forecast/static/main.tsx"></script>
+  </body>
+</html>

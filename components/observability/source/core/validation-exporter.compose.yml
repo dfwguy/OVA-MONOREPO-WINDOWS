@@ -1,0 +1,33 @@
+name: iren_mkz-validation
+
+services:
+  validation-exporter:
+    image: python:3.11-slim
+    container_name: iren_mkz-validation-exporter
+    network_mode: host
+    restart: always
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - /opt/observability/iren_mkz/dashboards/iren_mkz/validation_exporter.py:/app/validation_exporter.py:ro
+      - rack-status-data:/data:ro
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      RESULTS_DB: /data/history/results.db
+      VM_IMPORT_URL: http://127.0.0.1:8428/api/v1/import/prometheus
+      EXPORT_INTERVAL_SECONDS: "60"
+      NCCL_ALL_REDUCE_FLOOR_GBPS: "855"
+    command: ["python3", "/app/validation_exporter.py"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+volumes:
+  rack-status-data:
+    external: true
+    name: rack-status_rack-data

@@ -1,0 +1,2015 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "WC 8K Heat Load Test flight deck. Real compute/tray telemetry plus explicit missing BMS/DCIM gates.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "keepTime": true,
+      "title": "\u2302 IREN_MKZ Home",
+      "type": "link",
+      "url": "/d/iren_mkz-home?${__url_time_range}"
+    },
+    {
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "iren_mkz"
+      ],
+      "title": "IREN_MKZ Dashboards",
+      "type": "dashboards"
+    },
+    {
+      "keepTime": true,
+      "title": "GPU Health",
+      "type": "link",
+      "url": "/d/gpu-health/?${__url_time_range}"
+    },
+    {
+      "keepTime": true,
+      "title": "Thermal & Power",
+      "type": "link",
+      "url": "/d/nvis-bmc-thermal/?${__url_time_range}"
+    },
+    {
+      "keepTime": true,
+      "title": "Job Health",
+      "type": "link",
+      "url": "/d/iren_mkz-job-health/?${__url_time_range}"
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "panels": [],
+      "title": "Phase 0 \u2014 coverage, scheduler and instantaneous baseline",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Final roster: all scheduler-ready inventory; 10 drained and one down excluded.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "NO LIVE DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 1
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "vector(2005)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Reviewed target",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Must be 2,005 before loaded acceptance.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "NO LIVE DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1997
+              },
+              {
+                "color": "green",
+                "value": 2005
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 1
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(count by(node) (DCGM_FI_DEV_GPU_UTIL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "DCGM nodes reporting",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Four GPUs per final target node; expected 8,020.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "NO LIVE DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 7992
+              },
+              {
+                "color": "green",
+                "value": 8020
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 1
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(DCGM_FI_DEV_GPU_UTIL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs reporting",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Authoritative Slurm nodes currently available for admission from the bounded head-node collector.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "NO LIVE DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1997
+              },
+              {
+                "color": "green",
+                "value": 2005
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 1
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(nvis_slurm_node_available{cluster=\"IREN_MKZ\",exported_node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\"} == 1)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Target available",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Allocated, drained or down target nodes are launch/gate blockers. No data means scheduler telemetry is absent, not zero blockers.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "NO LIVE DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 12,
+        "y": 1
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(nvis_slurm_node_available{cluster=\"IREN_MKZ\",exported_node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\"} == 0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Target unavailable / busy",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "GPU device power only; NOT rack/PDU power.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "NO LIVE DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 8
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          },
+          "unit": "megawatt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 1
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}) / 1e6",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "GPU power",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Node ACPI module meter estimate; NOT facility PDU power.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "NO LIVE DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 8
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          },
+          "unit": "megawatt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 18,
+        "y": 1
+      },
+      "id": 17,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(node_hwmon_power_average_watt{instance=~\"example50-.*\",instance!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",instance=~\"$node\"}) / 1e6",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Host hwmon power",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Real Redfish coldplate + manifold tray sensors. This is not the facility leak-rope feed.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "NO LIVE DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 1
+      },
+      "id": 18,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rf_chassis_0_leakdetector_0_coldplate{node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}) + sum(rf_chassis_0_leakdetector_0_manifold{node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Tray leak alarms",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 20,
+      "panels": [],
+      "title": "Thermal load and utilisation",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Neither line is rack/PDU power; use only for load shape and missing-node detection.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "megawatt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}) / 1e6",
+          "legendFormat": "GPU device power",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(node_hwmon_power_average_watt{instance=~\"example50-.*\",instance!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",instance=~\"$node\"}) / 1e6",
+          "legendFormat": "Host ACPI module power",
+          "refId": "B"
+        }
+      ],
+      "title": "Fleet power \u2014 supporting measurements",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_GPU_UTIL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"})",
+          "legendFormat": "GPU util %",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_MEM_COPY_UTIL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"})",
+          "legendFormat": "Memory copy %",
+          "refId": "B"
+        }
+      ],
+      "title": "GPU utilisation and memory activity",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Compute-side temperature only; not coolant supply/return.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(DCGM_FI_DEV_GPU_TEMP{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"})",
+          "legendFormat": "Max GPU",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(DCGM_FI_DEV_MEMORY_TEMP{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"})",
+          "legendFormat": "Max HBM",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(node_hwmon_temp_celsius{instance=~\"example50-.*\",instance!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",instance=~\"$node\"})",
+          "legendFormat": "Max host hwmon",
+          "refId": "C"
+        }
+      ],
+      "title": "Worst GPU and HBM temperature",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_SM_CLOCK{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"})",
+          "legendFormat": "Mean SM MHz",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_MEM_CLOCK{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"})",
+          "legendFormat": "Mean memory MHz",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rate(DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "NVLink aggregate rate",
+          "refId": "C"
+        }
+      ],
+      "title": "Clocks and NVLink throughput",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 30,
+      "panels": [],
+      "title": "Rack/SU balance \u2014 every cooling domain must carry load",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Use this to detect an underloaded rack. It is GPU power, not PDU power.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kwatt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 31,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum by(rack) (DCGM_FI_DEV_POWER_USAGE{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\",rack=~\"$rack\"}) / 1000",
+          "legendFormat": "{{rack}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Power by rack (DCGM GPU watts)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Expected rack sizes are 18 normally, five racks have 17 and two have 16.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 23
+      },
+      "id": 32,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count by(rack) (count by(rack,node) (DCGM_FI_DEV_GPU_UTIL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\",rack=~\"$rack\"}))",
+          "legendFormat": "{{rack}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Reporting nodes by rack",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 40,
+      "panels": [],
+      "title": "Safety counters \u2014 any increase is a finding",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 33
+      },
+      "id": 41,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(DCGM_FI_DEV_THERMAL_VIOLATION{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "Thermal violation delta",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(DCGM_FI_DEV_POWER_VIOLATION{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "Power violation delta",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(DCGM_FI_DEV_BOARD_LIMIT_VIOLATION{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "Board-limit delta",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(DCGM_FI_DEV_RELIABILITY_VIOLATION{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "Reliability delta",
+          "refId": "D"
+        }
+      ],
+      "title": "DCGM thermal / power violations",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
+      "id": 42,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(DCGM_FI_DEV_XID_ERRORS{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "XID",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "DBE volatile",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "SBE volatile",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "PCIe replay",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "Row-remap failure",
+          "refId": "E"
+        }
+      ],
+      "title": "GPU error deltas",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Five requested counter families are obtainable from host HCA sysfs. They are live on the golden-node canary; fleet coverage increases only as the collector is rolled into the image.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 41
+      },
+      "id": 43,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(ib_hca_port_xmit_wait{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "port_xmit_wait",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(ib_hca_port_xmit_discards{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "port_xmit_discard",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(ib_hca_symbol_error{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "symbol_error_counter",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(ib_hca_link_downed{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "link_down_counter",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(ib_hca_link_error_recovery{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "link_error_recovery_counter",
+          "refId": "E"
+        }
+      ],
+      "title": "Host HCA counters \u2014 five available from nodes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Any nonzero value is an immediate-abort input, pending operator confirmation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 41
+      },
+      "id": 44,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rf_chassis_0_leakdetector_0_coldplate{node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"})",
+          "legendFormat": "Coldplate alarms",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rf_chassis_0_leakdetector_0_manifold{node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\",node=~\"$node\"})",
+          "legendFormat": "Manifold alarms",
+          "refId": "B"
+        }
+      ],
+      "title": "Tray leak alarms",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "These four counters are not exposed by host HCA sysfs or UFM REST. They require UFM Telemetry CSV on TCP/9001. No series means unavailable, never zero.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": null,
+          "min": null,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 0,
+        "y": 49
+      },
+      "id": 45,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(plr_xmit_retry_codes{cluster=\"IREN_MKZ\"}[$__rate_interval]))",
+          "legendFormat": "plr_xmit_retry_codes",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(plr_xmit_retry_events{cluster=\"IREN_MKZ\"}[$__rate_interval]))",
+          "legendFormat": "plr_xmit_retry_events",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(contain_n_drain_xmit_discards{cluster=\"IREN_MKZ\"}[$__rate_interval]))",
+          "legendFormat": "contain_n_drain_xmit_discards",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(increase(contain_n_drain_rcv_discards{cluster=\"IREN_MKZ\"}[$__rate_interval]))",
+          "legendFormat": "contain_n_drain_rcv_discards",
+          "refId": "D"
+        }
+      ],
+      "title": "UFM-only advanced fabric counters",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Collector-to-appliance truth signal. It is currently 0 because the UFM Telemetry CSV listener refuses TCP/9001.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "NO LIVE DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 49
+      },
+      "id": 46,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(ufm_telemetry_up{cluster=\"IREN_MKZ\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "UFM Telemetry (1=LIVE)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Number of active UFM switch ports decoded in the most recent successful CSV scrape.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "NO LIVE DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 53
+      },
+      "id": 47,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(ufm_telemetry_ports_emitted{cluster=\"IREN_MKZ\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "UFM active ports emitted",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 57
+      },
+      "id": 50,
+      "panels": [],
+      "title": "Availability contract and failure behavior",
+      "type": "row"
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 58
+      },
+      "id": 51,
+      "options": {
+        "content": "**LIVE ON THE GOLDEN-NODE CANARY:** host-HCA versions of `port_xmit_wait`, `port_xmit_discard`, `symbol_error_counter`, `link_down_counter`, and `link_error_recovery_counter`. The panel uses the real `ib_hca_*` series; fleet coverage depends on golden-image rollout.\n\n**COLLECTOR LIVE, UFM SOURCE BLOCKED:** `plr_xmit_retry_codes`, `plr_xmit_retry_events`, and both `contain_n_drain_*` families require UFM Telemetry CSV. `ufm_telemetry_up=0` reports that TCP/9001 is currently refused. Missing series are never converted into zero.\n\n**OTHER NOT LIVE:** all BMS/CDU/liquid-flow/facility-water/pump/valve/filter/rack-manifold/humidity/dew-point and rack PDU/DCIM power.",
+        "mode": "markdown"
+      },
+      "title": "Metric coverage contract",
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 58
+      },
+      "id": 52,
+      "options": {
+        "content": "One independent MNUberGEMM allocation runs per physical rack/NVLink domain. If a node fails, that rack job normally becomes `NODE_FAIL`; it does **not** elastically shrink. Other rack jobs continue so data is preserved, but the controller must HOLD/ABORT the phase: reporting coverage and rack power fall, the failed rack is identified here, and the continuous 100% acceptance clock resets. A degraded fleet can never silently pass full-load acceptance.",
+        "mode": "markdown"
+      },
+      "title": "If a node fails",
+      "type": "text"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "hlt",
+    "mnubergemm",
+    "acceptance",
+    "wc"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "label": "Datasource",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_UTIL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\"},node)",
+        "includeAll": true,
+        "label": "Target node",
+        "multi": true,
+        "name": "node",
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_UTIL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\"},node)",
+          "refId": "NODE"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query",
+        "options": []
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_UTIL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\"},rack)",
+        "includeAll": true,
+        "label": "Rack",
+        "multi": true,
+        "name": "rack",
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_UTIL{cluster=\"IREN_MKZ\",node!~\"example50-dh01-(d19-(15|16|17)|f19-16|g01-33|g04-(28|35)|i22-14|j03-29|j22-(13|15))\"},rack)",
+          "refId": "RACK"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query",
+        "options": []
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "30m",
+      "1h"
+    ]
+  },
+  "timezone": "utc",
+  "title": "IREN_MKZ \u2014 WC HLT Flight Deck",
+  "uid": "iren_mkz-wc-hlt-flight-deck",
+  "version": 5,
+  "weekStart": ""
+}

@@ -1,0 +1,399 @@
+# Pipeline for the checks in docs/reference/contributing.md. Last gate before
+# a change reaches a cluster; there is no staging deployment behind it.
+#
+# Nothing here talks to Slurm, BCM or a GPU -- the suites stub those on PATH.
+# Do not add a job that needs cluster access: it could only be faked.
+
+stages:
+  - lint
+  - test
+
+# Without this, a push to a branch with an open MR runs the pipeline twice.
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+# One place for the image and the runner tags. -scm ships git, so no job needs
+# a package mirror to clone; bookworm is frozen, so the userland cannot move.
+.base:
+  image: buildpack-deps:bookworm-scm
+  # Load-bearing: the runners are tagged, and an untagged job sits pending
+  # forever rather than failing.
+  tags:
+    - size/medium
+  # Superseded pipelines are wasted work; no job here has a side effect.
+  interruptible: true
+
+# Every job names what it checked, passing or failing -- a green pipeline that
+# printed nothing is indistinguishable from a loop that matched no files.
+
+shellcheck:
+  extends: .base
+  stage: lint
+  # severity=warning is the gate, not the ceiling: the ~80 info/style findings
+  # below it are mostly deliberate here. Debian's 0.9.0 rather than the newest,
+  # so the check set cannot grow under us; the tree's disables were triaged
+  # against that version.
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq --no-install-recommends shellcheck
+    - shellcheck --version
+  script:
+    - |
+      # By extension rather than a skip list that would drift.
+      files=$(git ls-files '*.sh' '*.sbatch')
+      if [ -z "$files" ]; then
+        echo "no scripts found -- the glob is wrong, not the tree"
+        exit 1
+      fi
+      echo "$(echo "$files" | wc -l) files"
+      # -f gcc names file:line:col in the log. The status is checked explicitly,
+      # not left to set -e: an earlier draft printed findings and went green.
+      if shellcheck -f gcc -S warning $files; then
+        echo "no findings at severity>=warning"
+      else
+        echo "shellcheck rejected the tree -- see the findings above"
+        exit 1
+      fi
+
+syntax:
+  extends: .base
+  stage: lint
+  script:
+    - |
+      status=0
+      count=0
+      for f in $(git ls-files '*.sh' '*.sbatch'); do
+        if bash -n "$f"; then
+          count=$((count + 1))
+        else
+          echo "syntax error: $f"
+          status=1
+        fi
+      done
+      if [ "$count" -eq 0 ]; then
+        echo "no scripts found -- the glob is wrong, not the tree"
+        exit 1
+      fi
+      echo "$count scripts parsed"
+      exit $status
+
+permissions:
+  extends: .base
+  stage: lint
+  # The exec-bit split breaks silently in both directions and survives a tarball
+  # drop. See the mode table in docs/reference/layout.md.
+  script:
+    - |
+      status=0
+
+      check() {
+        want=$1; file=$2
+        got=$(git ls-files -s -- "$file" | awk '{print $1}')
+        [ -z "$got" ] && return 0            # not tracked; nothing to say
+        if [ "$got" != "$want" ]; then
+          echo "mode $got, want $want: $file"
+          status=1
+        fi
+      }
+
+      # Sourced libraries. verdict-scan.sh is also run, but as
+      # `bash verdict-scan.sh` from xargs, like the health checks below.
+      for f in settings.sh priv.sh fanout.sh reason-map.sh slurm-recovery.sh verdict-scan.sh \
+               get-out-of-the-way.sh report-format.sh health-scan.sh slurm-snapshot.sh \
+               $(git ls-files 'parsers/*/verdict.sh'); do
+        check 100644 "$f"
+      done
+
+      # jobs/*/*.sh is sourced helpers (nccl-hca.sh) and any host launcher, which
+      # launch_job.sh runs as `bash "$launch"`. Neither is exec'd.
+      # See docs/explanation/sequencing.md#host-launched-jobs.
+      for f in $(git ls-files 'jobs/*/*.sh'); do
+        check 100644 "$f"
+      done
+
+      # Run as `python3 llmb_check.py`, never exec'd.
+      check 100644 llmb_check.py
+
+      # node_health.sh runs each check as `bash "$check_file"`, deliberately.
+      for f in $(git ls-files 'health-checks/*/[0-9][0-9]-*.sh'); do
+        check 100644 "$f"
+      done
+
+      # sbatch reads these; it does not exec them.
+      for f in $(git ls-files 'jobs/*/*.sbatch'); do
+        check 100644 "$f"
+      done
+
+      # systemd reads the units; install-agent.sh copies them with @BRINGUP_HOME@
+      # substituted. sudoers.default is a reference the site installs at 0440.
+      for f in $(git ls-files 'agent/units/*' agent/sudoers.default); do
+        check 100644 "$f"
+      done
+
+      # Entry points -- anything a human or a systemd unit invokes by path.
+      for f in $(git ls-files 'actions/*.sh' 'agent/*.sh' 'tests/*.sh'); do
+        check 100755 "$f"
+      done
+
+      # Top-level scripts are entry points except for the sourced libraries
+      # handled above.
+      for f in $(git ls-files -- '*.sh' | grep -v '/'); do
+        case "$f" in
+          settings.sh|priv.sh|fanout.sh|reason-map.sh|slurm-recovery.sh|verdict-scan.sh) continue ;;
+          get-out-of-the-way.sh|report-format.sh|health-scan.sh|slurm-snapshot.sh) continue ;;
+        esac
+        check 100755 "$f"
+      done
+
+      # abup has no .sh extension, so the glob above never finds it.
+      check 100755 abup
+
+      [ "$status" -eq 0 ] && echo "modes match the table in docs/reference/layout.md"
+      exit $status
+
+instruction-entrypoints:
+  extends: .base
+  stage: lint
+  script:
+    - test -s AGENTS.md
+    - test "$(wc -l < AGENTS.md)" -le 150
+    - |
+      awk '
+        /^# Repository instructions$/ || /^[[:space:]]*$/ { next }
+        /^@AGENTS[.]md$/ { imports++; next }
+        { print "policy belongs in AGENTS.md, not CLAUDE.md: " $0; bad=1 }
+        END { if (imports != 1 || bad) exit 1 }
+      ' CLAUDE.md
+    - echo "shared instructions present; Claude adapter contains only its import"
+
+layout-doc:
+  extends: .base
+  stage: lint
+  # The tree listing in docs/reference/layout.md has drifted twice this way. Scoped
+  # to the top level: the doc lists health-checks/ and jobs/ as directories.
+  script:
+    - |
+      status=0
+      # abup has no .sh extension, so the glob below never finds it.
+      for f in $(git ls-files -- '*.sh' | grep -v '/') abup; do
+        if ! grep -qF "$f" docs/reference/layout.md; then
+          echo "not listed in docs/reference/layout.md: $f"
+          status=1
+        fi
+      done
+      [ "$status" -eq 0 ] && echo "every top-level script is listed"
+      exit $status
+
+# One job per suite rather than a loop, so a failure names the gate that broke.
+
+verdict:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/verdict-test.sh
+    - ./tests/spectrum-x-verdict-test.sh
+
+health-runner:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/health-runner-test.sh
+
+pcie-snapshot:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/pcie-snapshot-test.sh
+
+file-copy-disabled:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/file-copy-disabled-test.sh
+    - ./tests/file-copy-explain-test.sh
+
+# Every gate here ends a cycle with exit 0, so a mistake is a fleet that has
+# quietly stopped health-checking -- or a golden baseline overwritten by the
+# node it is meant to judge. See docs/explanation/health-cadence.md.
+health-cadence:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/health-cadence-test.sh
+
+report-format:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/report-format-test.sh
+
+health-scan:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/health-scan-test.sh
+
+health-report:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/health-report-test.sh
+
+# What admin_set-baseline.sh promotes: the gated checks by name, never the logs
+# that sit beside them (service.log, the traces, the stamps).
+set-baseline:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/set-baseline-test.sh
+
+# The default report's one line per node. Nothing may read PASS that was not
+# judged, and three states print no failure without being a pass.
+brief-report:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/brief-report-test.sh
+
+recover:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/recover-test.sh
+
+# The one script that destroys evidence on purpose. What it refuses to clear is
+# the thing under test. See docs/how-to/archive-and-clear-dmesg.md.
+dmesg-archive:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/dmesg-archive-test.sh
+
+# A stale cache hit is silent: a clean report for a fleet that is not clean.
+# See docs/explanation/verdicts-and-the-cache.md#the-verdict-cache.
+scan-cache:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/scan-cache-test.sh
+
+# An adopted llmb install is judged by llmb_check.py, and every way it can be
+# wrong looks like a working install until a job refuses on 200 nodes.
+llmb-check:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/llmb-check-test.sh
+
+# The gate that decides whether a node already has a job out. A wrong answer
+# there is silent: the node looks like a healthy idle cycle while holding two
+# jobs, or none. See docs/explanation/sequencing.md#one-job-at-a-time.
+inflight:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/inflight-test.sh
+
+# The only thing in the tree that cancels a job of ours that is working. Every
+# case that must not cancel asserts that scancel was never called.
+yield:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/yield-test.sh
+
+# One query written into a node-side script is seventeen a second across the
+# fleet, and the reason each of them was removed is invisible in the diff that
+# adds one back. See docs/explanation/the-fleet-snapshot.md.
+node-queries:
+  extends: .base
+  stage: lint
+  script:
+    - ./tests/node-queries-test.sh
+
+# Both directions of this gate are silent: a false positive retires a real node
+# from the fleet, a false negative is the head node in every report.
+exclude:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/exclude-test.sh
+
+# Five scripts print --help from their own header through a hardcoded line
+# range, so comment length is runtime behaviour there. This is the gate that
+# stops a comment edit truncating --help silently.
+help-text:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/help-text-test.sh
+
+# Every other suite runs as one account, and an account that is wrong everywhere
+# is still consistent -- so this one runs the sequencer twice under two names and
+# diffs. See docs/explanation/architecture.md#one-account-name.
+job-user:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/job-user-test.sh
+
+# The busy gate and the heartbeat: a cycle that does work on a busy node, or one
+# that stops writing the heartbeat before a gate, is invisible from outside.
+agent:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/agent-test.sh
+
+# Which nodes the watchdog arms. Arming the wrong set is an ssh storm; arming
+# none is a fleet that quietly stops.
+supervisor:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/supervisor-test.sh
+
+# Whether a node is really scheduled after being armed. The gate runs on every
+# node of every re-arm, so a signature that also matches a healthy host costs a
+# FAILED line and a non-zero exit per node, fleet-wide.
+arm-timer:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/arm-timer-test.sh
+
+# A refused sudo does not fail a health check, it changes its output -- which
+# reads as bad hardware. See docs/explanation/running-unprivileged.md.
+priv:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/priv-test.sh
+
+# The one place this tree reaches more than one node. A silent fall back to pdsh
+# on a site that installed clush is a preference nobody chose.
+fanout:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/fanout-test.sh
+
+# A second copy of the two cadences, and a wrong bucket reads exactly like a
+# right one. See docs/how-to/see-what-fires-next.md#how-the-buckets-are-chosen.
+next-run:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/next-run-test.sh
+
+# The code points at docs/ by anchor and nothing renders those links, so a
+# reworded heading silently lands the reader on the wrong section.
+doc-links:
+  extends: .base
+  stage: test
+  script:
+    - ./tests/doc-links-test.sh

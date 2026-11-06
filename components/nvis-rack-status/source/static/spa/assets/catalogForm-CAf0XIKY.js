@@ -1,0 +1,3 @@
+var e=e=>(e||[]).join(`, `),t=e=>e.split(`,`).map(e=>e.trim()).filter(Boolean),n=e=>Object.entries(e||{}).map(([e,t])=>`${e}=${t}`).join(`
+`),r=e=>{let t={};for(let n of e.split(`
+`)){let e=n.trim();if(!e||!e.includes(`=`))continue;let r=e.indexOf(`=`),i=e.slice(0,r).trim(),a=e.slice(r+1).trim();i&&(t[i]=a)}return t},i=(e,t)=>{let n=parseInt(e,10);return Number.isFinite(n)?n:t};export{r as a,n as i,i as n,e as r,t};

@@ -1,0 +1,1079 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+ *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
+ */
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import { Plus, Pencil, Trash2, CheckCircle2, Server, FolderKanban, Wand2, FileCode2, UploadCloud } from "lucide-react";
+import {
+  Banner,
+  Button as KuiButton,
+  Card,
+  DatePicker,
+  Flex,
+  FormField,
+  Modal,
+  ModalCloseButton,
+  Select,
+  StatusMessage,
+  Switch,
+  Tag,
+  Text,
+  TextArea,
+  TextInput,
+} from "@nvidia/foundations-react-core";
+import { PageHeader } from "../components/layout/PageHeader";
+import { CONTENT_MAX_WIDTH } from "../components/layout/contentWidth";
+import {
+  deleteProject,
+  getVocab,
+  listPlatforms,
+  saveProject,
+} from "../services/catalogService";
+import { useActiveCluster } from "../context/ActiveClusterContext";
+import type {
+  CatalogVocab,
+  Cluster,
+  ClusterClusterKit,
+  ClusterEvidence,
+  ClusterKitEnvScope,
+  ClusterFabric,
+  ClusterNcclEnv,
+  NcclEnvScope,
+  Platform,
+  Project,
+} from "../types/catalog";
+import { intOr } from "../lib/catalogForm";
+import { bootstrapProjectScripts, deployScripts } from "../services/setupService";
+import { EnvListField } from "../components/EnvListField";
+import { ClusterPathsPanel } from "../components/ClusterPathsPanel";
+import { derivedPath, usePathLayout } from "../services/clusterPathsService";
+import { MultiSelectCombobox } from "../components/MultiSelectCombobox";
+
+// Lazy AND conditionally rendered: the wizard is a whole second form, and this screen is on the
+// initial route. Loading it for everyone to serve the rare "set up another cluster" click is
+// exactly the regression `initialBundle.test.ts` exists to catch.
+const SetupWizard = lazy(() =>
+  import("../components/setup/SetupWizard").then((m) => ({ default: m.SetupWizard })),
+);
+
+/** All blank: the on-node fabric scan decides. Also the fallback for a cluster stored before the field existed. */
+function emptyFabric(): ClusterFabric {
+  return { scaleout: "", addr_family: "", compute_hca: "", rail_rate_gbps: 0, net_plugin: "" };
+}
+
+/** No external feeds and no bring-up framework. Also the fallback for a cluster stored before the fields existed. */
+function emptyEvidence(): ClusterEvidence {
+  return { snapshot_path: "", healthcheck_root: "", bringup_home: "", bringup_enabled: false, stage2_bringup_job: "" };
+}
+
+/** No tests chosen, no GPU-Direct: ClusterKit runs the launcher's defaults (bandwidth + latency). */
+function emptyClusterKit(): ClusterClusterKit {
+  return { tests: [], gpudirect: false, multirack_tests: [], env: { rack: {}, multirack: {} } };
+}
+
+/** ClusterKit's two launch levels and what each list reaches. There is no single-node ClusterKit run. */
+const CLUSTERKIT_ENV_LEVELS: ReadonlyArray<[ClusterKitEnvScope, string, string]> = [
+  ["rack", "Rack environment", "ClusterKit inside one rack: pairwise tests between its nodes."],
+  ["multirack", "Multi-rack environment", "ClusterKit across racks: rack against rack."],
+];
+
+/** No variables at any span: every launch runs with the scripts' own defaults. */
+function emptyNcclEnv(): ClusterNcclEnv {
+  return { node: {}, rack: {}, multirack: {} };
+}
+
+/** The three spans, in the order a cluster is brought up, with which launches each one reaches. */
+const NCCL_ENV_SPANS: ReadonlyArray<[NcclEnvScope, string, string]> = [
+  ["node", "Single node", "Launches on one node."],
+  ["rack", "Single rack", "Launches inside one rack, including part of a rack."],
+  ["multirack", "Multi-rack", "Launches across racks, over the scale-out fabric."],
+];
+
+function emptyCluster(): Cluster {
+  return {
+    id: "",
+    name: "",
+    platform_id: "",
+    cluster_manager: "bcm",
+    scheduler: "slurm",
+    rack_mapping_mode: "direct",
+    site_prefix: "",
+    naming: { rack_id_template: "", ct_id_template: "", nvsw_id_template: "", ct_joiner: "-ct", slurm_hostlist: "" },
+    geometry: { pods: 1, rows_per_pod: 0, racks_per_row: 0, trays_per_rack: 0 },
+    fabric: emptyFabric(),
+    nccl_env: emptyNcclEnv(),
+    clusterkit: emptyClusterKit(),
+    connection: {
+      exec_mode: "",
+      ssh_host: "",
+      ssh_user: "",
+      ssh_key: "",
+      root: "",
+      remote_base_path: "",
+      log_dir: "",
+      workspace_dir: "",
+      shared_container_dir: "",
+      node_container_dir: "",
+      bug_report_dir: "",
+      node_sudo: false,
+      node_exec_direct: false,
+    },
+    // Empty means "derive SUs from the platform's racks_per_su", which is what a new
+    // cluster wants. A site with a ragged SU map states it explicitly instead.
+    scalable_units: [],
+    campaigns: [],
+    evidence: emptyEvidence(),
+    p2p_enabled: false,
+  };
+}
+
+/**
+ * An SU handover date (`YYYY-MM-DD`, a calendar day with no zone) as the local-midnight `Date`
+ * the picker shows, and back. Parsed by parts, never `new Date(iso)`: that reads the string as
+ * UTC midnight, which is the previous day for every operator west of Greenwich.
+ */
+function isoToDate(iso: string | undefined): Date | undefined {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso ?? "");
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : undefined;
+}
+
+function dateToIso(d: Date | undefined): string {
+  if (!d || Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function slugify(s: string): string {
+  return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 63) || "item";
+}
+
+export function ProjectsView() {
+  const { projects, active, setActive, refresh: refreshActive, catalogChanged } = useActiveCluster();
+  const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [scriptNote, setScriptNote] = useState("");
+  const [deploying, setDeploying] = useState(false);
+  const [vocab, setVocab] = useState<CatalogVocab | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const [projectDraft, setProjectDraft] = useState<Partial<Project> | null>(null);
+  // ``session`` numbers each opening of the editor. Fields that hold their own text (the NCCL
+  // environment lists) are keyed by it, so opening another cluster -- or this one again after a
+  // cancel -- starts from the stored record rather than from what the last edit left typed.
+  const [clusterDraft, setClusterDraft] = useState<
+    { projectId: string; cluster: Cluster; isNew: boolean; session: number } | null
+  >(null);
+  const editSession = useRef(0);
+  const [saving, setSaving] = useState(false);
+  // Which collective's NCCL lists the editor shows; "" = the first one with settings, else alltoall.
+  const [ncclCollective, setNcclCollective] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const [plats, voc] = await Promise.all([listPlatforms(), getVocab()]);
+      setPlatforms(plats);
+      setVocab(voc);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load reference data");
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const platformName = (id: string) => platforms.find((p) => p.id === id)?.name || id || "—";
+  /** The fabric protocol a platform implies, for the cluster form's "inherit" choice. */
+  const platformFabricNetwork = (id: string) => {
+    const s = platforms.find((p) => p.id === id)?.fabric?.scaleout;
+    return s === "ib" ? "InfiniBand" : s === "roce" ? "RoCE" : "";
+  };
+
+  const onSaveProject = async () => {
+    if (!projectDraft) return;
+    try {
+      setSaving(true);
+      const id = projectDraft.id || slugify(projectDraft.name || "");
+      const existing = projects.find((p) => p.id === id);
+      await saveProject({
+        id,
+        name: projectDraft.name,
+        customer: projectDraft.customer,
+        description: projectDraft.description,
+        clusters: existing?.clusters || [],
+      });
+      setProjectDraft(null);
+      await refreshActive();
+      catalogChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save project");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onDeleteProject = async (p: Project) => {
+    if (!window.confirm(`Delete project "${p.name}" and all its clusters?`)) return;
+    try {
+      await deleteProject(p.id);
+      await refreshActive();
+      catalogChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to delete project");
+    }
+  };
+
+  const onSaveCluster = async () => {
+    if (!clusterDraft) return;
+    const project = projects.find((p) => p.id === clusterDraft.projectId);
+    if (!project) return;
+    try {
+      setSaving(true);
+      const cluster = { ...clusterDraft.cluster, id: clusterDraft.cluster.id || slugify(clusterDraft.cluster.name) };
+      const clusters = clusterDraft.isNew
+        ? [...project.clusters, cluster]
+        : project.clusters.map((c) => (c.id === cluster.id ? cluster : c));
+      await saveProject({ ...project, clusters });
+      setClusterDraft(null);
+      await refreshActive();
+      catalogChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save cluster");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onDeleteCluster = async (project: Project, cluster: Cluster) => {
+    if (!window.confirm(`Remove cluster "${cluster.name}" from "${project.name}"?`)) return;
+    try {
+      await saveProject({ ...project, clusters: project.clusters.filter((c) => c.id !== cluster.id) });
+      await refreshActive();
+      catalogChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to remove cluster");
+    }
+  };
+
+  const setProj = (patch: Partial<Project>) => setProjectDraft((d) => (d ? { ...d, ...patch } : d));
+  const setCl = (patch: Partial<Cluster>) =>
+    setClusterDraft((d) => (d ? { ...d, cluster: { ...d.cluster, ...patch } } : d));
+  const setNaming = (patch: Partial<Cluster["naming"]>) =>
+    setClusterDraft((d) => (d ? { ...d, cluster: { ...d.cluster, naming: { ...d.cluster.naming, ...patch } } } : d));
+  const setConn = (patch: Partial<Cluster["connection"]>) =>
+    setClusterDraft((d) => (d ? { ...d, cluster: { ...d.cluster, connection: { ...d.cluster.connection, ...patch } } } : d));
+  const setEvidence = (patch: Partial<ClusterEvidence>) =>
+    setClusterDraft((d) =>
+      d ? { ...d, cluster: { ...d.cluster, evidence: { ...(d.cluster.evidence ?? emptyEvidence()), ...patch } } } : d,
+    );
+  // What each path derives to from the draft's root, as the server lays it out.
+  const pathLayout = usePathLayout();
+  const derivedHint = (key: string) => {
+    const derived = derivedPath(pathLayout, clusterDraft?.cluster.connection.root || "", key);
+    return derived ? `= ${derived}` : "blank = derived from Root";
+  };
+  // The paths panel shows the saved active cluster, so it appears only when editing that one.
+  const editingActive = Boolean(
+    clusterDraft && !clusterDraft.isNew && active?.project === clusterDraft.projectId && active?.cluster === clusterDraft.cluster.id,
+  );
+  const setSUs = (units: Cluster["scalable_units"]) => setCl({ scalable_units: units });
+  const setFabric = (patch: Partial<ClusterFabric>) =>
+    setClusterDraft((d) =>
+      d ? { ...d, cluster: { ...d.cluster, fabric: { ...(d.cluster.fabric ?? emptyFabric()), ...patch } } } : d,
+    );
+  const setClusterKit = (patch: Partial<ClusterClusterKit>) =>
+    setClusterDraft((d) =>
+      d ? { ...d, cluster: { ...d.cluster, clusterkit: { ...(d.cluster.clusterkit ?? emptyClusterKit()), ...patch } } } : d,
+    );
+  const setClusterKitEnv = (scope: ClusterKitEnvScope, env: Record<string, string>) =>
+    setClusterDraft((d) => {
+      if (!d) return d;
+      const ck = d.cluster.clusterkit ?? emptyClusterKit();
+      const levels = { rack: {}, multirack: {}, ...ck.env, [scope]: env };
+      return { ...d, cluster: { ...d.cluster, clusterkit: { ...ck, env: levels } } };
+    });
+  const setNcclEnv = (scope: NcclEnvScope, env: Record<string, string>) =>
+    setClusterDraft((d) =>
+      d ? { ...d, cluster: { ...d.cluster, nccl_env: { ...(d.cluster.nccl_env ?? emptyNcclEnv()), [scope]: env } } } : d,
+    );
+  // One collective's list for one span. A collective left with no variables at any span is dropped,
+  // as the backend does, so the record never carries empty entries.
+  const setCollectiveNcclEnv = (collective: string, scope: NcclEnvScope, env: Record<string, string>) =>
+    setClusterDraft((d) => {
+      if (!d) return d;
+      const nccl = d.cluster.nccl_env ?? emptyNcclEnv();
+      const collectives = { ...(nccl.collectives ?? {}) };
+      const lists = { ...emptyNcclEnv(), ...(collectives[collective] ?? {}), [scope]: env };
+      if (NCCL_ENV_SPANS.every(([s]) => Object.keys(lists[s] ?? {}).length === 0)) delete collectives[collective];
+      else collectives[collective] = { node: lists.node, rack: lists.rack, multirack: lists.multirack };
+      return { ...d, cluster: { ...d.cluster, nccl_env: { ...nccl, collectives } } };
+    });
+  // An SU id must be a slug (backend valid_id: ^[a-z0-9][a-z0-9._-]*$); derive it from the
+  // label so the operator only types a human name and the racks.
+  const suSlug = (label: string) =>
+    label.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "");
+  const clMode = clusterDraft?.cluster.rack_mapping_mode || "direct";
+  const clBcmSlurm = clusterDraft?.cluster.cluster_manager === "bcm" && clusterDraft?.cluster.scheduler === "slurm";
+  const clSUs = clusterDraft?.cluster.scalable_units || [];
+
+  /**
+   * Re-copy the shared defaults into this project's script directory.
+   *
+   * The counterpart to the per-project copy: isolation means a fix to a default script does not
+   * reach a project that was bootstrapped before it, so there has to be a way to pull one
+   * forward. Never forced from here — a file the operator edited is reported, not replaced,
+   * because discarding a site's own fix silently is worse than leaving it behind.
+   */
+  const onUpdateScripts = async (p: Project) => {
+    setError("");
+    setScriptNote("");
+    try {
+      const result = await bootstrapProjectScripts(p.id, false, p.clusters[0]?.id || "");
+      const kept =
+        result.differs_from_defaults > 0
+          ? ` ${result.differs_from_defaults} file(s) differ from the defaults and were left as they are.`
+          : "";
+      setScriptNote(`${p.name}: copied ${result.copied} file(s) into ${result.dest}.${kept}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  /**
+   * Send this release's shipped scripts to the head node.
+   *
+   * Cluster-wide, not per-project, which is why it sits in the header rather than on a
+   * project row: it writes the shared layers every project on this server composes from.
+   * Separate from "Update scripts" because that pulls a *default* forward into one
+   * project's copy, and on a head that has never had a deploy there is no default to pull.
+   */
+  const onDeployScripts = async () => {
+    setError("");
+    setScriptNote("");
+    setDeploying(true);
+    try {
+      const result = await deployScripts();
+      setScriptNote(`Sent ${result.files} shipped file(s) to ${result.dest}.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setDeploying(false);
+    }
+  };
+
+  if (wizardOpen) {
+    return (
+      <Suspense fallback={<Box sx={{ p: 4 }} />}>
+        <SetupWizard
+          onCancel={() => setWizardOpen(false)}
+          onFinished={() => {
+            setWizardOpen(false);
+            void refreshActive();
+          }}
+        />
+      </Suspense>
+    );
+  }
+
+  return (
+    <Box sx={{ maxWidth: CONTENT_MAX_WIDTH.comfortable, mx: "auto", p: 4 }}>
+      <PageHeader
+        title="Projects & Clusters"
+        description="Customer projects and their clusters: naming convention, geometry, platform, and connection. Set the active cluster to re-scope the whole app."
+        contentId="projects"
+        actions={
+          <Flex gap="2">
+            {/* The same wizard the first login runs. A second cluster is the same job as the
+                first one, and an operator who has done it once already knows this screen. */}
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<UploadCloud size={16} />}
+              disabled={deploying}
+              onClick={() => void onDeployScripts()}
+            >
+              {deploying ? "Deploying…" : "Deploy scripts to head"}
+            </Button>
+            <Button variant="outlined" size="small" startIcon={<Wand2 size={16} />} onClick={() => setWizardOpen(true)}>
+              Setup wizard
+            </Button>
+            <Button variant="contained" size="small" startIcon={<Plus size={16} />} onClick={() => setProjectDraft({ name: "", customer: "", description: "" })}>
+              New project
+            </Button>
+          </Flex>
+        }
+      />
+
+      {error && (
+        <Banner status="error" kind="inline" style={{ marginBottom: 16 }}>
+          {error}
+        </Banner>
+      )}
+
+      {scriptNote && (
+        <Banner status="success" kind="inline" style={{ marginBottom: 16 }}>
+          {scriptNote}
+        </Banner>
+      )}
+
+      {projects.length === 0 ? (
+        <Card style={{ padding: 32 }}>
+          <StatusMessage
+            size="small"
+            slotMedia={<FolderKanban />}
+            slotHeading="No projects yet"
+            slotSubheading="Create a project, then add the clusters for that customer engagement."
+          />
+        </Card>
+      ) : (
+        <Flex direction="col" gap="4">
+          {projects.map((p) => (
+            <Card key={p.id} style={{ padding: 16 }}>
+              <Flex justify="between" align="start" gap="2">
+                <Box>
+                  <Text kind="body/bold/md">{p.name}</Text>
+                  {p.customer && (
+                    <Text kind="body/regular/sm" style={{ color: "var(--text-color-secondary)", display: "block" }}>
+                      Customer: {p.customer}
+                    </Text>
+                  )}
+                  {p.description && (
+                    <Text kind="body/regular/sm" style={{ display: "block", marginTop: 4 }}>{p.description}</Text>
+                  )}
+                </Box>
+                <Flex gap="2">
+                  <Button variant="outlined" size="small" startIcon={<Pencil size={14} />} onClick={() => setProjectDraft({ id: p.id, name: p.name, customer: p.customer, description: p.description })}>
+                    Edit
+                  </Button>
+                  <Button variant="outlined" size="small" startIcon={<Plus size={14} />} onClick={() => setClusterDraft({ projectId: p.id, cluster: emptyCluster(), isNew: true, session: ++editSession.current })}>
+                    Cluster
+                  </Button>
+                  <Button variant="outlined" size="small" startIcon={<FileCode2 size={14} />} onClick={() => void onUpdateScripts(p)}>
+                    Update scripts
+                  </Button>
+                  <Button variant="outlined" color="error" size="small" startIcon={<Trash2 size={14} />} onClick={() => void onDeleteProject(p)}>
+                    Delete
+                  </Button>
+                </Flex>
+              </Flex>
+
+              {p.clusters.length === 0 ? (
+                <Text kind="body/regular/sm" style={{ color: "var(--text-color-secondary)", display: "block", marginTop: 12 }}>
+                  No clusters yet — add one to make it selectable.
+                </Text>
+              ) : (
+                <Box sx={{ mt: 2, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 1.5 }}>
+                  {p.clusters.map((c) => {
+                    const isActive = active.project === p.id && active.cluster === c.id;
+                    return (
+                      <Card key={c.id} style={{ padding: 12, border: isActive ? "1px solid var(--color-green-600, #4caf50)" : undefined }}>
+                        <Flex align="center" gap="2">
+                          <Server size={16} />
+                          <Text kind="body/bold/sm">{c.name}</Text>
+                          {isActive && (
+                            <Tag color="green" kind="solid" readOnly density="compact">active</Tag>
+                          )}
+                        </Flex>
+                        <Text kind="body/regular/sm" style={{ color: "var(--text-color-secondary)", display: "block", marginTop: 4 }}>
+                          {platformName(c.platform_id)} · {c.cluster_manager}
+                        </Text>
+                        <Flex gap="2" style={{ marginTop: 10 }} wrap="wrap">
+                          {!isActive && (
+                            <Button variant="contained" size="small" startIcon={<CheckCircle2 size={14} />} onClick={() => void setActive(p.id, c.id)}>
+                              Set active
+                            </Button>
+                          )}
+                          <Button variant="outlined" size="small" startIcon={<Pencil size={14} />} onClick={() => setClusterDraft({ projectId: p.id, cluster: { ...c, fabric: c.fabric ?? emptyFabric() }, isNew: false, session: ++editSession.current })}>
+                            Edit
+                          </Button>
+                          <Button variant="outlined" color="error" size="small" startIcon={<Trash2 size={14} />} onClick={() => void onDeleteCluster(p, c)}>
+                            Remove
+                          </Button>
+                        </Flex>
+                      </Card>
+                    );
+                  })}
+                </Box>
+              )}
+            </Card>
+          ))}
+        </Flex>
+      )}
+
+      {/* Project editor */}
+      <Modal
+        open={projectDraft !== null}
+        onOpenChange={(o) => {
+          if (!o) setProjectDraft(null);
+        }}
+        modal
+        style={{ width: "520px", maxWidth: "92vw" }}
+        slotHeading={projectDraft?.id ? "Edit project" : "New project"}
+        slotFooter={
+          <>
+            <ModalCloseButton kind="secondary">Cancel</ModalCloseButton>
+            <KuiButton kind="primary" color="brand" disabled={saving} onClick={() => void onSaveProject()}>
+              {saving ? "Saving…" : "Save"}
+            </KuiButton>
+          </>
+        }
+      >
+        <Flex direction="col" gap="3">
+          <FormField name="proj-name" slotLabel="Name">
+            <TextInput value={projectDraft?.name || ""} onValueChange={(v) => setProj({ name: v })} placeholder="e.g. Acme West" />
+          </FormField>
+          <FormField name="proj-customer" slotLabel="Customer">
+            <TextInput value={projectDraft?.customer || ""} onValueChange={(v) => setProj({ customer: v })} placeholder="e.g. Acme" />
+          </FormField>
+          <FormField name="proj-description" slotLabel="Description">
+            <TextArea value={projectDraft?.description || ""} onValueChange={(v) => setProj({ description: v })} resizeable="auto" placeholder="Optional notes about this engagement" />
+          </FormField>
+        </Flex>
+      </Modal>
+
+      {/* Cluster editor */}
+      <Modal
+        open={clusterDraft !== null}
+        onOpenChange={(o) => {
+          if (!o) setClusterDraft(null);
+        }}
+        modal
+        style={{ width: "820px", maxWidth: "94vw" }}
+        slotHeading={clusterDraft?.isNew ? "New cluster" : "Edit cluster"}
+        slotFooter={
+          <>
+            <ModalCloseButton kind="secondary">Cancel</ModalCloseButton>
+            <KuiButton kind="primary" color="brand" disabled={saving} onClick={() => void onSaveCluster()}>
+              {saving ? "Saving…" : "Save"}
+            </KuiButton>
+          </>
+        }
+      >
+        <Flex direction="col" gap="3">
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+            <FormField name="cl-name" slotLabel="Name">
+              <TextInput value={clusterDraft?.cluster.name || ""} onValueChange={(v) => setCl({ name: v })} placeholder="e.g. Pod A" />
+            </FormField>
+            <FormField name="cl-platform" slotLabel="Platform">
+              <Select
+                items={platforms.map((p) => ({ value: p.id, children: p.name }))}
+                value={clusterDraft?.cluster.platform_id || ""}
+                onValueChange={(v) => setCl({ platform_id: v })}
+                placeholder="Select"
+              />
+            </FormField>
+            <FormField name="cl-manager" slotLabel="Cluster manager">
+              <Select items={vocab?.cluster_managers || ["bcm", "maas"]} value={clusterDraft?.cluster.cluster_manager || "bcm"} onValueChange={(v) => setCl({ cluster_manager: v })} placeholder="Select" />
+            </FormField>
+            <FormField name="cl-scheduler" slotLabel="Scheduler" slotHelp="Where work runs; distinct from the cluster manager">
+              <Select items={vocab?.schedulers || ["slurm", "pythoncm", "local", "runai", "slinky", "maas"]} value={clusterDraft?.cluster.scheduler || "slurm"} onValueChange={(v) => setCl({ scheduler: v })} placeholder="Select" />
+            </FormField>
+            <FormField name="cl-siteprefix" slotLabel="Site prefix" slotHelp="Used for multirack hostname inference">
+              <TextInput value={clusterDraft?.cluster.site_prefix || ""} onValueChange={(v) => setCl({ site_prefix: v })} placeholder="optional" />
+            </FormField>
+          </Box>
+
+          <Text kind="body/bold/sm" style={{ display: "block", marginTop: 4 }}>Artifact Distribution</Text>
+          <FormField
+            name="cl-p2p"
+            slotLabel="NVIS-P2P"
+            slotHelp="Peer-to-peer container-image distribution (Dragonfly). Single-tenant: one P2P instance per cluster. When enabled, Artifact Distribution appears for this cluster."
+          >
+            <Switch
+              slotLabel="Enable P2P for this cluster"
+              checked={Boolean(clusterDraft?.cluster.p2p_enabled)}
+              onCheckedChange={(on: boolean) => setCl({ p2p_enabled: on })}
+            />
+          </FormField>
+
+          <Text kind="body/bold/sm" style={{ display: "block", marginTop: 4 }}>Naming convention</Text>
+          <FormField
+            name="cl-rackmapping"
+            slotLabel="Rack mapping"
+            slotHelp="Direct: the rack id is in the hostname (parsed by the templates below). Translate: rack/slot come from the cluster manager; with no rack id template its saved racks are listed by their own names, and the SU list below is optional for BCM with Slurm. Pool: there is no placement at all — nodes render as a flat list (GPU counts still come from the scheduler)."
+          >
+            <Select
+              items={[
+                { value: "direct", children: "Direct (rack id in hostname)" },
+                { value: "translate", children: clBcmSlurm ? "Translate (provider rack/slot)" : "Translate (provider rack + SU list)" },
+                { value: "pool", children: "Pool (no placement — flat node list)" },
+              ]}
+              value={clMode}
+              onValueChange={(v) => setCl({ rack_mapping_mode: v as Cluster["rack_mapping_mode"] })}
+              placeholder="Direct"
+            />
+          </FormField>
+          {clMode === "pool" ? (
+            <Text kind="body/regular/sm" style={{ color: "var(--text-color-secondary)", display: "block" }}>
+              Pool mode uses no naming templates: with no placement, there is nothing to parse out of
+              the hostname. Nodes render as a flat list ordered by hostname, and GPU counts come from
+              the scheduler (Slurm GRES) or an nvidia-smi sample.
+            </Text>
+          ) : (
+            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+              <FormField name="cl-rack-tpl" slotLabel="Rack id template" slotHelp={clMode === "translate" ? "Optional. Leave empty to list the cluster manager's saved racks by their own names; set NVIS_RACK_ID to decompose its rack ids into rows (e.g. [A-Z][\\d+]) or map legacy dashboard ids, and only racks it matches are shown." : "NVIS_RACK_ID"}>
+                <TextInput value={clusterDraft?.cluster.naming.rack_id_template || ""} onValueChange={(v) => setNaming({ rack_id_template: v })} />
+              </FormField>
+              {clMode === "direct" && (
+                <>
+                  <FormField name="cl-ct-tpl" slotLabel="Node/CT id template" slotHelp="NVIS_CT_ID">
+                    <TextInput value={clusterDraft?.cluster.naming.ct_id_template || ""} onValueChange={(v) => setNaming({ ct_id_template: v })} />
+                  </FormField>
+                  <FormField name="cl-nvsw-tpl" slotLabel="NVSwitch id template" slotHelp="NVIS_NVSW_ID">
+                    <TextInput value={clusterDraft?.cluster.naming.nvsw_id_template || ""} onValueChange={(v) => setNaming({ nvsw_id_template: v })} />
+                  </FormField>
+                  <FormField name="cl-joiner" slotLabel="Tray joiner">
+                    <TextInput value={clusterDraft?.cluster.naming.ct_joiner || "-ct"} onValueChange={(v) => setNaming({ ct_joiner: v })} />
+                  </FormField>
+                </>
+              )}
+            </Box>
+          )}
+
+          {clMode === "translate" && (
+            <>
+              <Text kind="body/bold/sm" style={{ display: "block", marginTop: 4 }}>Scalable Unit translation</Text>
+              <Text kind="body/regular/sm" style={{ color: "var(--text-color-secondary)", display: "block", marginTop: -4 }}>
+                One row per SU: a label and its comma-separated rack ids (the rack ids the cluster manager reports, e.g. U19, U20). {clBcmSlurm ? "Optional for BCM with Slurm; leave empty when the cluster has no SU grouping." : "Required in translate mode."}
+              </Text>
+              <Flex direction="column" gap="1.5">
+                {clSUs.map((su, i) => (
+                  <Box key={i} sx={{ display: "grid", gridTemplateColumns: "1fr 3fr 1.4fr auto", gap: 1.5, alignItems: "end" }}>
+                    <FormField name={`cl-su-label-${i}`} slotLabel={i === 0 ? "SU label" : undefined}>
+                      <TextInput
+                        value={su.label || ""}
+                        placeholder="SU19"
+                        onValueChange={(v) => {
+                          const next = clSUs.map((s, j) => (j === i ? { ...s, label: v, id: suSlug(v) || s.id } : s));
+                          setSUs(next);
+                        }}
+                      />
+                    </FormField>
+                    <FormField name={`cl-su-racks-${i}`} slotLabel={i === 0 ? "Racks (comma-separated)" : undefined}>
+                      <TextInput
+                        value={su.racks.join(", ")}
+                        placeholder="U19, U20, U21, U22, U23, U24, U25"
+                        onValueChange={(v) => {
+                          const racks = v.split(",").map((r) => r.trim()).filter(Boolean);
+                          setSUs(clSUs.map((s, j) => (j === i ? { ...s, racks } : s)));
+                        }}
+                      />
+                    </FormField>
+                    <FormField
+                      name={`cl-su-handover-${i}`}
+                      slotLabel={i === 0 ? "Handed over" : undefined}
+                      slotHelp={i === 0 ? "Leave empty while the SU is in bring-up" : undefined}
+                    >
+                      <DatePicker
+                        format="yyyy-MM-dd"
+                        placeholder="Not handed over"
+                        dismissible
+                        value={isoToDate(su.handed_over_at)}
+                        onValueChange={(d?: Date) =>
+                          setSUs(clSUs.map((s, j) => (j === i ? { ...s, handed_over_at: dateToIso(d) } : s)))
+                        }
+                      />
+                    </FormField>
+                    <KuiButton kind="secondary" size="small" onClick={() => setSUs(clSUs.filter((_, j) => j !== i))}>Remove</KuiButton>
+                  </Box>
+                ))}
+                <Box>
+                  <KuiButton
+                    kind="secondary"
+                    size="small"
+                    onClick={() => setSUs([...clSUs, { id: "", label: "", racks: [] }])}
+                  >
+                    Add SU
+                  </KuiButton>
+                </Box>
+              </Flex>
+            </>
+          )}
+
+          <Text kind="body/bold/sm" style={{ display: "block", marginTop: 4 }}>Connection</Text>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}>
+            <FormField name="cl-execmode" slotLabel="Exec mode">
+              <Select
+                items={[
+                  { value: "", children: "(default)" },
+                  { value: "local", children: "local" },
+                  { value: "ssh", children: "ssh" },
+                ]}
+                value={clusterDraft?.cluster.connection.exec_mode || ""}
+                onValueChange={(v) => setConn({ exec_mode: v })}
+                placeholder="(default)"
+              />
+            </FormField>
+            <FormField name="cl-sshhost" slotLabel="SSH host">
+              <TextInput value={clusterDraft?.cluster.connection.ssh_host || ""} onValueChange={(v) => setConn({ ssh_host: v })} />
+            </FormField>
+            <FormField name="cl-sshuser" slotLabel="SSH user">
+              <TextInput value={clusterDraft?.cluster.connection.ssh_user || ""} onValueChange={(v) => setConn({ ssh_user: v })} />
+            </FormField>
+            <FormField name="cl-sshkey" slotLabel="SSH key path">
+              <TextInput value={clusterDraft?.cluster.connection.ssh_key || ""} onValueChange={(v) => setConn({ ssh_key: v })} />
+            </FormField>
+            <Box sx={{ gridColumn: "span 2" }}>
+              <FormField
+                name="cl-root"
+                slotLabel="Root"
+                slotHelp="One folder on the cluster for everything Rack Status keeps there. Scripts, logs, workspace, bring-up and reports all derive from it; the fields below override one path each, for a site that keeps it elsewhere."
+              >
+                <TextInput
+                  value={clusterDraft?.cluster.connection.root || ""}
+                  onValueChange={(v) => setConn({ root: v })}
+                  placeholder="e.g. /home/rackstatus"
+                />
+              </FormField>
+            </Box>
+            <Box sx={{ gridColumn: "span 2" }}>
+              <FormField name="cl-remotebase" slotLabel="Scripts">
+                <TextInput
+                  value={clusterDraft?.cluster.connection.remote_base_path || ""}
+                  onValueChange={(v) => setConn({ remote_base_path: v })}
+                  placeholder={derivedHint("scripts")}
+                />
+              </FormField>
+            </Box>
+            <Box sx={{ gridColumn: "span 2" }}>
+              <FormField name="cl-logdir" slotLabel="Job logs">
+                <TextInput
+                  value={clusterDraft?.cluster.connection.log_dir || ""}
+                  onValueChange={(v) => setConn({ log_dir: v })}
+                  placeholder={derivedHint("logs")}
+                />
+              </FormField>
+            </Box>
+            <Box sx={{ gridColumn: "span 2" }}>
+              <FormField name="cl-workspace" slotLabel="Workspace" slotHelp="Toolchains and the LLMB install (workspace/llmb).">
+                <TextInput
+                  value={clusterDraft?.cluster.connection.workspace_dir || ""}
+                  onValueChange={(v) => setConn({ workspace_dir: v })}
+                  placeholder={derivedHint("workspace")}
+                />
+              </FormField>
+            </Box>
+            <Box sx={{ gridColumn: "span 2" }}>
+              <FormField name="cl-reports" slotLabel="Reports" slotHelp="Bug-report archives, NVLMapper reports and parser Excel exports.">
+                <TextInput
+                  value={clusterDraft?.cluster.connection.bug_report_dir || ""}
+                  onValueChange={(v) => setConn({ bug_report_dir: v })}
+                  placeholder={derivedHint("bug_reports")}
+                />
+              </FormField>
+            </Box>
+            <FormField
+              name="cl-bringupon"
+              slotLabel="Bring-up framework"
+              slotHelp="Whether this cluster runs the bring-up framework. Its verdicts are each node's Stage 2; without it a node passes on Stage 1 alone."
+            >
+              <Switch
+                slotLabel="Runs the bring-up framework"
+                checked={Boolean(clusterDraft?.cluster.evidence?.bringup_enabled)}
+                onCheckedChange={(on: boolean) => setEvidence({ bringup_enabled: on })}
+              />
+            </FormField>
+            <FormField
+              name="cl-stage2job"
+              slotLabel="Stage 2 bring-up job"
+              slotHelp="The bring-up job whose verdict is a node's Stage 2."
+            >
+              <TextInput
+                value={clusterDraft?.cluster.evidence?.stage2_bringup_job || ""}
+                onValueChange={(v) => setEvidence({ stage2_bringup_job: v })}
+                placeholder="blank = llm-pretrain-solo"
+              />
+            </FormField>
+            <Box sx={{ gridColumn: "span 2" }}>
+              <FormField name="cl-bringuphome" slotLabel="Bring-up home">
+                <TextInput
+                  value={clusterDraft?.cluster.evidence?.bringup_home || ""}
+                  onValueChange={(v) => setEvidence({ bringup_home: v })}
+                  placeholder={derivedHint("bringup")}
+                />
+              </FormField>
+            </Box>
+            <Box sx={{ gridColumn: "span 2" }}>
+              <FormField name="cl-healthroot" slotLabel="Health-check markers">
+                <TextInput
+                  value={clusterDraft?.cluster.evidence?.healthcheck_root || ""}
+                  onValueChange={(v) => setEvidence({ healthcheck_root: v })}
+                  placeholder={derivedHint("healthcheck")}
+                />
+              </FormField>
+            </Box>
+            <FormField
+              name="cl-sharedimages"
+              slotLabel="Image origin (P2P)"
+              slotHelp="Not under the root: P2P's origin store. No node reads it; nodes run images only from their own cache."
+            >
+              <TextInput
+                value={clusterDraft?.cluster.connection.shared_container_dir || ""}
+                onValueChange={(v) => setConn({ shared_container_dir: v })}
+                placeholder="blank = the P2P origin"
+              />
+            </FormField>
+            <FormField
+              name="cl-nodeimages"
+              slotLabel="Node image cache (P2P destination)"
+              slotHelp="Not under the root: each node's local disk, where P2P delivers images and every job runs them from."
+            >
+              <TextInput
+                value={clusterDraft?.cluster.connection.node_container_dir || ""}
+                onValueChange={(v) => setConn({ node_container_dir: v })}
+                placeholder="blank = the P2P destination"
+              />
+            </FormField>
+            {editingActive ? (
+              <Box sx={{ gridColumn: "span 2" }}>
+                <ClusterPathsPanel />
+              </Box>
+            ) : null}
+            <FormField
+              name="cl-nodesudo"
+              slotLabel="Node commands"
+              slotHelp="Service restarts and GPU resets need root on the nodes. Turn on when the SSH user is not root but has passwordless sudo there."
+            >
+              <Switch
+                slotLabel="Run with sudo -n"
+                checked={Boolean(clusterDraft?.cluster.connection.node_sudo)}
+                onCheckedChange={(on: boolean) => setConn({ node_sudo: on })}
+              />
+            </FormField>
+            <FormField
+              name="cl-nodedirect"
+              slotLabel="Reach compute nodes"
+              slotHelp="Off: through the head node. On: straight from the app server with this connection's user and key (the nodes must accept that key from the app server)."
+            >
+              <Switch
+                slotLabel="Directly from the app server"
+                checked={Boolean(clusterDraft?.cluster.connection.node_exec_direct)}
+                onCheckedChange={(on: boolean) => setConn({ node_exec_direct: on })}
+              />
+            </FormField>
+          </Box>
+
+          <Text kind="body/bold/sm" style={{ display: "block", marginTop: 4 }}>Compute fabric</Text>
+          <Text kind="body/regular/sm" style={{ color: "var(--text-color-secondary)", display: "block", marginTop: -4 }}>
+            Fabric network is the protocol the cluster's compute fabric runs; every script receives it as
+            NVIS_FABRIC_NETWORK and finds the interfaces by it. Address family and HCAs: blank = detect on each node.
+            Rail rate is the line rate each compute rail should train at; 0 = not stated, and the audits derive it
+            from the rails themselves.
+          </Text>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 2 }}>
+            <FormField name="cl-fab-scaleout" slotLabel="Fabric network">
+              <Select
+                items={[
+                  {
+                    value: "",
+                    children: platformFabricNetwork(clusterDraft?.cluster.platform_id || "")
+                      ? `Platform default (${platformFabricNetwork(clusterDraft?.cluster.platform_id || "")})`
+                      : "Platform default",
+                  },
+                  { value: "ib", children: "InfiniBand" },
+                  { value: "roce", children: "RoCE" },
+                ]}
+                value={clusterDraft?.cluster.fabric?.scaleout || ""}
+                onValueChange={(v) => setFabric({ scaleout: v })}
+                placeholder="Platform default"
+              />
+            </FormField>
+            <FormField name="cl-fab-family" slotLabel="RoCE address family">
+              <Select
+                items={[
+                  { value: "", children: "Detect" },
+                  { value: "ipv4", children: "IPv4" },
+                  { value: "ipv6", children: "IPv6" },
+                ]}
+                value={clusterDraft?.cluster.fabric?.addr_family || ""}
+                onValueChange={(v) => setFabric({ addr_family: v })}
+                placeholder="Detect"
+              />
+            </FormField>
+            <FormField name="cl-fab-hca" slotLabel="Compute HCAs">
+              <TextInput
+                value={clusterDraft?.cluster.fabric?.compute_hca || ""}
+                onValueChange={(v) => setFabric({ compute_hca: v })}
+                placeholder="Detect (e.g. roce_vf_r)"
+              />
+            </FormField>
+            <FormField name="cl-fab-rate" slotLabel="Rail rate (Gb/s)">
+              <TextInput
+                inputMode="numeric"
+                value={(clusterDraft?.cluster.fabric?.rail_rate_gbps ?? 0).toString()}
+                onValueChange={(v) => setFabric({ rail_rate_gbps: intOr(v, 0) })}
+                placeholder="0 = derive (e.g. 200)"
+              />
+            </FormField>
+            <FormField
+              name="cl-fab-plugin"
+              slotLabel="Container NCCL net plugin"
+              slotHelp="Path inside the job's container image, or none for NCCL's built-in IB/RoCE transport. Blank leaves NCCL's own choice. A host path does not exist in the container."
+            >
+              <TextInput
+                value={clusterDraft?.cluster.fabric?.net_plugin || ""}
+                onValueChange={(v) => setFabric({ net_plugin: v })}
+                placeholder="NCCL default (e.g. /opt/hpcx/nccl_spectrum-x_plugin/lib/libnccl-net-spcx.so)"
+              />
+            </FormField>
+          </Box>
+
+          <Text kind="body/bold/sm" style={{ display: "block", marginTop: 4 }}>NCCL environment</Text>
+          <Text kind="body/regular/sm" style={{ color: "var(--text-color-secondary)", display: "block", marginTop: -4 }}>
+            Variables added to every NCCL launch on this cluster (NCCL tests, NeMo, LLMB) by the span it runs over,
+            so a site&apos;s fabric tuning lives here instead of in the shared scripts. Each launch gets only its
+            span&apos;s list, and variables set in a launch&apos;s own options win. One KEY=VALUE per line.
+          </Text>
+          {clusterDraft && (
+            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}>
+              {NCCL_ENV_SPANS.map(([scope, label, help]) => (
+                <EnvListField
+                  key={`${clusterDraft.session}-${scope}`}
+                  name={`cl-nccl-${scope}`}
+                  label={label}
+                  help={help}
+                  value={clusterDraft.cluster.nccl_env?.[scope] ?? {}}
+                  onChange={(env) => setNcclEnv(scope, env)}
+                  placeholder={"NCCL_NET_PLUGIN=/path/libnccl-net-spcx.so\nNCCL_IB_DYNAMIC_FLOW=1"}
+                />
+              ))}
+            </Box>
+          )}
+          {clusterDraft && (() => {
+            const collectives = clusterDraft.cluster.nccl_env?.collectives ?? {};
+            const tuned = Object.keys(collectives);
+            const current = ncclCollective || tuned[0] || "alltoall";
+            const count = (c: string) =>
+              NCCL_ENV_SPANS.reduce((n, [s]) => n + Object.keys(collectives[c]?.[s] ?? {}).length, 0);
+            return (
+              <>
+                <Text kind="body/bold/sm" style={{ display: "block", marginTop: 4 }}>NCCL environment per collective</Text>
+                <Text kind="body/regular/sm" style={{ color: "var(--text-color-secondary)", display: "block", marginTop: -4 }}>
+                  For the direct NCCL test, which can run several collectives in one job: variables for one
+                  collective&apos;s run only, layered over the span list above. For tuning that helps one collective
+                  and hurts others (an alltoall channel cap halves allreduce). NeMo and other launches never get them.
+                </Text>
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 2 }}>
+                  <FormField
+                    name="cl-nccl-collective"
+                    slotLabel="Collective"
+                    slotHelp={tuned.length ? `With settings: ${tuned.join(", ")}` : "No collective has its own settings"}
+                  >
+                    <Select
+                      items={(vocab?.nccl_collectives ?? ["all_reduce", "alltoall"]).map((c) => ({
+                        value: c,
+                        children: count(c) ? `${c} (${count(c)})` : c,
+                      }))}
+                      value={current}
+                      onValueChange={(v) => setNcclCollective(v)}
+                      aria-label="Collective"
+                    />
+                  </FormField>
+                </Box>
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}>
+                  {NCCL_ENV_SPANS.map(([scope, label, help]) => (
+                    <EnvListField
+                      key={`${clusterDraft.session}-${current}-${scope}`}
+                      name={`cl-nccl-${current}-${scope}`}
+                      label={`${current} · ${label}`}
+                      help={help}
+                      value={collectives[current]?.[scope] ?? {}}
+                      onChange={(env) => setCollectiveNcclEnv(current, scope, env)}
+                      placeholder={"NCCL_IB_QPS_PER_CONNECTION=4\nNCCL_IB_SPLIT_DATA_ON_QPS=1"}
+                    />
+                  ))}
+                </Box>
+              </>
+            );
+          })()}
+
+          <Text kind="body/bold/sm" style={{ display: "block", marginTop: 4 }}>ClusterKit</Text>
+          <Text kind="body/regular/sm" style={{ color: "var(--text-color-secondary)", display: "block", marginTop: -4 }}>
+            Used whenever ClusterKit is launched on this cluster. No tests chosen = bandwidth and latency from host
+            memory. GPU-Direct makes the gpu_* tests run each rail from its own GPU. Multi-rack tests run when
+            ClusterKit is launched across racks, each rack a scope (none chosen = bisection_bw).
+          </Text>
+          <Box sx={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 2 }}>
+            <FormField name="cl-ck-tests" slotLabel="Test cases" slotHelp="RACK_CLUSTERKIT_TESTS">
+              <MultiSelectCombobox
+                items={vocab?.clusterkit_tests ?? []}
+                value={clusterDraft?.cluster.clusterkit?.tests ?? []}
+                onValueChange={(v) => setClusterKit({ tests: v })}
+                placeholder="Default (bw, lat)"
+                aria-label="ClusterKit test cases"
+                formatSummaryLabel={(n) => (clusterDraft?.cluster.clusterkit?.tests ?? []).slice(0, n).join(", ")}
+              />
+            </FormField>
+            <FormField name="cl-ck-gpudirect" slotLabel="GPU tests" slotHelp="RACK_CLUSTERKIT_GPUDIRECT">
+              <Switch
+                slotLabel="GPU-Direct"
+                checked={Boolean(clusterDraft?.cluster.clusterkit?.gpudirect)}
+                onCheckedChange={(on: boolean) => setClusterKit({ gpudirect: on })}
+              />
+            </FormField>
+            <FormField name="cl-ck-mr-tests" slotLabel="Multi-rack test cases" slotHelp="RACK_CLUSTERKIT_MULTIRACK_TESTS">
+              <MultiSelectCombobox
+                items={vocab?.clusterkit_tests ?? []}
+                value={clusterDraft?.cluster.clusterkit?.multirack_tests ?? []}
+                onValueChange={(v) => setClusterKit({ multirack_tests: v })}
+                placeholder="Default (bisection_bw)"
+                aria-label="ClusterKit multi-rack test cases"
+                formatSummaryLabel={(n) => (clusterDraft?.cluster.clusterkit?.multirack_tests ?? []).slice(0, n).join(", ")}
+              />
+            </FormField>
+          </Box>
+          <Text kind="body/regular/sm" style={{ color: "var(--text-color-secondary)", display: "block" }}>
+            Environment for ClusterKit jobs on this cluster, by launch level. It is applied over what the
+            launch works out for itself and forwarded to every rank, for example CUDA_MAJ=13 where the site
+            installed the CUDA 13 HPC-X. Each level gets only its own list. One KEY=VALUE per line.
+          </Text>
+          {clusterDraft && (
+            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+              {CLUSTERKIT_ENV_LEVELS.map(([scope, label, help]) => (
+                <EnvListField
+                  key={`${clusterDraft.session}-ck-${scope}`}
+                  name={`cl-ck-env-${scope}`}
+                  label={label}
+                  help={help}
+                  value={clusterDraft.cluster.clusterkit?.env?.[scope] ?? {}}
+                  onChange={(env) => setClusterKitEnv(scope, env)}
+                  placeholder={"CUDA_MAJ=13\nUCX_TLS=rc,cuda"}
+                />
+              ))}
+            </Box>
+          )}
+
+          <Text kind="body/bold/sm" style={{ display: "block", marginTop: 4 }}>Site geometry</Text>
+          <Text kind="body/regular/sm" style={{ color: "var(--text-color-secondary)", display: "block", marginTop: -4 }}>
+            0 = inherit from platform.
+          </Text>
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1.5 }}>
+            {([
+              ["pods", "Pods"],
+              ["rows_per_pod", "Rows/pod"],
+              ["racks_per_row", "Racks/row"],
+              ["trays_per_rack", "Trays/rack"],
+            ] as const).map(([key, label]) => (
+              <FormField key={key} name={`cl-geo-${key}`} slotLabel={label}>
+                <TextInput
+                  inputMode="numeric"
+                  value={(clusterDraft?.cluster.geometry[key] ?? 0).toString()}
+                  onValueChange={(v) => setCl({ geometry: { ...(clusterDraft as { cluster: Cluster }).cluster.geometry, [key]: intOr(v, 0) } })}
+                />
+              </FormField>
+            ))}
+          </Box>
+        </Flex>
+      </Modal>
+    </Box>
+  );
+}

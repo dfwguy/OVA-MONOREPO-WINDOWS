@@ -1,0 +1,38 @@
+# ---------------------------------------------------------------------------
+# Fan-out from the already-running nvis-otel-collector to the Parquet data lake.
+# Merge these keys into the existing collector config; the lake export is an
+# ADDITIONAL exporter on the logs pipeline, never a replacement for its current
+# sinks. Emits OTLP/HTTP logs in JSON encoding to the writer's /v1/logs endpoint
+# so no protobuf-OTLP stub is required in the writer image.
+#
+# The collector runs on the ObsVM next to the writer -> target loopback :9410.
+# ---------------------------------------------------------------------------
+exporters:
+  otlphttp/datalake:
+    logs_endpoint: http://127.0.0.1:9410/v1/logs
+    encoding: json
+    compression: gzip                # writer transparently gunzips json bodies
+    tls:
+      insecure: true
+    retry_on_failure:
+      enabled: true
+      max_elapsed_time: 60s          # bounded: lake drops are acceptable
+    sending_queue:
+      enabled: true
+      queue_size: 10000
+
+processors:
+  # keep host.name/node on every record so the lake can derive su/rack
+  resource/datalake:
+    attributes:
+      - key: cluster
+        value: IREN_MKZ
+        action: upsert
+
+service:
+  pipelines:
+    logs:
+      # append to the EXISTING receivers/processors of your logs pipeline;
+      # shown here as the delta to add:
+      processors: [resource/datalake]        # + your existing processors
+      exporters: [otlphttp/datalake]         # + your existing exporters

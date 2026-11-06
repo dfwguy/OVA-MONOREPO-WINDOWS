@@ -1,0 +1,109 @@
+---
+description: Frontend React component patterns — KUI-first UI framework with MUI as secondary
+globs: frontend/src/**/*.tsx,frontend/src/**/*.ts
+alwaysApply: false
+---
+
+# Frontend Conventions
+
+## KUI-First Design Philosophy
+
+NVIDIA Kaizen UI (`@nvidia/foundations-react-core`) is the **primary** UI framework. MUI is **secondary** — retained only for complex widgets with no KUI equivalent. When building new features, always reach for KUI first.
+
+Full KUI reference (components, guidelines, CSS variables): https://webassets.nvidia.com/kaizen-ui-foundations/docs/llms.txt
+See `kui-components.mdc` for the complete component catalog with KUI-to-MUI migration mappings.
+
+## KUI vs MUI Decision Table
+
+| Need | Use KUI | Do NOT use MUI |
+|------|---------|----------------|
+| Any text (body, labels, headings, titles) | `<Text kind="body/regular/md">` | `<Typography>` |
+| Page titles | `<Text kind="display/sm">` or `<Text kind="title/lg">` | `<Typography variant="h5">` |
+| Cards / content containers | `<Card>` | `<Card>` from MUI |
+| Status badges / tags | `<Tag color="green" kind="solid" readOnly density="compact">` | `<Chip>` |
+| Action buttons | `<Button kind="primary" size="small">` | `<Button>` from MUI |
+| Error/info/warning messages | `<Banner status="error">` | `<Alert>` (except inside Snackbar) |
+| Skeleton loading states | `<Skeleton>` | `<Skeleton>` from MUI |
+| Flex layout wrappers | `<Flex gap="2" align="center" wrap="wrap">` | `<Box display="flex">` |
+| Dropdown multi-select filters | `<Combobox items={[...]} multiple>` | Custom toggle buttons |
+| Dividers in content areas | `<Divider>` from KUI | `<Divider>` from MUI |
+
+### Button variants — this app is bordered-only
+
+A deliberate divergence from stock KUI guidance, for operators driving a dense cluster console:
+**every button carries a border, so nothing that is clickable can read as a caption.**
+
+| Action | Use | Renders |
+|---|---|---|
+| Primary CTA | `kind="primary" color="brand"` | solid NVIDIA green |
+| Everything else | `kind="secondary" color="neutral"` | bordered, theme text |
+| Destructive (cancel/scancel, resets, delete) | `kind="primary" color="danger"` | solid red, white text |
+
+- **Do not use `kind="tertiary"` for a standalone button.** It is intentionally borderless in KUI,
+  which is the look this app rejects.
+- **The one exception is a button nested inside another control** — e.g. the stepper chevrons in
+  `TextInput`'s `slotStart`/`slotEnd` (`LaunchOptionsDialog`). The field already draws the box, so a
+  bordered button there renders a box inside a box and stops reading as part of the input. Those
+  stay `tertiary`; say so in a comment at the call site.
+- **Always pass `color` on a destructive action.** `kind="primary"` alone falls back to the neutral
+  palette, so a Cancel button ends up visually identical to a harmless one (this is exactly what
+  `ActionCard` did until 2026-08-10).
+- Never re-create these variants in local CSS — see the header of `src/kaizen-oss.css` and
+  `docs/EXECUTION_ARCHITECTURE.md` for why a local override silently beat Kaizen's own rules.
+
+### MUI stays for (no KUI equivalent or renders better in MUI context)
+
+Table, Dialog, Tabs, Sidebar (Drawer + List), AppBar/Toolbar, TextField/Checkbox, Tooltip, IconButton, Menu/MenuItem, Snackbar + Alert (toasts), CircularProgress/LinearProgress, Paper/TableContainer. **Divider inside Drawer/AppBar** — KUI Divider renders differently in MUI shell components.
+
+### MUI Button alias pattern
+
+When a file needs both KUI Button (primary actions) and MUI Button (inside DialogActions):
+```tsx
+import MuiButton from "@mui/material/Button";
+import { Button } from "@nvidia/foundations-react-core";
+```
+
+## TypeScript & Lint
+
+- Build: `tsc -b && vite build`. All code must pass strict TypeScript.
+- MUI 9: Move `fontWeight`/`fontFamily`/`fontSize` into `sx`. Use `slotProps` not `primaryTypographyProps`.
+- `noUnusedLocals` enabled. Remove all unused imports.
+- Python lint: `ruff check`. Remove unused imports, no extraneous f-string prefixes.
+
+## Styling Rules
+
+- **KUI components**: `style` prop. Example: `style={{ color: "var(--text-color-secondary)" }}`
+- **MUI components**: `sx` prop. Example: `sx={{ display: "flex", gap: 2 }}`
+- **Colors**: NVIDIA design tokens: `--text-color-primary`, `--text-color-secondary`, `--text-color-subtle`, `--background-color-surface-base`. No hardcoded hex.
+- **Font sizes**: Minimum 14px. Never `fontSize: 12` or `variant="caption"`.
+- **Icons**: `lucide-react` exclusively.
+
+## Frontend Architecture
+
+- **Views**: SingleRackView, ClusterDashboardView, MultirackView, SlurmView, ReportsView, AnalyticsView, ToolsView, SettingsView
+- **Command tracking**: `RackCommandsStoreContext` manages ephemeral async job state (launch, poll, results) across all views. `RackCommandContext` per-rack.
+- **Validation activities**: `ValidationActivitiesTable` (in `ValidationTab` + `MultirackView`) polls durable `/api/validation-activities` — not the same as ephemeral `RackCommandsStoreContext` UUIDs. Service: `validationActivitiesService.ts`; types: `ValidationActivity` / `ActivityTask`.
+- **Hooks**: `useRackStatus` (polling /api/status), `useClusterOverview` (cluster-wide data)
+- **Lib**: `rackCommandTypes.ts`, `rackLog.ts`, `slurmHelpers.ts`, `parseSqueueStdout.ts`, `parseSinfoRStdout.ts`, `nvloomHeatmapParse.ts`
+- **Tests**: Vitest + Testing Library. Co-located `*.test.tsx` files. Run: `npm test`
+
+## Import Patterns
+
+```tsx
+// KUI — single import for multiple components
+import { Text, Card, Tag, Button, Banner, Flex, Combobox } from "@nvidia/foundations-react-core";
+
+// MUI — deep imports (one per line), aliased when needed alongside KUI
+import Dialog from "@mui/material/Dialog";
+import MuiButton from "@mui/material/Button";
+import Divider from "@mui/material/Divider";  // only inside Sidebar/Toolbar
+
+// Icons — named imports from lucide
+import { CircleCheck, Ellipsis, ArrowDownToLine } from "lucide-react";
+
+// Charts
+import { Bar, Line } from "react-chartjs-2";
+```
+
+Full KUI docs: https://webassets.nvidia.com/kaizen-ui-foundations/docs/llms.txt
+Per-component docs: `https://webassets.nvidia.com/kaizen-ui-foundations/docs/components/<Component>.txt`

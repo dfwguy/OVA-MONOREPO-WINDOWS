@@ -1,0 +1,21 @@
+stages:
+  - validate
+
+windows-control-acceptance:
+  stage: validate
+  tags:
+    - os/windows
+    - perflab-windows
+  image: mcr.microsoft.com/windows/servercore:ltsc2019
+  timeout: 45m
+  variables:
+    GIT_CONFIG_COUNT: '1'
+    GIT_CONFIG_KEY_0: core.longpaths
+    GIT_CONFIG_VALUE_0: 'true'
+  script:
+    - powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File tests/Test-WindowsControls.ps1
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - artifacts/windows-controls/

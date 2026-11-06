@@ -1,0 +1,25 @@
+[Unit]
+Description=IREN_MKZ UFM Telemetry Prometheus exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=true
+User=nvis-ufm-telemetry
+EnvironmentFile=/etc/nvis-observability/ufm-telemetry.env
+ExecStart=/usr/bin/python3 /opt/observability/iren_mkz/exporters/ufm-telemetry/ufm_telemetry_exporter.py
+Restart=always
+RestartSec=5s
+TimeoutStopSec=15s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

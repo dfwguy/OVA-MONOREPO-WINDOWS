@@ -1,0 +1,37 @@
+# Runtime and fleet-local state.
+state/
+profiles/
+inventory/
+
+# Live credentials and rendered local configuration.
+deploy/*/secrets/
+configs/manager.yaml
+*.env
+!.env.example
+
+# Upstream working clones and build caches are reproducible from release pins.
+upstream/*
+!upstream/console/
+!upstream/console/**
+upstream/console/.git/
+upstream/console/node_modules/
+upstream/console/build/
+build/client-v1.4.9-arm64-64k/
+**/target/
+**/.cargo-cache/
+
+# Download cache and generated release trees/archives.
+downloads/*.tar.gz
+release/stage/
+release/out/
+*.tar.gz
+deploy/console/artifacts/*
+!deploy/console/artifacts/NVIS-P2P-Console-2.5.1-nvis.2-static.tar.gz
+!deploy/console/artifacts/NVIS-P2P-Console-2.5.1-nvis.2-static.tar.gz.sha256
+
+# Editor and interpreter noise.
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+tests/cluster.env.test

@@ -1,0 +1,14 @@
+# On-node. LD_LIBRARY_PATH is set to the discovered libdcgm dir by install-node.sh
+# (aarch64 default /usr/lib/aarch64-linux-gnu on GB300/Grace).
+[Unit]
+Description=NVIDIA DCGM Exporter (NVIS IREN_MKZ)
+After=network-online.target nvidia-dcgm.service
+Wants=network-online.target
+[Service]
+Environment=LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu
+ExecStart=/usr/local/bin/dcgm-exporter --address=:9400 --remote-hostengine-info=localhost:5555 --collectors=/etc/dcgm-exporter/counters.csv
+Restart=always
+RestartSec=5
+User=root
+[Install]
+WantedBy=multi-user.target

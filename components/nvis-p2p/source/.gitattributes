@@ -1,0 +1,15 @@
+# Release binaries exceed normal Git hosting limits and belong in Git LFS.
+dist/core/manager filter=lfs diff=lfs merge=lfs -text
+dist/core/scheduler filter=lfs diff=lfs merge=lfs -text
+dist/client-*/dfdaemon filter=lfs diff=lfs merge=lfs -text
+dist/client-*/dfget filter=lfs diff=lfs merge=lfs -text
+dist/client-*/dfstore filter=lfs diff=lfs merge=lfs -text
+*.tar.gz filter=lfs diff=lfs merge=lfs -text
+
+*.sh text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.tsv text eol=lf
+*.py text eol=lf
+*.env.example text eol=lf

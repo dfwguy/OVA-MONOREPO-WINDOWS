@@ -1,0 +1,1002 @@
+include:
+  - project: 'ci-toolkit/ci-toolkit'
+    ref: 'stable'
+    file:
+      - .reusable_jobs/release/mono/release.yml
+      - .reusable_jobs/auto_merge/auto_merge_automated_release.yml
+      - .reusable_jobs/docker/multi/buildkit/docker_build_and_push_rc.yml
+      - .reusable_jobs/docker/multi/buildkit/docker_build_and_push.yml
+  # Must be last: overrides ci-toolkit .pipeline_post_job_hooks (drops Slack failure notifications).
+  - local: .gitlab-ci/ci-toolkit-no-slack.yml
+
+default:
+  retry:
+    max: 2
+    when:
+      - script_failure
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - scheduler_failure
+      - api_failure
+      - data_integrity_failure
+      - unknown_failure
+
+# App CI (lint / test / image verify) runs first; ci-toolkit release + JFrog push last.
+stages:
+  - lint
+  - test
+  # The backend serving a REALLY built frontend. Its own stage because it needs the bundle the `test`
+  # stage builds, and because neither unit tier can see a defect that only exists where the two meet:
+  # assets served chunked (unstyled dashboard over TLS), or an index.html naming chunks absent from
+  # assets/ (blank page, every health check green). Both have reached a demo.
+  - integration
+  - build
+  - ci_toolkit_release
+
+variables:
+  # No Slack (MR notifier + pipeline-failure hooks). Re-enable: CI_TOOLKIT_ENABLE_SLACK: "true"
+  CI_TOOLKIT_ENABLE_SLACK: "false"
+  LOG_LEVEL: "INFO"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm-cache"
+  GITLAB_RUNNER_DOCKER_TAG: "fusion-instance-k8s"
+
+  ############# AUTOMATED BADGES ###########################################
+  CI_TOOLKIT_AUTOMATED_BADGES: "['apps_release_badges.json']"
+  ##########################################################################
+  CI_TOOLKIT_MR_COMMENTER_BOT: "CI_TOOLKIT_VERSION_BOT"
+  ##########################################################################
+
+  ############# AUTOMATED DOCKER BUILD AND PUSH TO JFROG ################
+  PUSH_TO_JFROG: "true"
+  JFROG_IMAGE_PREFIX: "artifactory.nvidia.com/it-astra-docker-local"
+  JFROG_DOCKER_REGISTRY_HOSTNAME: "artifactory.nvidia.com"
+  ##########################################################################
+
+# Run lint/test/build on branch pushes and merge requests
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+
+# ─── Lint ────────────────────────────────────────────────────────────────────
+
+# Does the code import on the Python the SHIPPED IMAGE runs?
+#
+# Nothing else in this pipeline asks. `Dockerfile`'s final stage is `ubuntu:22.04`, whose `python3`
+# is **3.10**, while every job here and every developer machine is 3.12. `backend/toml_compat.py`
+# names the gap exactly: "`local-vs-ci-tree.mdc` with the image as a third tree nobody tests."
+#
+# Two defects have now shipped through it, both invisible to a green pipeline:
+#
+#   * `import tomllib` (stdlib in 3.11) — the NPI catalog import silently failed on every container
+#     deployment, and `POST /api/catalog/npi-tools/import` answered 500;
+#   * `from enum import StrEnum` (3.11) — `cli.py check` died on an air-gapped install at a
+#     customer site, before the product could report anything at all.
+#
+# Each was fixed where it was found. This asks the question that would have caught both *before*
+# they shipped, and it is cheap: `check-tracked-tree.sh` imports all ~179 backend modules in about
+# three seconds, and a module-scope import of a stdlib name that 3.10 lacks is the whole failure
+# mode. Runtime dependencies only — no dev tooling, because nothing here runs a test.
+#
+# This does not replace `python-test`. The suite still runs on 3.12, which is what the product
+# targets; this job answers the narrower question of whether the container can start.
+runtime-python-import:
+  stage: lint
+  # Pinned to the interpreter `ubuntu:22.04` provides. If the Dockerfile's base moves, this image
+  # must move with it — `test_ci_job_tooling.py` fails the build if the two disagree, because a
+  # job testing the wrong version is worse than no job: it reports safety it never checked.
+  image: python:3.10-slim
+  cache:
+    key: pip-310-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .pip-cache/
+  script:
+    - pip install -q -r backend/requirements.txt
+    - bash bin/check-tracked-tree.sh
+
+# The generated sources of truth, BUILT BEFORE ANYTHING CONSUMES THEM.
+#
+# `docs/action-vocabulary.json` is derived from the live action registry, so it goes stale the moment
+# anyone adds, removes or renames an API route — a routine change, made by people who have no reason
+# to know this file exists. Left to rot it becomes the worst kind of document: one that claims to be
+# derived from the code and is not.
+#
+# **It builds AND gates, and both halves are load-bearing.** Building makes the artifact available
+# to later stages, and running in `lint` means a stale document fails before the suite spends four
+# minutes on it. Gating is what preserves the reason the file is tracked at all: a renamed action
+# shows up as a reviewed diff in the merge request, rather than being silently regenerated inside CI
+# where nobody would notice that `rack:power` had become `rack.power:on`.
+#
+# So the failure is an instruction rather than a diagnosis: regenerate, read the diff, commit it.
+docs-build:
+  stage: lint
+  image: python:3.12-slim
+  cache:
+    key: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .pip-cache/
+  script:
+    # Only the docs dependencies: conf.py parses the version out of `version.py` rather than
+    # importing anything from `backend/`, so a docs build needs no runtime deps. That is the whole
+    # reason this is a cheap job in `lint` rather than waiting on `test`.
+    - pip install -q -r docs/requirements.txt
+    # Structure first, and it is a separate check because Sphinx cannot see it: a page whose
+    # declared Diataxis mode disagrees with its directory builds perfectly and lies to the reader.
+    - python bin/check-docs-diataxis.py
+    # -W: a warning is a broken cross-reference or a page missing from `_toc.yml`, both of which
+    # are 404s for a reader. --keep-going so one run lists every problem.
+    - sphinx-build -W --keep-going -b html docs static/docs
+    # Operators read these pages over an SSH tunnel to an air-gapped cluster, so a subresource
+    # hosted elsewhere does not degrade -- it hangs, then the page renders without it, and the
+    # only evidence is a console nobody is watching. That is how the docs shipped in a fallback
+    # font for weeks. Checks the built output, which is the only place the answer exists.
+    - python bin/check-docs-offline.py
+  artifacts:
+    paths:
+      - static/docs/
+    expire_in: 1 week
+
+sources-of-truth:
+  stage: lint
+  image: python:3.12-slim
+  cache:
+    key: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .pip-cache/
+  script:
+    # The generators import `app` to read the live registry, so they need the runtime dependencies.
+    # That is why this is its own job rather than another line in python-lint.
+    - pip install -q -r backend/requirements.txt
+    # Gate FIRST, against the tracked files, then build. The order matters: the check compares the
+    # committed document with what the registry produces, so writing first would overwrite the very
+    # thing being judged. `--check` prints a unified diff, so a contributor still sees WHICH action
+    # changed.
+    #
+    # This deliberately does NOT shell out to `git`. `python:3.12-slim` has no git binary (the
+    # runner clones in a separate helper container), so the first version of this job died with
+    # `git: command not found` and then printed "a generated source of truth is stale" — blaming
+    # the documents for a missing tool. It never passed. See `local-vs-ci-tree.mdc` §4.
+    # Both checks always run and the codes are collected, rather than `! A || ! B` — that
+    # short-circuits, so a stale vocabulary would hide a stale snapshot and the second failure
+    # would only surface on the next push. Same "report every fault at once" rule the startup
+    # gate and config preflight follow.
+    - |
+      stale=0
+      python bin/gen-action-vocabulary.py --check || stale=1
+      python bin/gen-action-snapshot.py --check || stale=1
+      python bin/gen-settings-reference.py --check || stale=1
+      if [ "$stale" -ne 0 ]; then
+        echo ""
+        echo "A generated source of truth is stale. The diff above says which, and why:"
+        echo "  a route or action was added, removed or renamed  -> vocabulary / snapshot"
+        echo "  a setting was added, renamed, or is read differently -> settings reference"
+        echo ""
+        echo "Run ALL of these locally, review the diff, and commit it. Running the one you"
+        echo "think you broke is how the next push fails on a different document:"
+        echo "    bin/gen-action-vocabulary.py"
+        echo "    bin/gen-action-snapshot.py"
+        echo "    bin/gen-settings-reference.py"
+        exit 1
+      fi
+    # Build after the gate, so a later job or a developer downloading artifacts has the document.
+    - python bin/gen-action-vocabulary.py
+    - python bin/gen-action-snapshot.py
+    - python bin/gen-settings-reference.py
+  artifacts:
+    when: always
+    paths:
+      - docs/action-vocabulary.json
+      - docs/ACTION_VOCABULARY.md
+      - docs/reference/identity/action-vocabulary.md
+      - docs/reference/configuration/settings.md
+      - backend/tests/action_snapshot.json
+
+python-lint:
+  stage: lint
+  image: python:3.12-slim
+  cache:
+    key: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .pip-cache/
+  script:
+    # Pinned on purpose. Unpinned, every ruff release can widen the default rule set under us --
+    # which is how this job sat red at ~310 findings for months while allow_failure hid it. Bump
+    # the pin deliberately, with the new findings fixed in the same commit.
+    #
+    # The pin alone was not enough: until ruff.toml existed there was no config in the repo at all,
+    # so "which rules" was answered by ruff's built-in defaults rather than by us. ruff.toml now
+    # declares it -- full PEP 8 on top of the defaults, with E501 deliberately off.
+    # Same pins as backend/requirements-dev.txt -- installed narrowly here because this job needs
+    # no runtime dependencies, so keep the two in step when bumping either.
+    - pip install -q ruff==0.16.0 pylint==4.0.7
+    # No `--exclude tests` any more: the whole of `backend/` is linted, tests included.
+    #
+    # That exclusion was the gap this job used to name, and naming it did not hold it: the
+    # comment recorded 99 findings and by the time anyone counted again there were 165. An
+    # ungated number does not stay still, because nothing makes a contributor look at it --
+    # every new test file could add violations for free and did. The 165 are fixed and the
+    # gate is on, which is the only version of this that stays fixed.
+    #
+    # Test code is not held to a lower standard than the code it checks: a test with a stale
+    # `# noqa`, an unsorted import block or a `subprocess.run` whose exit status nobody reads
+    # is a test that is harder to trust when it fails.
+    - ruff check backend/
+    # Pylint runs only for what ruff structurally cannot see: cross-module duplicate code. Config
+    # and the reasoning for every enabled/disabled check live in .pylintrc.
+    - pylint --recursive=y backend
+    - bash scripts/check_no_vault_in_git.sh
+    - bash scripts/sync_claude_rules.sh --check
+
+typescript-check:
+  stage: lint
+  image: node:24-slim
+  cache:
+    key: npm-${CI_COMMIT_REF_SLUG}
+    paths:
+      - frontend/node_modules/
+      - .npm-cache/
+  script:
+    - cd frontend
+    - npm ci --ignore-scripts
+    - npx tsc -b --noEmit
+    # Hard gate, no allow_failure: every eslint rule in the config is at zero errors as of
+    # 2026-08-04, so any error here is something this commit introduced. Warnings do not fail
+    # the job -- set-state-in-effect is deliberately a warning and eslint.config.js says why.
+    - npm run lint
+
+# The Rust CLI (`cli/`) is a separate workspace with its own toolchain. These two jobs gate it the
+# same way the Python and TypeScript jobs gate their trees: format + clippy at zero warnings in
+# `lint`, the full test suite in `test`. Both are scoped with `rules: changes` so an unrelated
+# backend/frontend commit does not pay for a Rust build; a change under `cli/` runs them.
+.cli-rust-base:
+  # Pinned to the workspace MSRV (see cli/Cargo.toml `rust-version`), so CI and a contributor's
+  # `rustup` agree on which compiler judged the code. Bump both together. 1.88 is the floor the
+  # dependency tree requires: `url` pulls `icu_*`/`idna_adapter`, whose manifests use edition2024 and
+  # need rustc 1.88 — an older image fails to *parse* them before any of our code compiles.
+  image: rust:1.88-slim-bookworm
+  cache:
+    key: cargo-${CI_COMMIT_REF_SLUG}
+    paths:
+      - cli/target/
+      - .cargo-registry/
+  variables:
+    CARGO_HOME: ${CI_PROJECT_DIR}/.cargo-registry
+  before_script:
+    # aws-lc-rs (the rustls crypto provider, shared with reqwest) builds AWS-LC from source with
+    # CMake and a C toolchain; the slim image ships neither. Install them before cargo runs, or the
+    # first build of `aws-lc-sys` fails with "cmake: not found" long after the manifests parse.
+    - apt-get update && apt-get install -y --no-install-recommends cmake build-essential perl
+  rules:
+    - changes:
+        - cli/**/*
+
+cli-rust-lint:
+  extends: .cli-rust-base
+  stage: lint
+  script:
+    - rustup component add rustfmt clippy
+    - cd cli
+    # `--check`: the job fails on unformatted code rather than reformatting it, so formatting is a
+    # gate, not a side effect. `-D warnings`: clippy findings fail the build, matching the "zero
+    # warnings" bar the TypeScript job holds.
+    - cargo fmt --all -- --check
+    - cargo clippy --all-targets -- -D warnings
+
+cli-rust-test:
+  extends: .cli-rust-base
+  stage: test
+  script:
+    - cd cli
+    - cargo test --all
+
+# ─── Test ────────────────────────────────────────────────────────────────────
+
+python-test:
+  stage: test
+  image: python:3.12-slim
+  cache:
+    key: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .pip-cache/
+  script:
+    # requirements-dev.txt pins the test tooling so this job and a contributor's laptop run the
+    # same versions. pytest/pytest-cov used to be installed unpinned here, which meant CI tracked
+    # latest and a green local run was a different claim from a green pipeline.
+    - pip install -q -r backend/requirements.txt -r backend/requirements-dev.txt
+    # `rsync`, because part of the suite shells out to `bin/bootstrap-project-scripts.sh`, which
+    # composes a project's script layers with `rsync --ignore-existing` — the flag that protects an
+    # operator's edit. `python:3.12-slim` does not ship it, so four tests failed here with exit 127
+    # while passing on every developer machine (macOS and any cluster head node have it). This is
+    # the `local-vs-ci-tree.mdc` §4 trap: the job image is not your shell.
+    #
+    # Installed rather than skipped. A skip would leave the bootstrap's layer composition — whose
+    # staging-directory ordering is subtle and has been wrong once already — untested in the only
+    # place that runs the whole suite.
+    #
+    # Same rule for `squashfs-tools` and `curl`: the image scrub (test_enroot_scrub_rootfs.py) and the
+    # node catalog refresh (test_p2p_catalog_refresh.py) run the real scripts against the real tools,
+    # and both skip where a tool is missing. On this image that skip was silent and permanent.
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends rsync squashfs-tools curl procps
+    # BEFORE the suite, because it answers a different question and answers it clearly: does the
+    # COMMITTED tree import, using only files git tracks? On 2026-08-21 an import was committed one
+    # commit before the module it named, and the suite reported it as 34 collection errors whose
+    # shared cause was one missing file. This says so in one line, and it needs the deps installed
+    # above, which is why it lives here and not in the lint job.
+    - bash bin/check-tracked-tree.sh
+    # config/rackstatus.toml.example is generated from backend/config_registry.py. A generated
+    # file nobody regenerates is worse than a hand-written one, because it claims to be derived
+    # from the code -- so this fails the build when a setting was declared without regenerating.
+    - python bin/gen-config-example.py --check
+    # The action vocabulary is NOT re-checked here: `sources-of-truth` in the lint stage builds and
+    # gates it, and a failed stage stops the pipeline before this job starts. Two places to check
+    # one thing is two places to forget when a third generator arrives.
+    # Run from the repo root so backend modules resolve repo-root assets (var/, etc.);
+    # pytest adds backend/ to sys.path via the backend/tests package.
+    # --cov-config picks up .coveragerc, which measures ALL of backend/ with branch coverage. The
+    # previous form named --cov=ai_chat --cov=workflow_engine, so the reported figure described two
+    # modules out of 136 and the gate below would have had almost nothing to check.
+    # --ignore the integration tier: it needs a built frontend this job does not have, so every case
+    # there would skip and read as a pass. `integration-test` runs it against frontend-test's bundle.
+    - python -m pytest backend/tests/ --ignore=backend/tests/integration -v --tb=short --junitxml=report-python.xml --cov --cov-config=.coveragerc --cov-report=term-missing --cov-report=json:coverage.json
+    # REQ-45: every file meets the 50% floor, or is on a list of known exceptions that may only
+    # shrink. Runs after the suite because it reads the report the suite produced.
+    - python bin/check-coverage-floor.py coverage.json
+  # The figure the Backend Coverage badge shows. .coveragerc prints it to one decimal (71.4%), so
+  # the pattern takes a fraction -- a whole-number-only pattern matched nothing and the badge read
+  # "unknown". test_ci_coverage_pattern.py holds the two together.
+  coverage: '/TOTAL.+\s(\d+(?:\.\d+)?%)/'
+  artifacts:
+    when: always
+    paths:
+      - coverage.json
+    reports:
+      junit: report-python.xml
+
+auth-benchmark:
+  stage: test
+  image: python:3.12-slim
+  # RECORDS, NEVER GATES. A runner is a noisy shared machine, so a latency assertion here would
+  # fail on unrelated commits — and a perf job that cries wolf is one somebody sets to
+  # allow_failure and then stops reading. `bin/bench-auth.py` always exits 0 by design; this
+  # `allow_failure` covers the job's own plumbing (deps, artifacts), not the numbers.
+  allow_failure: true
+  cache:
+    key: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .pip-cache/
+  script:
+    - pip install -q -r backend/requirements.txt
+    # The line to read first in the log. `srp.begin` is ~1,400x every other operation and the two
+    # SRP backends differ by ~2x, so the backend decides what the rest of the output means. It is
+    # picked by whether libssl can be dlopen'd — not by us — so a base-image bump can change it
+    # silently. `python:3.12-slim` ships libssl.so.3 while the package asks for libssl.so.1.1,
+    # which is why we expect the pure-Python fallback here; this job is how we find out when that
+    # stops being true.
+    - python -c "import srp; print('SRP backend:', srp._mod.__name__)"
+    - |
+      D=$(mktemp -d)
+      RACK_WEB_SECRET_KEY=ci-benchmark-not-a-credential \
+      NVIS_IDENTITY_FILE=$D/identity.json \
+      RACK_WEB_SIGNING_KEY_DIR=$D/oidc \
+        python bin/bench-auth.py --metrics auth-metrics.txt --json auth-bench.json
+      rm -rf "$D"
+  artifacts:
+    when: always
+    expire_in: 1 year
+    paths:
+      # The durable series. Kept a year because the value is the trend, and it carries the
+      # environment beside the numbers — a latency history whose hardware is unrecorded cannot be
+      # reasoned about later, which is the exact mistake docs/PERFORMANCE_BASELINE.md had to unpick.
+      - auth-bench.json
+    reports:
+      # GitLab diffs these against the target branch and shows the change on the merge request, so
+      # a regression is visible where it is introduced rather than in a dashboard nobody opens.
+      metrics: auth-metrics.txt
+
+frontend-test:
+  stage: test
+  image: node:24-slim
+  cache:
+    key: npm-${CI_COMMIT_REF_SLUG}
+    paths:
+      - frontend/node_modules/
+      - .npm-cache/
+  script:
+    - cd frontend
+    - npm ci --ignore-scripts
+    - npx vitest run --reporter=default --reporter=junit --outputFile=../report-frontend.xml --coverage --coverage.reporter=text-summary
+    # FR-19b / AC-15i: the built bundle must fetch nothing from the internet. Operators reach this
+    # over an SSH tunnel and some deployments are air-gapped, where an external reference does not
+    # error -- it hangs, so the page merely looks slow and a control may never render. It needs a
+    # real build: Vite inlines and rewrites, so a dependency can introduce a CDN URL that appears
+    # nowhere in our source. This was a `grep` recipe in a README, i.e. a check nobody ran, on the
+    # one axis where a regression is invisible on every developer's machine (a workstation just
+    # fetches the asset).
+    - npm run build
+    - cd .. && bash bin/check-frontend-offline.sh
+  coverage: '/Statements\s*:\s*(\d+\.?\d*%)/'
+  artifacts:
+    when: always
+    expire_in: 1 day
+    # The bundle this job already builds for the offline check, handed to `integration-test` rather
+    # than built a second time. static/spa/ is gitignored, so an artifact is the only way across.
+    paths:
+      - static/spa/
+    reports:
+      junit: report-frontend.xml
+
+# ─── Integration ─────────────────────────────────────────────────────────────
+
+# The backend, serving that bundle, with the headers a browser actually sends (Accept-Encoding: br --
+# curl sends none, never reaches Flask-Compress's streaming branch, and passed throughout the
+# chunked-asset bug). Catches what neither unit tier can; verify-deploy.sh catches a missing chunk
+# AFTER a deploy, this catches it before.
+integration-test:
+  stage: integration
+  image: python:3.12-slim
+  needs: ["frontend-test", "python-test"]
+  cache:
+    key: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .pip-cache/
+  script:
+    - pip install -q -r backend/requirements.txt -r backend/requirements-dev.txt
+    # Fail rather than skip: every case here is guarded on a built frontend, so a missing artifact
+    # would turn the job green without running anything -- how the chunking bug survived two fixes.
+    - test -f static/spa/index.html || (echo "static/spa/ artifact missing -- integration tests would silently skip" && exit 1)
+    - python -m pytest backend/tests/integration/ -v --tb=short --junitxml=report-integration.xml
+  artifacts:
+    when: always
+    reports:
+      junit: report-integration.xml
+
+# ─── Build (Kaniko verify; JFrog push is in ci_toolkit_release) ──────────────
+
+docker-build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - bin/write-build-info.sh --stamp "$(date -u +%Y%m%dT%H%M).${CI_COMMIT_SHORT_SHA}"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --no-push
+  rules:
+    # The release image build (docker-save) + JFrog push cover the release commit
+    # on main, so skip the redundant verify-only build there.
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+
+    # BLOCKING when the change touched how the image is built.
+    #
+    # This job used to be advisory in every case, which made it a gate that could not fail —
+    # and on 2026-09-14 that is exactly what happened: a new `docs-build` stage was added whose
+    # inputs were excluded by `.dockerignore`, Kaniko failed, and the pipeline still reported
+    # success. Nobody would have noticed from the pipeline; the break was found by reading the
+    # log by hand, and it would have surfaced next on **main**, where this job is skipped and
+    # the image comes from ci-toolkit's JFrog push, which is not advisory and ships the
+    # artifact customers install.
+    #
+    # Scoped to the build inputs rather than made unconditional on purpose. An image build on a
+    # shared Kaniko runner fails for reasons that have nothing to do with the commit (runner
+    # capacity, a registry timeout), and a gate that blocks unrelated work is a gate people
+    # learn to retry past. If you changed the Dockerfile or what it installs, a broken image is
+    # your change; otherwise it is information.
+    #
+    # `changes:` on a branch push compares against the previous commit, so this bites in the
+    # pipeline where the edit lands — which is the one that matters. A later commit that does
+    # not touch these files drops back to advisory, and the MR pipeline re-evaluates against
+    # the whole MR diff.
+    - if: $CI_COMMIT_BRANCH || $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - Dockerfile
+        - .dockerignore
+        - backend/requirements.txt
+        - docs/requirements.txt
+        - gunicorn.conf.py
+        - bin/write-build-info.sh
+        - frontend/package.json
+        - frontend/package-lock.json
+        # This file too: it holds the Kaniko invocation above, so a change here can break the
+        # build as surely as the Dockerfile can — and it means the gate verifies itself the
+        # moment somebody edits it, including this commit.
+        - .gitlab-ci.yml
+      allow_failure: false
+
+    # Otherwise: still runs, still visible, but does not block.
+    - if: $CI_COMMIT_BRANCH
+      allow_failure: true
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      allow_failure: true
+
+# ─── Air-gapped image bundle (docker save → downloadable .tar artifact) ─────────
+# Produces a self-contained image tarball that can be downloaded from the pipeline,
+# copied to an offline/air-gapped host, then `docker load`ed and `docker run`. The
+# k8s runners have no Docker daemon, so we use Kaniko's --tarPath (the daemonless
+# equivalent of `docker save`) instead of build-docker.sh's local `docker save`.
+#
+# Builds automatically on the release (finalize) commit — tagged with the release
+# VERSION from version.py — so the bundle ships with every release. Also available
+# on-demand (manual) on any other pipeline for ad-hoc offline images.
+docker-save:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  variables:
+    IMAGE_NAME: "nvis-rack-status"
+  script:
+    # On the release commit version.py holds the new release version; elsewhere
+    # (manual runs) fall back to the short SHA so the artifact is still unique.
+    - export VERSION=$(grep -Eo '"[0-9]+\.[0-9]+\.[0-9]+[^"]*"' version.py 2>/dev/null | head -1 | tr -d '"')
+    - export BUNDLE_TAG="${VERSION:-$CI_COMMIT_SHORT_SHA}"
+    - export IMAGE_TAR="${IMAGE_NAME}-${BUNDLE_TAG}.tar"
+    # Stamped into var/build-info.json, which is what the dashboard reports as its build. Two
+    # images from the same release commit are otherwise indistinguishable to an operator.
+    - export BUILD_STAMP="$(date -u +%Y%m%dT%H%M).${CI_COMMIT_SHORT_SHA}"
+    - bin/write-build-info.sh --stamp "${BUILD_STAMP}"
+    - echo "Building air-gapped bundle ${IMAGE_TAR} (tag ${BUNDLE_TAG}, build ${BUILD_STAMP})"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --no-push
+      --destination "${IMAGE_NAME}:${BUNDLE_TAG}"
+      --destination "${IMAGE_NAME}:latest"
+      --tarPath "${CI_PROJECT_DIR}/${IMAGE_TAR}"
+    - gzip -f "${IMAGE_TAR}"
+    - sha256sum "${IMAGE_TAR}.gz" > "${IMAGE_TAR}.gz.sha256"
+    - ls -lh "${IMAGE_TAR}.gz"
+    # Pass the resolved tag + filename to the publish job via dotenv.
+    - printf 'BUNDLE_TAG=%s\nBUNDLE_FILE=%s\n' "${BUNDLE_TAG}" "${IMAGE_TAR}.gz" > bundle.env
+    - cat bundle.env
+  artifacts:
+    name: "nvis-rack-status-image-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - "nvis-rack-status-*.tar.gz"
+      - "nvis-rack-status-*.tar.gz.sha256"
+    reports:
+      dotenv: bundle.env
+    expire_in: 2 weeks
+  rules:
+    - !reference [.rules:on_main_finalize_commit, rules]
+    - when: manual
+      allow_failure: true
+
+# ─── Publish the bundle to the Package Registry + attach to the GitLab Release ──
+# Runs on the release (finalize) commit, alongside the ci-toolkit release jobs.
+# Uploads the versioned tarball to the project's generic Package Registry (a stable,
+# permanent, version-addressed URL) and links it as an asset on the GitLab Release
+# so the air-gapped image is downloadable straight from the release page.
+release:publish-bundle:
+  stage: ci_toolkit_release
+  image:
+    name: dockerhub.nvidia.com/python:3.12
+    pull_policy: ["if-not-present", "always"]
+  tags:
+    - $GITLAB_RUNNER_DOCKER_TAG
+  variables:
+    GIT_STRATEGY: none
+  needs:
+    - job: docker-save
+      artifacts: true
+    - job: "release:finalize"
+      artifacts: false
+      optional: true
+  rules:
+    - !reference [.rules:on_main_finalize_commit, rules]
+  script:
+    # Single literal block: keeps the `JOB-TOKEN: ...` header colon out of YAML's
+    # block-sequence parser (a bare `- curl ... "X: y"` item is read as a mapping).
+    - |
+      set -e
+      test -n "${BUNDLE_TAG:-}" && test -f "${BUNDLE_FILE:-}"
+      PKG_BASE="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/nvis-rack-status-image/${BUNDLE_TAG}"
+      echo "Uploading ${BUNDLE_FILE} -> ${PKG_BASE}/"
+      curl --fail-with-body --silent --show-error --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "${BUNDLE_FILE}" "${PKG_BASE}/${BUNDLE_FILE}"
+      curl --fail-with-body --silent --show-error --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "${BUNDLE_FILE}.sha256" "${PKG_BASE}/${BUNDLE_FILE}.sha256"
+      echo "Attaching release asset link to release ${BUNDLE_TAG} (best-effort)"
+      curl --fail-with-body --silent --show-error --request POST \
+        --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+        --data-urlencode "name=${BUNDLE_FILE} (air-gapped Docker image)" \
+        --data-urlencode "url=${PKG_BASE}/${BUNDLE_FILE}" \
+        --data "link_type=package" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/${BUNDLE_TAG}/assets/links" \
+        || echo "WARN: could not attach release link (release ${BUNDLE_TAG} may not exist yet or token scope); bundle is in the Package Registry regardless."
+  after_script:
+    - !reference [.pipeline_post_job_hooks, after_script]
+
+# ─── macOS desktop: build → 3S sign → notarize → staple ────────────────────────
+#
+# DISABLED. The job is only created when `NVIS_ENABLE_MACOS_SIGNING` is "true", and even then it
+# is manual — so until someone sets that variable this contributes nothing to a pipeline. Written
+# now, while the procedure is fresh and proven, rather than reconstructed at release time.
+#
+# It is defined rather than commented out on purpose: commented YAML is never linted, drifts
+# silently, and cannot be dry-run. This form is parsed by `gitlab-ci lint` on every push.
+#
+# ── Before enabling, three things must exist ──
+#
+# 1. A **macOS runner**, tagged, with Xcode 13+ and Node 24. Not optional and not substitutable:
+#    `codesign`, `ditto`, `xcrun notarytool` and `stapler` are macOS-only, and there is no
+#    container image that can stand in — Docker on macOS is a Linux VM. See desktop/README.md.
+#    Set `MACOS_RUNNER_TAG` to that runner's tag.
+#
+# 2. **3S service-account credentials.** The interactive `nvsec` browser login used on a
+#    workstation cannot work here. Add as masked CI variables:
+#      NVSEC_SSA_CLIENT_ID, NVSEC_SSA_CLIENT_SECRET, NVSEC_SSA_SCOPE (= SIGNING_MACOS)
+#    `nvsec 3s submit` reads all three from the environment, so `sign-3s.sh` needs no changes.
+#    Requires an SSA client with the scope granted — a separate request from the signer DL.
+#
+# 3. **Apple notarization credentials.** Use an App Store Connect API key, not an app-specific
+#    password: a personal Apple ID ties every release to one person and cannot be shared with a
+#    runner. Add `APPLE_API_KEY` as a *file*-type variable (the .p8) plus `APPLE_API_KEY_ID` and
+#    `APPLE_API_ISSUER`. An App Store Connect Admin issues these.
+#
+# Everything else is already proven: `desktop/scripts/sign-3s.sh` carries the whole sequence and
+# the traps behind it, and runs identically on a workstation.
+macos-sign:
+  stage: build
+  tags:
+    - $MACOS_RUNNER_TAG
+  variables:
+    # The signed bundle is the deliverable; a shallow clone is all that is needed to build it.
+    GIT_DEPTH: "1"
+  script:
+    - cd desktop
+    - npm ci --no-audit --no-fund
+    - npm run build
+    # `--dir` only: electron-builder must NOT produce the dmg/zip yet. The .app has to be signed
+    # first, then packaged — signing a finished dmg leaves the .app inside it unsigned and
+    # invalidates the hashes already written into latest-mac.yml.
+    - npx electron-builder --mac --dir --publish never
+    - scripts/sign-3s.sh
+  artifacts:
+    name: "nvis-greenlight-macos-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - desktop/release/signed/*.zip
+      - desktop/release/latest-mac.yml
+    expire_in: 2 weeks
+  rules:
+    # Absent from the pipeline entirely unless explicitly switched on, and manual even then.
+    - if: $NVIS_ENABLE_MACOS_SIGNING == "true"
+      when: manual
+      allow_failure: true
+    - when: never
+
+# ─── Linux and Windows desktop installers ──────────────────────────────────────
+#
+# Manual, but NOT gated behind an enable-flag like macos-sign, because unlike that one these need
+# no credential and no special runner: an ordinary linux/amd64 Docker runner is the *right* place
+# to build them, and is in fact better than a workstation here.
+#
+# **Why CI is the only practical home for the Windows installer.** electron-builder finishes an
+# NSIS build by running the installer stub under Wine to generate the uninstaller. On an Apple
+# Silicon workstation that step dies inside emulation:
+#
+#   wine: dlls/ntdll/unix/virtual.c:267: anon_mmap_fixed:
+#         Assertion `!((UINT_PTR)start & host_page_mask)' failed.
+#
+# Wine requires 4 KB host pages for its fixed-address mappings and Apple Silicon's 16 KB pages
+# leak through the emulator, so the assertion fires no matter which image or emulation backend is
+# used — `wine --version` runs fine, which makes it look like a solvable configuration problem for
+# much longer than it should. On a native amd64 runner there is no emulation and no assertion.
+#
+# Both jobs pin the version through `BUILD_STAMP`. A release is ONE version across every platform,
+# and these are built on different machines at different times from the signed macOS bundle — left
+# to read the clock, each would stamp itself differently and the shared `latest/` update feed would
+# then hold three mutually inconsistent answers, each individually satisfying its own platform.
+# Pass the macOS build's stamp when adding to an existing release; leave it empty for a fresh one.
+.desktop-installer:
+  stage: build
+  # Deliberately independent of lint and test, which is not the usual shape for a build job.
+  #
+  # The desktop shell does not contain the frontend: it opens the SPA that the deployment serves
+  # over the tunnel, so `files:` in electron-builder.yml ships only out/ and package.json. A
+  # frontend lint error therefore says nothing about whether this installer is correct, and
+  # inheriting the stage gate means an unrelated eslint rule change blocks the release build —
+  # which is exactly what happened the first time these jobs existed: four react-refresh errors in
+  # a feature branch's new components made the Windows installer unbuildable, on a commit that had
+  # not touched the desktop shell at all.
+  #
+  # Manual and opt-in, so this cannot ship anything by accident.
+  needs: []
+  variables:
+    GIT_DEPTH: "1"
+    # Set when adding a platform to an existing release, e.g. 260910185147. Empty = stamp now.
+    BUILD_STAMP: ""
+  before_script:
+    - cd desktop
+    - npm ci --no-audit --no-fund
+    - npm run build
+    # A release build carries the product's version from version.py, with NO build stamp; every
+    # other build is stamped.
+    #
+    # The distinction is not cosmetic. The stamp is a semver *prerelease* identifier, so
+    # `0.3.1-260914...` ranks BELOW plain `0.3.1`. Stamp a release and electron-updater would
+    # never offer it to anyone already on `0.3.1` — the release would exist and silently reach
+    # nobody. Conversely the stamp is exactly right off the release line, where two builds of the
+    # same version on the same day must be distinguishable.
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+        APP_VERSION=$(grep -Eo '"[0-9]+\.[0-9]+\.[0-9]+[^"]*"' ../version.py | head -1 | tr -d '"')
+      else
+        APP_VERSION=$(node scripts/build-version.mjs)
+      fi
+      export APP_VERSION
+      echo "building $APP_VERSION"
+    # Passed to release:publish-desktop, which runs with GIT_STRATEGY none and so cannot read
+    # version.py for itself. Both build jobs write this key and GitLab merges the dotenv reports,
+    # so a disagreement would resolve silently to whichever landed last — that is caught one level
+    # down instead, where it is unambiguous: each platform's manifest records the version it was
+    # built with, and publish-release.sh refuses a set that does not agree.
+    - echo "DESKTOP_VERSION=$APP_VERSION" > ../desktop.env
+  artifacts:
+    expire_in: 2 weeks
+    reports:
+      dotenv: desktop.env
+  rules:
+    # Automatic on the release (finalize) commit, so installers ship with every release without
+    # anyone remembering to press a button; manual everywhere else for ad-hoc builds.
+    - !reference [.rules:on_main_finalize_commit, rules]
+    - when: manual
+      allow_failure: true
+
+desktop-linux:
+  extends: .desktop-installer
+  image: electronuserland/builder:latest
+  script:
+    - npx electron-builder --linux --x64 --publish never
+      --config.extraMetadata.version="$APP_VERSION"
+    - ls -lh release/*.AppImage release/*.deb release/*.rpm
+  artifacts:
+    name: "nvis-greenlight-linux-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - desktop/release/*.AppImage
+      - desktop/release/*.deb
+      - desktop/release/*.rpm
+      - desktop/release/latest-linux.yml
+
+# The installer is NOT Authenticode-signed, so Windows shows a SmartScreen "Windows protected your
+# PC" panel on first run. Signing also goes through 3S, but the account that signs the macOS app is
+# entitled to job type MACOS only (`nvsec 3s user-jobtypes --jobtype_specifier submit` lists one
+# row) — Windows Authenticode needs membership of its own submit group. Request that, then add a
+# signing step here mirroring desktop/scripts/sign-3s.sh.
+desktop-windows:
+  extends: .desktop-installer
+  image: electronuserland/builder:wine
+  script:
+    - npx electron-builder --win --x64 --publish never
+      --config.extraMetadata.version="$APP_VERSION"
+    - ls -lh release/*.exe
+  artifacts:
+    name: "nvis-greenlight-windows-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - desktop/release/*.exe
+      - desktop/release/latest.yml
+
+# ─── Publish the desktop installers to the Package Registry + the GitLab Release ───────────────
+#
+# **The installers never enter git, and they never need to.** `release/` is gitignored — a 100 MB
+# binary in history is a permanent tax on every clone — so the bytes travel a different path than
+# the source:
+#
+#   build job (ephemeral container)  ->  job artifacts  ->  generic Package Registry  ->  Release
+#                                        (expire in 2w)     (permanent, version-addressed)
+#
+# `needs: artifacts: true` is what hands the built files from one job to the next; this job then
+# uploads them and attaches *links* to the Release. A release asset link is a URL, not a blob, so
+# the Release page can show "Windows (x64)" while the file itself lives in the registry. Same
+# shape as release:publish-bundle above, which does this for the air-gapped Docker image.
+#
+# It runs `desktop/scripts/publish-release.sh` instead of reimplementing the upload in YAML. The
+# valuable part of that script is not the curl: it refuses manifests that disagree about the
+# version, cross-checks every payload's sha512 against the manifest that names it, and skips what
+# is already published. A second copy here would be the copy that quietly loses one of those.
+#
+# **macOS is not here, and cannot be.** Signing and notarization need `codesign`, `ditto` and
+# `notarytool`, so the .zip is produced on a workstation by `scripts/sign-3s.sh` and published by
+# running the same script by hand. It is idempotent, so doing that after this job has run adds the
+# macOS artifact and its release link without touching what is already there. Stand up a macOS
+# runner and `macos-sign` closes the gap.
+release:publish-desktop:
+  stage: ci_toolkit_release
+  image:
+    name: dockerhub.nvidia.com/python:3.12
+    pull_policy: ["if-not-present", "always"]
+  tags:
+    - $GITLAB_RUNNER_DOCKER_TAG
+  variables:
+    # The artifacts are the input; the source is not needed. This is also why the version arrives
+    # by dotenv rather than being read from version.py here.
+    GIT_STRATEGY: none
+  needs:
+    - job: desktop-linux
+      artifacts: true
+    - job: desktop-windows
+      artifacts: true
+    # Building on a red branch is fine and deliberate (see .desktop-installer); *publishing* one
+    # is not. The builds are decoupled from the test stage, so the gate belongs here instead.
+    - job: python-test
+      artifacts: false
+    - job: frontend-test
+      artifacts: false
+    - job: "release:finalize"
+      artifacts: false
+      optional: true
+  rules:
+    - !reference [.rules:on_main_finalize_commit, rules]
+  script:
+    - |
+      set -e
+      test -n "${DESKTOP_VERSION:-}"
+      echo "publishing desktop ${DESKTOP_VERSION}"
+      # The release tag is the product version: once the desktop ships with the product, the
+      # installers belong on the product's own release rather than a desktop-* tag of their own.
+      cd desktop
+      RELEASE_TAG="${DESKTOP_VERSION}" bash scripts/publish-release.sh
+
+# ─── nvrs CLI release binaries ─────────────────────────────────────────────────
+#
+# Prebuilt `nvrs` binaries, published the same way the desktop installers are: build job -> job
+# artifacts -> generic Package Registry -> Release asset links, so a binary is downloadable straight
+# from the release page and never enters git.
+#
+# Scope, deliberately: **Linux x86_64 and macOS universal only** — the two targets that build
+# *natively* on the runners this project has. The CLI's TLS provider (aws-lc-rs) builds AWS-LC from C
+# and is painful to cross-compile, so Linux/aarch64 and Windows are intentionally out until either a
+# runner of that arch exists or the provider moves to `ring` (which cross-compiles cleanly). Building
+# each target on its own architecture avoids that whole problem.
+#
+# Linux is a glibc binary built on the same bookworm base the OVA container runs, so it runs there and
+# on any comparably-recent Linux; a fully-static musl build is the natural next step once the `ring`
+# switch lands. macOS is a fat binary (arm64 + x86_64 via lipo), gated behind a mac runner exactly
+# like `macos-sign`, so it is defined and lint-checked now but never blocks a pipeline until a runner
+# is wired up.
+.cli-release-base:
+  stage: build
+  # Independent of lint/test, like the desktop installers: a release binary's correctness does not
+  # depend on an unrelated frontend/backend gate, and coupling them means an unrelated failure blocks
+  # the build. `release:publish-cli` gates on the test jobs instead, where publishing a red commit
+  # actually matters.
+  needs: []
+  variables:
+    GIT_DEPTH: "1"
+  rules:
+    # Automatic on the release (finalize) commit; manual elsewhere for ad-hoc builds (including on an
+    # MR, so the build can be verified before merge).
+    - !reference [.rules:on_main_finalize_commit, rules]
+    - when: manual
+      allow_failure: true
+
+cli-release-linux:
+  extends: .cli-release-base
+  image: rust:1.88-slim-bookworm
+  variables:
+    GIT_DEPTH: "1"
+    CARGO_HOME: ${CI_PROJECT_DIR}/.cargo-registry
+  before_script:
+    # Same toolchain the cli-rust jobs need: aws-lc-rs builds AWS-LC with cmake + a C compiler.
+    - apt-get update && apt-get install -y --no-install-recommends cmake build-essential perl
+  script:
+    # The release tag is the product version on a release commit, else the short SHA so an ad-hoc
+    # build is still uniquely addressable — the same rule the bundle and desktop jobs use.
+    - export VERSION=$(grep -Eo '"[0-9]+\.[0-9]+\.[0-9]+[^"]*"' version.py 2>/dev/null | head -1 | tr -d '"')
+    - export CLI_TAG="${VERSION:-$CI_COMMIT_SHORT_SHA}"
+    - (cd cli && cargo build --release -p nvrs)
+    - install -m 0755 cli/target/release/nvrs nvrs-linux-x86_64
+    - sha256sum nvrs-linux-x86_64 > nvrs-linux-x86_64.sha256
+    - ./nvrs-linux-x86_64 --version
+    # Hand the resolved tag to the publish job (which runs with GIT_STRATEGY none).
+    - printf 'CLI_TAG=%s\n' "${CLI_TAG}" > cli.env
+    - ls -lh nvrs-linux-x86_64
+  artifacts:
+    name: "nvrs-linux-x86_64-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - nvrs-linux-x86_64
+      - nvrs-linux-x86_64.sha256
+    reports:
+      dotenv: cli.env
+    expire_in: 2 weeks
+
+cli-release-macos:
+  extends: .cli-release-base
+  tags:
+    - $MACOS_RUNNER_TAG
+  script:
+    - export VERSION=$(grep -Eo '"[0-9]+\.[0-9]+\.[0-9]+[^"]*"' version.py 2>/dev/null | head -1 | tr -d '"')
+    - export CLI_TAG="${VERSION:-$CI_COMMIT_SHORT_SHA}"
+    - rustup target add x86_64-apple-darwin aarch64-apple-darwin
+    - cd cli
+    - cargo build --release -p nvrs --target x86_64-apple-darwin
+    - cargo build --release -p nvrs --target aarch64-apple-darwin
+    # One fat binary that runs on both Apple Silicon and Intel Macs.
+    - lipo -create -output ../nvrs-macos-universal target/x86_64-apple-darwin/release/nvrs target/aarch64-apple-darwin/release/nvrs
+    - cd ..
+    - shasum -a 256 nvrs-macos-universal > nvrs-macos-universal.sha256
+    - lipo -info nvrs-macos-universal
+  artifacts:
+    name: "nvrs-macos-universal-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - nvrs-macos-universal
+      - nvrs-macos-universal.sha256
+    expire_in: 2 weeks
+  rules:
+    # Gated like macos-sign: absent from the pipeline entirely unless a mac runner tag is set, manual
+    # even then. Defined and lint-checked now so it is ready when a runner exists.
+    - if: $MACOS_RUNNER_TAG
+      when: manual
+      allow_failure: true
+    - when: never
+
+# ─── Publish the CLI binaries to the Package Registry + attach to the GitLab Release ───────────────
+release:publish-cli:
+  stage: ci_toolkit_release
+  image:
+    name: dockerhub.nvidia.com/python:3.12
+    pull_policy: ["if-not-present", "always"]
+  tags:
+    - $GITLAB_RUNNER_DOCKER_TAG
+  variables:
+    GIT_STRATEGY: none
+  needs:
+    - job: cli-release-linux
+      artifacts: true
+    # Optional: only present when a mac runner built it.
+    - job: cli-release-macos
+      artifacts: true
+      optional: true
+    # Publishing a red commit is what the test gate guards against (the builds themselves are decoupled).
+    - job: python-test
+      artifacts: false
+    - job: cli-rust-test
+      artifacts: false
+      optional: true
+    - job: "release:finalize"
+      artifacts: false
+      optional: true
+  rules:
+    - !reference [.rules:on_main_finalize_commit, rules]
+  script:
+    - |
+      set -e
+      test -n "${CLI_TAG:-}"
+      PKG_BASE="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/nvrs-cli/${CLI_TAG}"
+      for f in nvrs-linux-x86_64 nvrs-macos-universal; do
+        [ -f "$f" ] || { echo "skip $f (not built this pipeline)"; continue; }
+        echo "Uploading $f -> ${PKG_BASE}/"
+        curl --fail-with-body --silent --show-error --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "$f" "${PKG_BASE}/$f"
+        curl --fail-with-body --silent --show-error --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "$f.sha256" "${PKG_BASE}/$f.sha256"
+        echo "Attaching release asset link to release ${CLI_TAG} (best-effort)"
+        curl --fail-with-body --silent --show-error --request POST \
+          --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          --data-urlencode "name=$f (nvrs CLI)" \
+          --data-urlencode "url=${PKG_BASE}/$f" \
+          --data "link_type=package" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/${CLI_TAG}/assets/links" \
+          || echo "WARN: could not attach release link (release ${CLI_TAG} may not exist yet or token scope); binary is in the Package Registry regardless."
+      done
+  after_script:
+    - !reference [.pipeline_post_job_hooks, after_script]
+
+# Push to NVCR (uncomment when registry is configured)
+# docker-push:
+#   stage: build
+#   image:
+#     name: gcr.io/kaniko-project/executor:debug
+#     entrypoint: [""]
+#   variables:
+#     NVCR_REGISTRY: "nvcr.io/your-org"
+#   needs: [docker-build]
+#   script:
+#     - mkdir -p /kaniko/.docker
+#     - echo "{\"auths\":{\"nvcr.io\":{\"auth\":\"$(echo -n \$oauthtoken:${NVCR_API_KEY} | base64)\"}}}" > /kaniko/.docker/config.json
+#     - /kaniko/executor
+#       --context "${CI_PROJECT_DIR}"
+#       --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+#       --destination "${NVCR_REGISTRY}/nvis-rack-status:${CI_COMMIT_SHORT_SHA}"
+#       --destination "${NVCR_REGISTRY}/nvis-rack-status:latest"
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == "main"

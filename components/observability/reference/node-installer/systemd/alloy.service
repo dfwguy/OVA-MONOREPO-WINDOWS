@@ -1,0 +1,13 @@
+# On-node. Alloy binds 127.0.0.1:12345 (self-metrics only; remote_write is outbound).
+[Unit]
+Description=Grafana Alloy (NVIS IREN_MKZ)
+After=network-online.target
+Wants=network-online.target
+[Service]
+Environment=NVIS_CLUSTER=IREN_MKZ
+ExecStart=/usr/bin/alloy run /etc/alloy/config.alloy --storage.path=/var/lib/alloy/data --server.http.listen-addr=127.0.0.1:12345 --disable-reporting
+Restart=always
+RestartSec=5
+User=root
+[Install]
+WantedBy=multi-user.target

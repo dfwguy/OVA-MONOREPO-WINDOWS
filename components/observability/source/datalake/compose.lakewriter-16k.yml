@@ -1,0 +1,82 @@
+name: nvis-16k-lakewriter
+
+services:
+  lakewriter:
+    image: python:3.11-slim
+    container_name: nvis-16k-lakewriter
+    restart: unless-stopped
+    network_mode: host
+    cpus: 4
+    mem_limit: 16g
+    working_dir: /app
+    environment:
+      CLUSTER_NAME: IREN_MKZ-16K
+      LAKE_ROOT: /lake
+      PORT: "9410"
+      FLUSH_BYTES: "67108864"
+      FLUSH_SECONDS: "60"
+      SPOOL_MAX: "53687091200"
+      MIN_FREE_BYTES: "214748364800"
+      ARTIFACT_INLINE_MAX: "1048576"
+      PYTHONPATH: /opt/pip/lib/python3.11/site-packages:/app
+      PYTHONUSERBASE: /opt/pip
+    volumes:
+      - ./:/app:ro
+      - ../lake-active:/lake
+      - lake-pip:/opt/pip
+    command: >
+      bash -lc "PYTHONUSERBASE=/opt/pip pip install --user -q -r /app/requirements.txt &&
+                PYTHONPATH=/opt/pip/lib/python3.11/site-packages:/app
+                python /app/lakewriter.py"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9410/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+
+  reconcile:
+    image: python:3.11-slim
+    container_name: nvis-16k-lake-reconcile
+    restart: unless-stopped
+    network_mode: host
+    cpus: 4
+    mem_limit: 8g
+    working_dir: /app
+    environment:
+      LAKE_ROOT: /data/lake
+      CLUSTER_NAME: IREN_MKZ-16K
+      SLURM_CONF: /cm/shared/apps/slurm/etc/slurm/slurm.conf
+      RACK_SLURM_SACCT: /cm/local/apps/slurm/25.05/bin/sacct
+      RECONCILE_SINCE: "2026-08-20"
+      RECONCILE_INTERVAL_SECONDS: "120"
+      PYTHONPATH: /opt/pip/lib/python3.11/site-packages:/app
+      PYTHONUSERBASE: /opt/pip
+    volumes:
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - /lib/x86_64-linux-gnu/libmunge.so.2:/lib/x86_64-linux-gnu/libmunge.so.2:ro
+      - /cm:/cm:ro
+      - /run/munge:/run/munge:ro
+      - /cluster:/cluster:ro
+      - ./:/app:ro
+      - ../lake-active:/data/lake
+      - lake-pip:/opt/pip
+    command: >
+      bash -lc "PYTHONUSERBASE=/opt/pip pip install --user -q -r /app/requirements.txt &&
+                PYTHONPATH=/opt/pip/lib/python3.11/site-packages:/app
+                python /app/lake_reconcile.py"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json,time; s=json.load(open('/data/lake/_state/reconcile.json')); assert s['ok'] and time.time()-s['last_success_at'] < 900"
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 180s
+
+volumes:
+  lake-pip:
+    name: nvis-16k-lake-pip

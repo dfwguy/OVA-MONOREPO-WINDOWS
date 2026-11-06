@@ -1,0 +1,27 @@
+name: nvis-victoriametrics-portable
+
+services:
+  nvis-victoria-metrics:
+    image: victoriametrics/victoria-metrics:v1.108.1
+    environment:
+      TZ: ${TZ:-America/Chicago}
+      GOMAXPROCS: "16"
+    command:
+      - --storageDataPath=/storage
+      - --retentionPeriod=7d
+      - --opentelemetry.usePrometheusNaming
+      - --memory.allowedPercent=20
+      - --maxConcurrentInserts=2
+      - --insert.maxQueueDuration=1s
+      - --search.maxConcurrentRequests=2
+      - --search.maxQueryDuration=30s
+      - --httpListenAddr=:8428
+    ports:
+      - ${VM_LISTEN_ADDRESS:-host.docker.internal}:8428:8428
+    volumes:
+      - ${VM_STORAGE_PATH:-/var/lib/nvis-observability/victoriametrics}:/storage
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    cpus: 16.0
+    mem_limit: 128g
+    restart: unless-stopped

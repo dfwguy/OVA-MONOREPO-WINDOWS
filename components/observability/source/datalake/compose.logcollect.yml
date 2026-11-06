@@ -1,0 +1,87 @@
+# =============================================================================
+# IREN_MKZ GB300 — VALIDATION LOG lane of the Parquet data lake.
+#
+# Deliberately a SEPARATE compose file from compose.datalake.yml. That file
+# contains nvis-lake-fabric, which is one of the 14 network/switch scrapers
+# HALTED in the 2026-07-25 incident. Keeping this service out of it means no
+# `docker compose -f compose.logcollect.yml up -d` can ever resurrect a halted
+# fabric poller, whatever flags are passed.
+#
+# Canonical IREN TX 16K invocation:
+#   docker compose -f compose.logcollect.yml up -d
+#
+# Reads local paths only. It never SSHes to a head node, a compute tray or a
+# switch — point RUNLOG_ROOTS at wherever the head node's logs are mounted or
+# rsynced and it starts producing the moment they appear.
+# =============================================================================
+services:
+  nvis-lake-logs:
+    image: python:3.11-slim
+    container_name: nvis-16k-lake-logs
+    restart: always
+    # host networking: reach Loki on 127.0.0.1:3100 and expose :9413 for the
+    # firehose.json scrape, exactly like nvis-lakewriter.
+    network_mode: host
+    cpus: 4
+    mem_limit: 8g
+    working_dir: /app
+    environment:
+      CLUSTER_NAME: IREN_MKZ-16K
+      LAKE_ROOT: /data/lake
+      METRICS_PORT: "9413"            # :9410 lakewriter, :9412 vmexport, :9413 here
+      # Production requirement: add newly appended validation output to the
+      # Parquet lane every 15 minutes. The collector bookmark makes each pass
+      # incremental and idempotent across restarts.
+      SCAN_INTERVAL_S: "900"
+      # Long historical NCCL blob compression must not leave an entire scan's
+      # bookmark state only in memory. Preserve progress every five minutes.
+      RUNLOG_CHECKPOINT_S: "300"
+      # Blob a file only once it has been quiet this long, so a 450 MB per-rank
+      # NCCL debug log is copied ONCE at the end of the job rather than on every
+      # scan while it grows. Line-level ingest stays incremental throughout.
+      RUNLOG_SETTLE_S: "300"
+      RUNLOG_MAX_FILE_BYTES: "4294967296"   # 4 GiB
+      RUNLOG_BLOB_GZIP: "1"           # sha256 is ALWAYS of the uncompressed bytes
+      RUNLOG_ZSTD_LEVEL: "3"
+      # One standardized shared production tree. Rack Status writes SU/rack/
+      # workload/run directories below it; this container can only read it.
+      RUNLOG_ROOTS: /logs/rackstatus
+      RUNLOG_ACTIVITY_STORE: /rack-status-data/cache/validation_activities.json
+      LOKI_URL: http://127.0.0.1:3100/loki/api/v1/push
+      LOKI_ENABLE: "1"
+      # Loki's effective per-stream ordering window is much shorter than its
+      # global retention age.  Do not replay older validation lines into Loki:
+      # they remain authoritative in Parquet/raw blobs, and skipping them here
+      # prevents a post-reboot scan from issuing millions of deterministic 400s.
+      LOKI_MAX_AGE_S: "3600"
+      LOKI_FUTURE_GRACE_S: "300"      # inside Loki's creation_grace_period
+      MIN_FREE_BYTES: "53687091200"   # 50 GiB — SKIP a scan below this, never drop
+      IB_ALIAS_JSON: /data/lake/_identity/alias.json
+      PIP_ROOT: /opt/pip
+      PYTHONPATH: /opt/pip/lib/python3.11/site-packages:/app
+      PYTHONUSERBASE: /opt/pip
+    volumes:
+      - ./:/app:ro
+      - /cluster/OVA/hlakshminara/opt/iren_mkz-16k-services/lake-active:/data/lake
+      # Sources are mounted READ-ONLY: the collector must never be able to
+      # mutate or delete a validation artifact it is archiving.
+      - /cluster/OVA/logs:/logs/rackstatus:ro
+      - rack-status-data:/rack-status-data:ro
+      - lake-pip:/opt/pip
+    command: >
+      bash -lc "PYTHONUSERBASE=/opt/pip pip install --user -q -r /app/requirements.txt &&
+                PYTHONPATH=/opt/pip/lib/python3.11/site-packages:/app
+                python /app/log_collector.py"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:9413/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  lake-pip:
+    external: true
+    name: nvis-16k-lake-pip    # shared with the active 16K lakewriter/reconciler
+  rack-status-data:
+    external: true
+    name: rack-status_rack-data

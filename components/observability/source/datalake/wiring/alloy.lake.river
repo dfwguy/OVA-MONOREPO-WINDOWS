@@ -1,0 +1,42 @@
+// ---------------------------------------------------------------------------
+// On-node Alloy fan-out to the Parquet data lake (IREN_MKZ GB300).
+// Append to each node's Alloy config ALONGSIDE the existing Loki/remote_write
+// sinks — do NOT replace them. The lake is a second, independent sink; if it is
+// slow or down, Alloy's per-endpoint WAL/queue absorbs it and the primary
+// Loki/VM path is unaffected.
+//
+// ObsVM is on-fabric, so nodes reach it directly at 192.0.2.4:9410
+// (no head-node relay needed at IREN_MKZ).
+// ---------------------------------------------------------------------------
+
+// --- Logs: second loki.write sink pointing at the lakewriter's Loki-push port.
+// Reuse whatever loki.source.*/loki.process components already feed your primary
+// Loki sink; just add this endpoint to their forward_to list, e.g.:
+//     loki.source.journal "j"  { forward_to = [loki.write.primary.receiver,
+//                                               loki.write.lake.receiver] }
+loki.write "lake" {
+  endpoint {
+    url = "http://192.0.2.4:9410/loki/api/v1/push"
+    // bounded backpressure: lake drops are acceptable (Loki has the live copy)
+    max_backoff_period = "5s"
+  }
+  external_labels = {
+    cluster = "IREN_MKZ",
+    // `node` drives lake su/rack partitioning; keep it on every stream.
+    node = env("HOSTNAME"),
+  }
+}
+
+// --- (Optional) OTLP logs path instead of / in addition to Loki-push.
+// Use this only if you emit logs via the OpenTelemetry pipeline. It posts OTLP
+// logs (JSON) to the writer's /v1/logs handler. Attach otelcol.exporter.otlphttp
+// to your otelcol.processor.batch "logs" output.
+otelcol.exporter.otlphttp "lake" {
+  client {
+    endpoint = "http://192.0.2.4:9410"   // writer appends /v1/logs
+    // request JSON encoding so the writer's stdlib json decoder can read it
+    // (no protobuf OTLP stub needed in the image).
+    encoding = "json"
+    tls { insecure = true }
+  }
+}

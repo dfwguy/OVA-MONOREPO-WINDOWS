@@ -1,0 +1,1 @@
+import{r as e}from"./apiFetch-BPiv8L49.js";var t=`/api/p2p`;function n(){return e(`${t}/settings`)}function r(n){return e(`${t}/settings`,{method:`PUT`,body:JSON.stringify(n)})}function i(){return e(`${t}/provision`,{method:`POST`,body:`{}`})}export{i as n,r,n as t};

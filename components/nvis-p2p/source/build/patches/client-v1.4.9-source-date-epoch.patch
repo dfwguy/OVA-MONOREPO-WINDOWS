@@ -1,0 +1,24 @@
+diff --git a/dragonfly-client-config/build.rs b/dragonfly-client-config/build.rs
+index d3c8a29..b8e5e79 100644
+--- a/dragonfly-client-config/build.rs
++++ b/dragonfly-client-config/build.rs
+@@ -63,10 +63,15 @@ fn main() {
+     let target = env::var("TARGET").unwrap_or_default();
+     println!("cargo:rustc-env=BUILD_PLATFORM={target}");
+ 
+-    // Set the environment variables for the build time.
+-    if let Ok(build_time) = SystemTime::now().duration_since(UNIX_EPOCH) {
+-        println!("cargo:rustc-env=BUILD_TIMESTAMP={}", build_time.as_secs());
+-    }
++    // SOURCE_DATE_EPOCH makes release binaries reproducible. Fall back to
++    // wall-clock time for ordinary developer builds.
++    println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
++    let build_timestamp = env::var("SOURCE_DATE_EPOCH")
++        .ok()
++        .and_then(|value| value.parse::<u64>().ok())
++        .or_else(|| SystemTime::now().duration_since(UNIX_EPOCH).ok().map(|time| time.as_secs()))
++        .unwrap_or_default();
++    println!("cargo:rustc-env=BUILD_TIMESTAMP={build_timestamp}");
+ 
+     // Get the commit information from git.
+     if let Some(commit) = get_commit_from_git() {

@@ -1,0 +1,31 @@
+[Unit]
+Description=NVIS head-node per-user and service resource attribution exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/observability/iren_mkz/exporters/headnode-attribution/headnode_attribution_exporter.py
+Restart=always
+RestartSec=5s
+Environment=CLUSTER_NAME=IREN_MKZ
+Environment=NODE_NAME=site-management
+Environment=NODE_ROLE=head
+Environment=ATTRIBUTION_EXPORTER_PORT=9106
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+CPUQuota=25%
+MemoryMax=256M
+
+[Install]
+WantedBy=multi-user.target

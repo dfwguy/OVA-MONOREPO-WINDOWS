@@ -1,0 +1,757 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>How catalog images reach every node &#8212; NVIS Greenlight</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/local-fonts.css?v=64a3f04a" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f6167d25" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=1657e09f"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'explanation/p2p-catalog-distribution';</script>
+
+    <link rel="icon" href="../_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Rack placement and collective performance" href="rack-placement-and-collective-performance.html" />
+    <link rel="prev" title="Active/passive and blue/green for Rack Status" href="active-passive-and-blue-green.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.1" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials — learning by doing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/distribute-your-first-image.html">Distribute your first image with NVIS-P2P</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides — getting something done</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../how-to/configure-a-deployment.html">How to configure a deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/authenticate-to-the-api.html">How to authenticate to the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/grant-a-team-access.html">How to grant a team access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/diagnose-a-refused-request.html">How to diagnose a refused request</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/add-your-own-script.html">How to add your own script and register it as a tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/use-the-terminal.html">How to use the terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/stage-observability-agents.html">How to stage the observability node-agents to a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/connect-a-pythoncm-cluster.html">How to connect a PythonCM (BCM) cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/distribute-a-catalog-image.html">How to distribute a catalog image to the fleet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/recover-p2p-peers-after-a-reimage.html">How to bring P2P peers up on new or reimaged nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/publish-the-deployment-tracker.html">How to publish the deployment tracker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/forecast-cluster-completion.html">How to forecast when the cluster finishes validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/write-a-rack-handover-report.html">How to write a rack handover report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/place-a-multirack-job.html">How to place a multi-rack job for best collective performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/list-bcm-racks-without-templates.html">How to list saved BCM racks without naming templates</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference — the machinery, described</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/configuration/settings.html">Configuration settings — every setting, generated</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/projects-and-clusters.html">Projects and clusters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/tools.html">Tool documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/actions-by-scope.html">Actions by scope — node, rack, multirack</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/identity/index.html">Identity and authorization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/actions-and-resources.html">Actions and resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/policy-schema.html">Policy schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/evaluation.html">How a decision is made</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/action-vocabulary.html">Action vocabulary — every service and action</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/p2p-catalog-distribution.html">P2P catalog distribution — components, parameters, scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/collective-settings-by-job-size.html">Collective settings by job size</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation — why it is like this</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="the-parametric-platform.html">The parametric platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-authorization-is-default-deny.html">Why authorization is default-deny</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-a-script-path-is-chosen.html">How a script path is chosen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="the-cluster-home-directory.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-cluster-paths-reach-scripts.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry-and-hostnames.html">Geometry and hostnames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="which-storage-engine.html">Which storage engine, and why</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-no-pythoncm-broker.html">Why there is no PythonCM broker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="porting-the-pythoncm-fork.html">Porting the PythonCM fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="p2p-module-integration.html">NVIS-P2P as a per-cluster capability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="active-passive-and-blue-green.html">Active/passive and blue/green (roadmap)</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">How catalog images reach every node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rack-placement-and-collective-performance.html">Rack placement and collective performance</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">How catalog images reach every node</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="how-catalog-images-reach-every-node">
+<h1>How catalog images reach every node<a class="headerlink" href="#how-catalog-images-reach-every-node" title="Link to this heading">#</a></h1>
+<div class="nvis-diataxis nvis-diataxis-explanation docutils">
+<p>Explanation — background and reasoning. No instructions.</p>
+</div>
+<p><em>Explanation — the model behind NVIS-P2P catalog distribution: what a task, a roster and a
+campaign are, why there is a fixed seed as well as a peer mesh, and why the thing that makes it
+scale is staging, not raw fan-out.</em></p>
+<p>NVIS-P2P exists to answer one question: how do you put a 10–40 GB container image on a few hundred
+GPU nodes without the origin server — a single appserver — melting under a few hundred simultaneous
+downloads. The answer is <a class="reference external" href="https://d7y.io/">Dragonfly</a>: a BitTorrent-shaped peer-to-peer fabric
+where nodes fetch an image in <em>pieces</em> from a small set of seeds <strong>and from each other</strong>, so the
+origin serves the bytes roughly once and the fleet carries the rest.</p>
+<p>Most of the vocabulary that accretes around this is orthogonal, not hierarchical. It is worth
+pinning down before anything else.</p>
+<section id="three-independent-things-catalog-task-roster-joined-by-a-campaign">
+<h2>Three independent things: catalog, task, roster — joined by a campaign<a class="headerlink" href="#three-independent-things-catalog-task-roster-joined-by-a-campaign" title="Link to this heading">#</a></h2>
+<p>There is no tree here. Four nouns, and the first three are independent inputs:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Term</p></th>
+<th class="head"><p>What it is</p></th>
+<th class="head"><p>The question it answers</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Catalog</strong></p></td>
+<td><p>The manifest of which images exist and their pinned <code class="docutils literal notranslate"><span class="pre">sha256</span></code>/size (<code class="docutils literal notranslate"><span class="pre">images.tsv</span></code>/<code class="docutils literal notranslate"><span class="pre">images.json</span></code>).</p></td>
+<td><p><em>What</em> can be distributed</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Task</strong></p></td>
+<td><p>One image’s transfer. Its identity is a task-id derived from the image’s content hash.</p></td>
+<td><p><em>The transfer itself</em></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Roster</strong></p></td>
+<td><p>A flat list of target hostnames.</p></td>
+<td><p><em>Which</em> nodes</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Campaign</strong></p></td>
+<td><p>Drive one catalog image onto one roster, tracking each node to <code class="docutils literal notranslate"><span class="pre">ready</span></code> or <code class="docutils literal notranslate"><span class="pre">deferred</span></code>.</p></td>
+<td><p><em>Make it so, and account for it</em></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A campaign is the <strong>binding</strong> of a task to a roster:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>campaign  =  task (one image, id = sha)   ×   roster (which nodes)
+</pre></div>
+</div>
+<p>Same task, different roster → a different campaign. Same roster, different task → a different
+campaign. The catalog is the shared registry both sides read from — the task gets its <code class="docutils literal notranslate"><span class="pre">sha</span></code> there,
+the roster is just names. This is a two-dimensional composition, not a cascade, and most of the
+confusion people have with the system comes from expecting a hierarchy that is not there.</p>
+<section id="a-task-is-content-addressed-and-that-has-consequences">
+<h3>A task is content-addressed, and that has consequences<a class="headerlink" href="#a-task-is-content-addressed-and-that-has-consequences" title="Link to this heading">#</a></h3>
+<p>A task’s identity is literally <code class="docutils literal notranslate"><span class="pre">nvis-p2p-sha256:&lt;sha256-of-the-image&gt;</span></code>. That single fact drives most
+of the system’s good behaviour and all of its sharp edges:</p>
+<ul class="simple">
+<li><p><strong>It unifies the swarm.</strong> Every node that pulls the same image computes the <em>same</em> task-id, so
+they all join the <em>same</em> task. That shared task <em>is</em> the swarm — it is what lets peers trade
+pieces. Without content-addressing, 500 downloads would be 500 unrelated transfers.</p></li>
+<li><p><strong>It is stable forever.</strong> The same image always produces the same id. “Re-running” a distribution
+is not a new task; it rejoins the existing one. A <em>new</em> id appears only when the <em>content</em> changes.</p></li>
+<li><p><strong>It deduplicates rather than collides.</strong> Two requests for identical bytes are not a hash
+collision to be feared; they are the same task, by design. A real collision — different content,
+same id — would require breaking SHA-256.</p></li>
+<li><p><strong>The id carries no intent.</strong> Because identity is purely content, there is no way to model “two
+independent transfers of the same bytes at different priorities.” You almost never want that, so
+it is the right trade — but it is why <code class="docutils literal notranslate"><span class="pre">--tag</span></code>/<code class="docutils literal notranslate"><span class="pre">--application</span></code> exist to namespace <em>campaign</em> intent
+without touching <em>task</em> identity.</p></li>
+</ul>
+</section>
+</section>
+<section id="seeds-and-peers-are-different-roles">
+<h2>Seeds and peers are different roles<a class="headerlink" href="#seeds-and-peers-are-different-roles" title="Link to this heading">#</a></h2>
+<p>The most common misconception is that an early-finishing node “becomes a seed.” It does not, and the
+distinction is load-bearing.</p>
+<ul class="simple">
+<li><p>A <strong>seed</strong> is one of a small, fixed set of daemons (two, on the appserver) that are <strong>registered
+with the manager</strong> and configured with <code class="docutils literal notranslate"><span class="pre">seedPeer.enable:</span> <span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">enableBackToSource:</span> <span class="pre">true</span></code>.
+Only a seed may fetch an image from the origin. It holds the whole image and serves it to peers.</p></li>
+<li><p>A <strong>peer</strong> is a compute node. It runs the same daemon but with <code class="docutils literal notranslate"><span class="pre">seedPeer.enable:</span> <span class="pre">false</span></code> and —
+critically — <strong><code class="docutils literal notranslate"><span class="pre">enableBackToSource:</span> <span class="pre">false</span></code></strong>: a peer is <em>forbidden from contacting the origin at
+all</em>. It pulls pieces from seeds and other peers, and (because <code class="docutils literal notranslate"><span class="pre">upload.disableShared:</span> <span class="pre">false</span></code>)
+serves the pieces it has to other peers.</p></li>
+</ul>
+<p>A peer feeding pieces to another peer is <strong>real, and it is how the system scales out</strong> — but it is a
+transient piece-source for one task, not a seed. The seeds are irreducible: when a brand-new image
+appears, <em>no peer has a single byte</em>, and peers are not allowed to ask the origin. Something must
+make the first pull from the origin, and that something is a seed. Remove the fixed seeds and the
+first pull has no source — the swarm never ignites. <strong>Seeds cold-start each image from the origin;
+peers scale it out across the fleet.</strong></p>
+</section>
+<section id="what-actually-makes-it-scale-staging-not-fan-out">
+<h2>What actually makes it scale: staging, not fan-out<a class="headerlink" href="#what-actually-makes-it-scale-staging-not-fan-out" title="Link to this heading">#</a></h2>
+<p>A campaign does not move bytes — the Dragonfly scheduler does. What a campaign adds is <strong>convergence
+and accounting</strong>: a ledger (<code class="docutils literal notranslate"><span class="pre">tracking.tsv</span></code>) that starts every roster node at <code class="docutils literal notranslate"><span class="pre">NEW</span></code>, a loop that
+polls each node’s real state, re-launches stragglers up to a limit, defers the unreachable, and ends
+with a partition of the roster into <code class="docutils literal notranslate"><span class="pre">ready.tsv</span></code> and <code class="docutils literal notranslate"><span class="pre">deferred.tsv</span></code>.</p>
+<p>The campaign also paces the launch — <code class="docutils literal notranslate"><span class="pre">xargs</span> <span class="pre">-P</span> <span class="pre">&lt;parallelism&gt;</span></code> throttles how many nodes it <em>starts</em>
+per poll cycle. The lesson learned the hard way on NC: firing all ~500 downloads at once with a raw
+<code class="docutils literal notranslate"><span class="pre">pdsh</span></code> fan-out <strong>corrupts the scheduler state and stalls</strong>, because a few hundred nodes announcing
+the same task simultaneously is more than two seeds and one scheduler absorb gracefully. Staging the
+launch in bounded waves lets the first wave become a piece-source for the next, so the mesh warms
+itself before the whole fleet piles on.</p>
+<p>The effect is measurable. A real staged run — 50 nodes per wave of a 9.8 GB image — produced this:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Wave</p></th>
+<th class="head"><p>Ready</p></th>
+<th class="head"><p>Seed bytes served</p></th>
+<th class="head"><p>Delivered</p></th>
+<th class="head"><p>Offload</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1 (cold)</p></td>
+<td><p>48/50</p></td>
+<td><p>29 GB</p></td>
+<td><p>471 GB</p></td>
+<td><p>16×</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>48/50</p></td>
+<td><p><strong>0 GB</strong></p></td>
+<td><p>471 GB</p></td>
+<td><p>100% peer</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>50/50</p></td>
+<td><p><strong>0 GB</strong></p></td>
+<td><p>490 GB</p></td>
+<td><p>100% peer</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>50/50</p></td>
+<td><p><strong>0 GB</strong></p></td>
+<td><p>490 GB</p></td>
+<td><p>100% peer</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>50/50</p></td>
+<td><p><strong>0 GB</strong></p></td>
+<td><p>490 GB</p></td>
+<td><p>100% peer</p></td>
+</tr>
+<tr class="row-odd"><td><p>total</p></td>
+<td><p>293</p></td>
+<td><p><strong>52 GB</strong></p></td>
+<td><p>2.88 TB</p></td>
+<td><p>~55×</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Even the cold first wave offloaded 16×, because the 50 nodes in it shared pieces among themselves.
+Once the mesh was warm, waves 2–5 delivered ~1.9 TB with the seeds serving <strong>zero bytes</strong>. The seeds
+carried under 2% of the total; the peer mesh carried the rest. That is the entire thesis, measured.</p>
+<section id="staging-by-rack-not-by-name">
+<h3>Staging by rack, not by name<a class="headerlink" href="#staging-by-rack-not-by-name" title="Link to this heading">#</a></h3>
+<p>Bounded waves warm the mesh, but <em>which</em> nodes share a wave decides where the pieces come from.
+Every peer is labelled with its SU and rack, and the scheduler ranks a parent in the same rack
+first, then the same SU, then the seeds. A roster sliced in hostname order ignores that: on NC,
+where the rack is not in the hostname, alphabetical waves of 25 touched only 7–14 racks each, and
+the last of 93 racks received its first copy in wave 53 of 58. Until then, every node in a rack
+without a holder pulled across racks or from the seeds.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">rack-staged</span></code> wave plan follows the scheduler instead. It first puts one copy in every rack —
+the only waves that need the seeds — and then grows every rack in steps. The steps matter as much
+as the seeding: if a rack’s single first holder fed its 16 rack-mates at once, that one node would
+become the rack’s bottleneck. The default ladder fills every rack to half first, so the first holder
+feeds about as many nodes as remain, and the last half pulls from half a rack of holders. A finer
+ladder (<code class="docutils literal notranslate"><span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">8,</span> <span class="pre">100%</span></code>) doubles the holders at each step, so no holder ever feeds more than one
+new node per step, at the cost of more waves. Because later stages pull inside racks, they can run
+wider waves than the seed stage without adding seed load — which is why the two are paced
+separately.</p>
+<p>On a fleet that already holds the image in most racks, seeding every rack again is wasted work —
+the first run of the plan spent its seed waves on racks that had copies, and picked a few freshly
+reimaged nodes as seeds. So the plan reads the fleet snapshot when it is fresh: holders count
+toward each rack’s rungs, a rack with a copy gets no seed, and a rack is seeded by its most proven
+peer. The gain from staging is therefore largest on a cold fleet or a set of new racks; on a warm
+fleet most of what remains is fewer waves, each with less fixed overhead.</p>
+</section>
+</section>
+<section id="the-sharp-edges-and-where-they-come-from">
+<h2>The sharp edges, and where they come from<a class="headerlink" href="#the-sharp-edges-and-where-they-come-from" title="Link to this heading">#</a></h2>
+<p>None of these are bugs; they follow from the design, and knowing them is the difference between the
+system working and mysteriously not.</p>
+<ul class="simple">
+<li><p><strong>The catalog must be synced to the nodes first, and completely.</strong> A node resolves the expected
+<code class="docutils literal notranslate"><span class="pre">sha</span></code> from its <em>local</em> catalog, and that <code class="docutils literal notranslate"><span class="pre">sha</span></code> is both the task-id (which swarm to join) and the
+verification target. Re-pin an image on the server but leave a node’s catalog stale and that node
+will pull the correct bytes and then <em>reject them</em> as a digest mismatch. An incomplete catalog push
+shows up later as a block of nodes failing verification — not as an obvious error at push time.</p></li>
+<li><p><strong>The peer-sharing window is time-boxed.</strong> A peer serves a task’s pieces only while the task lives
+in its storage (<code class="docutils literal notranslate"><span class="pre">gc.taskTTL</span></code>, about a day). After that it still has the assembled image on disk
+(so it correctly <em>skips</em> a re-run) but has GC’d the servable pieces — so a late repair of a few
+stragglers falls back to the seeds. The swarm for a given image fades after a day, which is exactly
+why the seeds must be permanent.</p></li>
+<li><p><strong>A stuck download used to hold a wave open to its timeout.</strong> The campaign polls until every node
+is <code class="docutils literal notranslate"><span class="pre">ready</span></code> or <code class="docutils literal notranslate"><span class="pre">deferred</span></code>, and a download that neither finished nor failed counted as active — on NC
+one sat on 40 of 42.5 GB, idle, for a quarter of an hour. The rollout now watches the bytes each
+download has actually written and treats one that has not moved for the stall window as stuck:
+it is stopped and relaunched (the peer keeps its pieces and the scheduler picks new parents), and
+deferred once it has used its launches. What remains is the stall window itself, which must be
+long enough to cover a slow transfer that is still moving. Re-run with <code class="docutils literal notranslate"><span class="pre">deferred.tsv</span></code> as the next
+roster to pick up what was deferred.</p></li>
+<li><p><strong>Giving up on a node has to stop the node.</strong> The same NC download outlived its wave by ten hours:
+the rollout recorded the node as deferred and moved on, dfget ignored its own six-hour timeout, and
+every later launch found the process alive and re-adopted it. Each layer now enforces its own end —
+the node kills a transfer at its download limit (an hour by default), a launch replaces a download
+older than that limit, and a wave that times out stops what it is giving up on — so no single
+layer’s failure leaves a node stuck.</p></li>
+</ul>
+</section>
+<section id="idempotency-why-re-running-is-cheap-and-correct">
+<h2>Idempotency: why re-running is cheap and correct<a class="headerlink" href="#idempotency-why-re-running-is-cheap-and-correct" title="Link to this heading">#</a></h2>
+<p>Because the task-id is stable and the node-side download guards on a receipt, a campaign is a
+<strong>converge-to-desired-state</strong> operation, not a one-shot push. <code class="docutils literal notranslate"><span class="pre">download-catalog-image.sh</span></code> checks for
+the image at the expected size with a matching receipt (or matching on-disk <code class="docutils literal notranslate"><span class="pre">sha</span></code>) and exits
+immediately if it is already there — no transfer, not even a re-hash in the receipt case. So
+re-running a campaign over a roster where most nodes are done is nearly free: the satisfied nodes
+short-circuit in milliseconds and only the missing or corrupt ones actually pull. The
+<code class="docutils literal notranslate"><span class="pre">nvis-p2p-catalog-sync</span></code> timer on each node does exactly this on a schedule — it <em>is</em> the “re-run the
+campaign forever” loop, made autonomous.</p>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Reference — <a class="reference internal" href="../reference/p2p-catalog-distribution.html"><span class="std std-doc">P2P catalog distribution: components, parameters, and scripts</span></a></p></li>
+<li><p>How-to — <a class="reference internal" href="../how-to/distribute-a-catalog-image.html"><span class="std std-doc">How to distribute a catalog image to the fleet</span></a></p></li>
+<li><p>Tutorial — <a class="reference internal" href="../tutorials/distribute-your-first-image.html"><span class="std std-doc">Distribute your first image with NVIS-P2P</span></a></p></li>
+<li><p><a class="reference internal" href="p2p-module-integration.html"><span class="std std-doc">NVIS-P2P as a per-cluster capability</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="active-passive-and-blue-green.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Active/passive and blue/green for Rack Status</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="rack-placement-and-collective-performance.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Rack placement and collective performance</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#three-independent-things-catalog-task-roster-joined-by-a-campaign">Three independent things: catalog, task, roster — joined by a campaign</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-task-is-content-addressed-and-that-has-consequences">A task is content-addressed, and that has consequences</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seeds-and-peers-are-different-roles">Seeds and peers are different roles</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-actually-makes-it-scale-staging-not-fan-out">What actually makes it scale: staging, not fan-out</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#staging-by-rack-not-by-name">Staging by rack, not by name</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-sharp-edges-and-where-they-come-from">The sharp edges, and where they come from</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#idempotency-why-re-running-is-cheap-and-correct">Idempotency: why re-running is cheap and correct</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

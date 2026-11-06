@@ -1,0 +1,301 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Current Slurm cgroup placement projected onto expected P2P host/leaf/spine design, with live HCA/switch state and an explicit observed-path coverage boundary.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "home",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "\u2302 IREN_MKZ Home",
+      "tooltip": "Back to IREN_MKZ Home",
+      "type": "link",
+      "url": "/d/iren_mkz-home?${__url_time_range}"
+    },
+    {
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "iren_mkz"
+      ],
+      "title": "IREN_MKZ Dashboards",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "description": "Current job placement and health projected onto timestamped P2P design intent. Expected and observed evidence are visually distinct.",
+      "gridPos": {
+        "h": 31,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "<style>\n#path{--bg:#050a12;--panel:#0b1624;--line:#20364d;--text:#dceeff;--muted:#7593ac;--blue:#55baff;--green:#28d878;--amber:#ffb52d;--red:#ff496a;background:radial-gradient(circle at 18% 0,#10243a,#050a12 36%);color:var(--text);font-family:Inter,Roboto,system-ui,sans-serif;padding:14px;border-radius:10px;height:100%;overflow:auto;box-sizing:border-box}#path *{box-sizing:border-box}#path a{text-decoration:none;color:inherit}.top{display:flex;align-items:center;gap:10px;margin-bottom:10px}.mark{width:11px;height:11px;border-radius:50%;background:var(--blue);box-shadow:0 0 14px var(--blue)}.title{font-size:15px;font-weight:900;letter-spacing:.13em}.sub,.fresh{font-size:9px;color:var(--muted);letter-spacing:.1em}.fresh{margin-left:auto}.contract{display:flex;gap:7px;margin-bottom:10px}.contract span{border:1px solid var(--line);border-radius:999px;padding:4px 8px;font:9px ui-monospace,monospace;color:#9cb9d0}.contract .expected{border-color:#67501e;color:#ffd06b}.job{display:none}.job[data-job=\"$jobid\"]{display:block}.job-head{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;background:linear-gradient(90deg,#102238,#09131f);padding:10px 12px;margin-bottom:8px}.job-head b{font-size:20px}.job-head small{color:var(--muted)}.badges{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}.badge{border:1px solid #29445d;border-radius:999px;padding:4px 7px;font:9px ui-monospace,monospace}.groups{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}.group{border:1px solid #29445d;background:#0c1928;border-radius:5px;padding:4px 7px;font:9px ui-monospace,monospace}.nodes{display:grid;grid-template-columns:repeat(2,minmax(420px,1fr));gap:8px}.node{border:1px solid var(--line);border-radius:8px;background:linear-gradient(155deg,#102138,#08121e);padding:9px}.node-top{display:flex;align-items:center;gap:7px;margin-bottom:7px}.node-top b{font:900 12px ui-monospace,monospace}.node-top span{margin-left:auto;color:var(--muted);font:9px ui-monospace,monospace}.paths{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}.rail{position:relative;border:1px solid #23405a;border-radius:6px;background:#091725;padding:7px;min-height:70px}.rail.ib{border-left:3px solid var(--blue)}.rail.ethernet{border-left:3px solid #9d72ff}.rail-head{display:flex;align-items:center;gap:5px;font:800 9px ui-monospace,monospace}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green)}.dot.bad{background:var(--red);box-shadow:0 0 8px var(--red)}.dot.gap{background:var(--amber);box-shadow:0 0 7px var(--amber)}.route{display:grid;grid-template-columns:auto 15px 1fr;margin-top:7px;align-items:center;font:9px ui-monospace,monospace}.arrow{color:#476985;text-align:center}.peer{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#a9d9ff}.meta{color:#66859e;font:8px ui-monospace,monospace;margin-top:4px}.actions{display:flex;gap:5px;margin-top:7px}.action{border:1px solid #2d6287;border-radius:4px;padding:4px 6px;color:#67c5ff!important;font:800 8px ui-monospace,monospace}.note{margin-top:10px;border:1px solid #5b431b;background:rgba(90,59,13,.26);color:#e3bd6d;border-radius:7px;padding:8px 10px;font-size:9px;line-height:1.5}.empty{border:1px solid #663245;background:#26101a;color:#ff9bad;border-radius:8px;padding:15px}.legend{font:8px ui-monospace,monospace;color:#5f7e97;margin-top:8px}\n@media(max-width:1200px){.nodes{grid-template-columns:1fr}}\n</style><div id=\"path\"><div class=\"top\"><span class=\"mark\"></span><div><div class=\"title\">IREN_MKZ WORKLOAD \u00b7 EXPECTED FABRIC PATH</div><div class=\"sub\">LIVE JOB + HCA + SWITCH STATE OVER P2P DESIGN INTENT</div></div><div class=\"fresh\"><a class=\"action\" href=\"/d/iren_mkz-home\">\u2302 HOME</a> \u00b7 SNAPSHOT 2026-09-22 06:37 UTC</div></div><div class=\"contract\"><span>LIVE: JOB PLACEMENT</span><span>LIVE: HCA STATE</span><span>LIVE: SWITCH REACHABILITY / INVENTORY</span><span class=\"expected\">EXPECTED: CABLE + LEAF + SPINE CANDIDATES</span><span class=\"expected\">UNAVAILABLE: OBSERVED ECMP PATH</span></div><div class=\"empty\">NO CURRENT CGROUP JOB PLACEMENT IS PUBLISHING</div><div class=\"legend\">CLICK TRAY / HCA / GPU FOR LIVE L3 EVIDENCE \u00b7 SWITCH NAMES ARE CANONICALIZED FROM P2P NODE INVENTORY \u00b7 NO EXPECTED PATH IS PRESENTED AS OBSERVED</div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "description": "Query-driven job, HCA, switch and collector evidence beneath the snapshot.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Live evidence behind the selected job path",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current HCA ports not ACTIVE on trays carrying the selected job.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "expr": "(ib_hca_port_state{cluster=\"IREN_MKZ\"} != 4) and on(node) max by(node)(cgroup_info{cluster=\"IREN_MKZ\",jobid=\"$jobid\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Selected job \u2014 exact node and HCA exceptions",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(node|rack|su|hca|Value.*)$"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value": "HCA state"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live unhealthy IB inventory endpoints in racks occupied by the selected job. These are blast-radius candidates, not proof of traversal.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "expr": "(switch_health{cluster=\"IREN_MKZ\",kind=\"ib_switch\"} == 0) and on(rack) max by(rack)(cgroup_info{cluster=\"IREN_MKZ\",jobid=\"$jobid\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Selected job racks \u2014 unhealthy IB switch candidates",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(switch|rack|kind|ip|Value.*)$"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value": "Healthy"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Collectors required to turn expected P2P paths into observed port/peer/path truth.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "expr": "up{cluster=\"IREN_MKZ\",job=~\"ib-identity|ib-lldp|ib-switch-live|ib-cable-issue|ufm|ufm-telemetry\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Observed-path telemetry coverage",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "instance": true
+            },
+            "renameByName": {
+              "Value": "Up"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "topology",
+    "workload",
+    "expected-path"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 2,
+        "name": "datasource",
+        "query": "prometheus",
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(cgroup_info{cluster=\"IREN_MKZ\",jobid!=\"\"},jobid)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Current Job",
+        "multi": false,
+        "name": "jobid",
+        "options": [],
+        "query": {
+          "query": "label_values(cgroup_info{cluster=\"IREN_MKZ\",jobid!=\"\"},jobid)",
+          "refId": "jobidQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 4,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "utc",
+  "title": "IREN_MKZ \u2014 Workload Expected Fabric Path",
+  "uid": "iren_mkz-expected-path",
+  "version": 3
+}

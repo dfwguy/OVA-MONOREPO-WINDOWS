@@ -1,0 +1,541 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "Five-minute full-fleet HCA health for triage; active validation nodes retain a one-minute fast path. Counter growth is shown by exact node and HCA so it can be correlated with switch-link evidence and job performance.",
+        "mode": "markdown"
+      },
+      "title": "Host fabric evidence",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(up{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Host nodes reporting",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 3
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(increase(ib_hca_port_xmit_wait{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]) > 0) or on() count(up{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) * 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "HCAs increasing TX wait",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 3
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(increase(ib_hca_port_xmit_discards{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]) > 0) or on() count(up{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) * 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "HCAs discarding",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 3
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count((increase(ib_hca_symbol_error{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]) + increase(ib_hca_link_downed{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]) + increase(ib_hca_out_of_buffer{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range])) > 0) or on() count(up{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}) * 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "HCA link/error signals",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Host-side evidence by exact node/HCA. Empty means zero only when the coverage card is non-zero.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 6,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_join(topk(100, sum by(node,hca)(increase(ib_hca_port_xmit_wait{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) > 0, \"endpoint\", \" \", \"node\", \"hca\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "TX wait",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_join(topk(100, sum by(node,hca)(increase(ib_hca_port_xmit_discards{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) > 0, \"endpoint\", \" \", \"node\", \"hca\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "discards",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_join(topk(100, sum by(node,hca)(increase(ib_hca_symbol_error{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) > 0, \"endpoint\", \" \", \"node\", \"hca\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "symbol errors",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_join(topk(100, sum by(node,hca)(increase(ib_hca_link_downed{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) > 0, \"endpoint\", \" \", \"node\", \"hca\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "link down",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_join(topk(100, sum by(node,hca)(increase(ib_hca_out_of_buffer{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__range]))) > 0, \"endpoint\", \" \", \"node\", \"hca\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "out of buffer",
+          "refId": "E"
+        }
+      ],
+      "title": "Exact host HCAs with counter growth",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "endpoint",
+            "mode": "outer"
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, rate(ib_hca_port_xmit_wait{job=\"node-exporter-fleet-health\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{node}} {{hca}}",
+          "refId": "A"
+        }
+      ],
+      "title": "TX wait growth rate \u2014 top HCAs",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": [
+    "IREN_MKZ",
+    "16kAIC-OVA",
+    "operator"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "includeAll": true,
+        "label": "SU",
+        "multi": true,
+        "name": "su",
+        "query": {
+          "query": "label_values(nvis_slurm_node_info, su)",
+          "refId": "su"
+        },
+        "refresh": 1,
+        "type": "query",
+        "options": [],
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        }
+      },
+      {
+        "allValue": ".*",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "includeAll": true,
+        "label": "Rack",
+        "multi": true,
+        "name": "rack",
+        "query": {
+          "query": "label_values(nvis_slurm_node_info{su=~\"$su\"}, rack)",
+          "refId": "rack"
+        },
+        "refresh": 1,
+        "type": "query",
+        "options": [],
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        }
+      },
+      {
+        "allValue": ".*",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "query": {
+          "query": "label_values(nvis_slurm_node_info{su=~\"$su\",rack=~\"$rack\"}, node)",
+          "refId": "node"
+        },
+        "refresh": 1,
+        "type": "query",
+        "options": [],
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        }
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "IREN 16kAIC-OVA \u2014 Host HCA Health",
+  "uid": "iren16k-ova-host-hca",
+  "version": 4
+}

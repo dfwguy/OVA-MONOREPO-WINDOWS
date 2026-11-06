@@ -1,0 +1,114 @@
+name: nvis-observability-16k
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: nvis16k-prometheus
+    restart: always
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.listen-address=:9090
+      - --web.enable-lifecycle
+      - --web.enable-remote-write-receiver
+    volumes:
+      - /cluster/observability/iren_mkz/prometheus:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - /var/lib/nvis-observability/prometheus-targets:/etc/prometheus/active-targets:ro
+    ports:
+      - "0.0.0.0:9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks: [nvis16k]
+    logging:
+      driver: json-file
+      options: {max-size: "50m", max-file: "5"}
+
+  loki:
+    # 3.1.0 from the handoff emits a known owned-stream ring error every 30s
+    # in single-binary mode. 3.5.12 is a pinned compatible patch release.
+    image: grafana/loki:3.5.12
+    container_name: nvis16k-loki
+    restart: always
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - /cluster/observability/iren_mkz/loki:/loki
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+    ports:
+      - "0.0.0.0:3100:3100"
+    networks: [nvis16k]
+    logging:
+      driver: json-file
+      options: {max-size: "50m", max-file: "5"}
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    container_name: nvis16k-grafana
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-nvis}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:?set in /etc/nvis-observability/core.env}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_DEFAULT_THEME: dark
+      GF_PANELS_DISABLE_SANITIZE_HTML: "true"
+      GF_SECURITY_CONTENT_SECURITY_POLICY: "false"
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      # Infinity 4.x requires Grafana >=11.6.11 and imports react/jsx-runtime.
+      # This stack is Grafana 11.1.4, so keep the last tested compatible line.
+      GF_INSTALL_PLUGINS: ${GF_INSTALL_PLUGINS:-https://github.com/grafana/grafana-infinity-datasource/releases/download/v3.6.0/yesoreyeram-infinity-datasource-3.6.0.linux_amd64.zip;yesoreyeram-infinity-datasource}
+      NVIS_CLUSTER_NAME: ${CLUSTER_NAME:-IREN_MKZ}
+      NVIS_DGX_FLAVOR: ${DGX_FLAVOR:-GB300}
+    volumes:
+      - /cluster/observability/iren_mkz/grafana:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+      - ./grafana/dashboards-iren_mkz:/etc/grafana/dashboards-iren_mkz:ro
+    ports:
+      - "0.0.0.0:3001:3000"
+      - "0.0.0.0:3002:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - prometheus
+      - loki
+    networks: [nvis16k]
+    logging:
+      driver: json-file
+      options: {max-size: "50m", max-file: "5"}
+
+  alloy:
+    image: grafana/alloy:v1.5.1
+    container_name: nvis16k-alloy
+    restart: always
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+    environment:
+      CLUSTER_NAME: ${CLUSTER_NAME:-IREN_MKZ}
+      VM_REMOTE_WRITE_URL: http://host.docker.internal:8428/api/v1/write
+      LOKI_PUSH_URL: http://loki:3100/loki/api/v1/push
+    volumes:
+      - /cluster/observability/iren_mkz/alloy:/var/lib/alloy/data
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+    ports:
+      - "0.0.0.0:12345:12345"
+      - "0.0.0.0:9099:9099"
+      - "0.0.0.0:9098:9098"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - loki
+    networks: [nvis16k]
+    logging:
+      driver: json-file
+      options: {max-size: "50m", max-file: "5"}
+
+networks:
+  nvis16k:
+    name: nvis-observability-16k
+    driver: bridge

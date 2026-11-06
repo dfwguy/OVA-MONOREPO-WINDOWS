@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 60s
+  evaluation_interval: 60s
+  external_labels: {cluster: IREN_MKZ}
+scrape_configs:
+  - job_name: iren-core
+    static_configs:
+      - targets: ["prometheus:9090", "victoriametrics:8428", "loki:3100", "grafana:3000", "alloy:12345"]
+  - job_name: node-exporter
+    file_sd_configs: [{files: ["/etc/prometheus/targets/node.json"]}]
+  - job_name: dcgm-exporter
+    honor_timestamps: false
+    sample_limit: 2000
+    file_sd_configs: [{files: ["/etc/prometheus/targets/dcgm.json"]}]
+  - job_name: cgroup-exporter
+    file_sd_configs: [{files: ["/etc/prometheus/targets/cgroup.json"]}]
+remote_write:
+  - url: http://victoriametrics:8428/api/v1/write

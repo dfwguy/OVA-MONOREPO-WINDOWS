@@ -1,0 +1,1714 @@
+{
+  "description": "Live 16K node readiness view. The authoritative expected topology is /tmp/val.txt: 3,978 nodes across 14 Super Units (SU4 has 13 active racks; d20, d23, and d24 are excluded). Green means node-exporter reachable; gray means no target has published a value.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "external link",
+      "includeTimeRange": true,
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "Open Live Topology",
+      "type": "link",
+      "url": "/d/nvis-live-topology-v2/"
+    },
+    {
+      "icon": "external link",
+      "includeTimeRange": true,
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "Open Node Deep Dive",
+      "type": "link",
+      "url": "/d/nvis-node-deep-dive/"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "<div style='padding:14px 18px;border-left:4px solid #76B900;background:#181B1F;border-radius:3px'><div style='font-size:20px;font-weight:600;color:#D8D9DA;letter-spacing:.3px'>Kishore Node View</div><div style='font-size:13px;color:#A7ABB0;margin-top:5px'>Authoritative topology: 3,978 nodes from val.txt \u00b7 SU1\u2013SU14 \u00b7 16 racks per SU except SU4 (13) \u00b7 18 nodes per rack. Green = node exporter reachable; gray = no data. Refreshes every 30 seconds.</div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=~\"$su\",node!~\"example50-dh02-d(20|23|24)-.*\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Node exporter reachable",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "No Slurm node-state metric is currently exported to VictoriaMetrics; this is intentionally shown as unavailable rather than treated as a node failure.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "dark-gray",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "noValue": "NOT EXPORTED",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-gray",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 3
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "max(slurm_node_up{su=~\"$su\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Slurm node signal",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Unavailable until the Slurm node-state exporter is enabled; this is not used to colour node reachability.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "dark-gray",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "noValue": "NOT EXPORTED",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-gray",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 3
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "max(slurm_node_state{state=~\"down|drain|drained|draining|fail|failing|maint|unknown\",su=~\"$su\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Slurm unavailable / drained",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "The bounded BMC ping sweep has not been enabled in VictoriaMetrics. This is intentionally not inferred from node-exporter reachability.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "dark-gray",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "noValue": "NOT EXPORTED",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-gray",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 3
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "max(nvis_bmc_ping_up{su=~\"$su\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "BMC ping signal",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 10,
+      "panels": [],
+      "title": "Super Units \u2014 healthy nodes / expected (288 each; SU4 234)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU1. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 0,
+        "y": 8
+      },
+      "id": 11,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU1",
+          "url": "/d/kishore-node-view/?var-su=SU1"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU1\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU1",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU2. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 3,
+        "y": 8
+      },
+      "id": 12,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU2",
+          "url": "/d/kishore-node-view/?var-su=SU2"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU2\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU2",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU3. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 6,
+        "y": 8
+      },
+      "id": 13,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU3",
+          "url": "/d/kishore-node-view/?var-su=SU3"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU3\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU3",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU4. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 9,
+        "y": 8
+      },
+      "id": 14,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU4",
+          "url": "/d/kishore-node-view/?var-su=SU4"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU4\",node!~\"example50-dh02-d(20|23|24)-.*\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU4",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU5. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 12,
+        "y": 8
+      },
+      "id": 15,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU5",
+          "url": "/d/kishore-node-view/?var-su=SU5"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU5\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU5",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU6. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 15,
+        "y": 8
+      },
+      "id": 16,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU6",
+          "url": "/d/kishore-node-view/?var-su=SU6"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU6\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU6",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU7. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 18,
+        "y": 8
+      },
+      "id": 17,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU7",
+          "url": "/d/kishore-node-view/?var-su=SU7"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU7\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU7",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU8. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 21,
+        "y": 8
+      },
+      "id": 18,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU8",
+          "url": "/d/kishore-node-view/?var-su=SU8"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU8\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU8",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU9. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 0,
+        "y": 13
+      },
+      "id": 19,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU9",
+          "url": "/d/kishore-node-view/?var-su=SU9"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU9\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU9",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU10. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 3,
+        "y": 13
+      },
+      "id": 20,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU10",
+          "url": "/d/kishore-node-view/?var-su=SU10"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU10\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU10",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU11. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 6,
+        "y": 13
+      },
+      "id": 21,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU11",
+          "url": "/d/kishore-node-view/?var-su=SU11"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU11\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU11",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU12. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 9,
+        "y": 13
+      },
+      "id": 22,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU12",
+          "url": "/d/kishore-node-view/?var-su=SU12"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU12\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU12",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU13. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 12,
+        "y": 13
+      },
+      "id": 23,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU13",
+          "url": "/d/kishore-node-view/?var-su=SU13"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU13\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU13",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Live node-exporter reachability for SU14. Click to focus its racks.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 15,
+        "y": 13
+      },
+      "id": 24,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Focus racks in SU14",
+          "url": "/d/kishore-node-view/?var-su=SU14"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "expr": "count(max by(node)(up{job=\"node-exporter\",node!=\"\",su=\"SU14\"}) == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SU14",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 20,
+      "panels": [],
+      "title": "Racks in $su \u2014 authoritative val.txt topology",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Every discovered rack is listed with the live node-exporter count. Green is available compute; red is the remaining capacity to the 18-node rack target.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "minWidth": 100
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Available"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Down"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Target"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 20,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 50,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "expr": "sum by(su,rack)(up{job=\"node-exporter\",su=~\"$su\",node!~\"example50-dh02-d(20|23|24)-.*\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "expr": "18 - sum by(su,rack)(up{job=\"node-exporter\",su=~\"$su\",node!~\"example50-dh02-d(20|23|24)-.*\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "expr": "18 + 0 * sum by(su,rack)(up{job=\"node-exporter\",su=~\"$su\",node!~\"example50-dh02-d(20|23|24)-.*\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        }
+      ],
+      "title": "All racks \u2014 live compute availability out of 18",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "rack",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "__name__": true,
+              "__name__ 1": true,
+              "__name__ 2": true,
+              "cluster": true,
+              "cluster 1": true,
+              "cluster 2": true,
+              "job": true,
+              "job 1": true,
+              "job 2": true,
+              "rack 1": true,
+              "rack 2": true,
+              "su 1": true,
+              "su 2": true
+            },
+            "indexByName": {
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "rack": 1,
+              "su": 0
+            },
+            "renameByName": {
+              "Value #A": "Available",
+              "Value #B": "Down",
+              "Value #C": "Target",
+              "rack": "Rack",
+              "su": "Super Unit"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": false,
+                "field": "Super Unit"
+              },
+              {
+                "desc": false,
+                "field": "Rack"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 30,
+      "panels": [],
+      "title": "Nodes in $rack \u2014 live readiness",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "READY = the node exporter is reachable. DOWN = its scrape target is unavailable. Slurm and BMC-ping signals will be added when those exporters are enabled.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "text": "DOWN"
+                },
+                "1": {
+                  "color": "green",
+                  "text": "READY"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 2,
+        "x": 0,
+        "y": 41
+      },
+      "id": 31,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Open node deep dive",
+          "url": "/d/nvis-node-deep-dive/?var-su=$su&var-rack=$rack&var-node=$node"
+        }
+      ],
+      "maxPerRow": 9,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "repeat": "node",
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "expr": "max by(node)(up{job=\"node-exporter\",su=~\"$su\",rack=~\"$rack\",node=~\"$node\",node!~\"example50-dh02-d(20|23|24)-.*\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "$node",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Per-node Slurm state. Use the Node Deep Dive link above for hardware and agent detail.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "minWidth": 90
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Slurm state"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 46
+      },
+      "id": 40,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "expr": "slurm_node_state{state=~\"down|drain|drained|draining|fail|failing|maint|unknown\",su=~\"$su\",rack=~\"$rack\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes requiring attention",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(node|su|rack|state|reason|Value)$"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "node": 2,
+              "rack": 1,
+              "reason": 4,
+              "state": 3,
+              "su": 0
+            },
+            "renameByName": {
+              "Value": "Present",
+              "node": "Node",
+              "rack": "Rack",
+              "reason": "Reason",
+              "state": "Slurm state",
+              "su": "Super Unit"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "iren_mkz",
+    "live",
+    "nodes",
+    "slurm",
+    "drilldown"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 2,
+        "label": "Metrics source",
+        "name": "datasource",
+        "query": "prometheus",
+        "type": "datasource"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "includeAll": true,
+        "label": "Super Unit",
+        "multi": true,
+        "name": "su",
+        "query": {
+          "query": "label_values(up{job=\"node-exporter\",node!=\"\",node!~\"example50-dh02-d(20|23|24)-.*\"}, su)",
+          "refId": "su"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query",
+        "options": []
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "includeAll": true,
+        "label": "Rack",
+        "multi": false,
+        "name": "rack",
+        "query": {
+          "query": "label_values(up{job=\"node-exporter\",node!=\"\",su=~\"$su\",node!~\"example50-dh02-d(20|23|24)-.*\"}, rack)",
+          "refId": "rack"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query",
+        "options": []
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "hide": 2,
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "query": {
+          "query": "label_values(up{job=\"node-exporter\",node!=\"\",su=~\"$su\",rack=~\"$rack\",node!~\"example50-dh02-d(20|23|24)-.*\"}, node)",
+          "refId": "node"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query",
+        "options": []
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "hide": 2,
+        "includeAll": true,
+        "multi": true,
+        "name": "rack_tile",
+        "query": {
+          "query": "label_values(up{job=\"node-exporter\",node!=\"\",su=~\"$su\",node!~\"example50-dh02-d(20|23|24)-.*\"}, rack)",
+          "refId": "rack_tile"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query",
+        "options": []
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Kishore Node View",
+  "uid": "kishore-node-view",
+  "version": 13
+}

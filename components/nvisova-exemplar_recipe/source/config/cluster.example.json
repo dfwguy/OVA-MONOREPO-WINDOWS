@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "cluster_alias": "<CLUSTER_ALIAS>",
+  "network_mode": "<connected|airgap>",
+  "upstream": {
+    "repository": "https://github.com/NVIDIA/exemplar-performance.git",
+    "commit": "<FULL_40_CHARACTER_COMMIT>",
+    "release": "<APPROVED_RELEASE>"
+  },
+  "hardware": {
+    "architecture": "<x86_64|aarch64>",
+    "gpu_type": "<UPSTREAM_GPU_TYPE>",
+    "gpus_per_node": null,
+    "nodes": ["<COMPUTE_HOSTNAME>"],
+    "transport": "<infiniband|roce|efa|socket>",
+    "expected_hcas_per_node": null,
+    "socket_interface": "<MANAGEMENT_OR_RENDEZVOUS_INTERFACE>",
+    "transport_environment": {}
+  },
+  "scheduler": {
+    "type": "slurm",
+    "account": "<SLURM_ACCOUNT>",
+    "partition": "<SLURM_PARTITION>",
+    "qos": "<SLURM_QOS_OR_EMPTY_STRING>",
+    "operator_user": "<OPERATOR_USER>"
+  },
+  "storage": {
+    "layout": "<shared|node-local>",
+    "source_root": "<ABSOLUTE_SOURCE_PATH>",
+    "install_root": "<ABSOLUTE_INSTALL_PATH>",
+    "image_root": "<ABSOLUTE_IMAGE_PATH>",
+    "hf_cache": "<ABSOLUTE_HF_CACHE_PATH>",
+    "evidence_root": "<ABSOLUTE_EVIDENCE_PATH>"
+  },
+  "credentials": {
+    "hf_token_file": "<ABSOLUTE_RESTRICTED_SECRET_FILE>",
+    "ngc_credentials_file": "<ABSOLUTE_RESTRICTED_ENROOT_CREDENTIALS_FILE>"
+  },
+  "workloads": [
+    {
+      "name": "<INSTALLED_WORKLOAD_KEY>",
+      "model_size": "<SUPPORTED_MODEL_SIZE>",
+      "dtype": "<SUPPORTED_DTYPE>",
+      "scale": null,
+      "repeats": 1,
+      "purpose": "diagnostic"
+    }
+  ]
+}

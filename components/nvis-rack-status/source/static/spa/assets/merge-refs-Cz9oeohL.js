@@ -1,0 +1,1 @@
+function e(...e){let t=e.filter(Boolean);return t.length<=1?t[0]||null:function(e){t.forEach(t=>{typeof t==`function`?t(e):t&&(t.current=e)})}}export{e as t};

@@ -1,0 +1,676 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Entry point for the GB300 GPU boards. Carries a single dataset \u2014 racks currently carrying a GPU fault \u2014 with an exactly-matching detail table. All other GPU datasets are owned by the Coverage, Error surface and NVLink boards and are deliberately not repeated here.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"font:13px/1.55 Inter,Roboto,sans-serif;color:#c7d0d9\"><div style=\"font-size:15px;font-weight:600;color:#e6edf3;margin-bottom:4px\">GPU Health &mdash; area home</div><div style=\"color:#8b98a5;margin-bottom:8px\">Entry point for the GB300 GPU boards. This page carries one dataset only: which racks are carrying a GPU fault right now. Every other GPU number lives on exactly one of the boards below, so nothing on this page is repeated anywhere else.</div><div style=\"font-size:12px\"><span style=\"color:#8b98a5\">GPU area&nbsp;&rsaquo;&nbsp;</span><span style=\"color:#e6edf3;font-weight:600\">Area home</span>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/gpu-health/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">Coverage &middot; thermal &middot; power &middot; clocks</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/gpu-errors/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">Error surface &mdash; ECC &middot; XID &middot; violations</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/gpu-nvlink-health/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">NVLink &amp; bandwidth</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/nvis-dcgm-diag/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">Readiness checks</a></div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "A rack counts once here if any GPU in it is reporting an XID, has a non-zero volatile or aggregate ECC or remapped-row counter, has fewer than 18 NVLink ports, or has a tray with nvidia-imex inactive. The table beside it is built from the identical expression \u2014 its row count equals this number.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(count by(rack, su) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) or count by(rack, su) (max by(node, gpu, rack, su) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0 or max by(node, gpu, rack, su) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0 or max by(node, gpu, rack, su) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0 or max by(node, gpu, rack, su) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0 or max by(node, gpu, rack, su) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0 or max by(node, gpu, rack, su) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0) or count by(rack, su) (count by(node, gpu, rack, su) (su1_nvlink_up{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) < 18) or count by(rack, su) (su1_service_active{service=\"nvidia-imex\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"} == 0)) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Racks carrying at least one GPU fault",
+      "type": "stat"
+    },
+    {
+      "gridPos": {
+        "h": 5,
+        "w": 18,
+        "x": 6,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"font:13px/1.7 Inter,Roboto,sans-serif;color:#c7d0d9;padding:2px 4px\"><div style=\"font-weight:600;color:#e6edf3;margin-bottom:6px\">What counts as a GPU fault on this page</div><table style=\"border-collapse:collapse;font-size:12.5px\"><tr><td style=\"padding:2px 18px 2px 0;color:#8b98a5\">XID</td><td>any <code>DCGM_FI_DEV_XID_ERRORS</code> series present &mdash; DCGM emits it only for an active XID. No codes excluded.</td></tr><tr><td style=\"padding:2px 18px 2px 0;color:#8b98a5\">ECC / remap</td><td>volatile or aggregate SBE/DBE, or correctable/uncorrectable remapped rows, greater than zero.</td></tr><tr><td style=\"padding:2px 18px 2px 0;color:#8b98a5\">NVLink</td><td>a GPU enumerating fewer than 18 NVLink ports.</td></tr><tr><td style=\"padding:2px 18px 2px 0;color:#8b98a5\">IMEX</td><td><code>nvidia-imex</code> not active on a tray in the rack. Per-tray IMEX detail is owned by the <a href=\"/d/nvis-nvlink-downlanes/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">NVLink Downlane Map</a>.</td></tr></table><div style=\"margin-top:8px;color:#8b98a5;font-size:12px\">Per-GPU detail for each column is on the <a href=\"/d/gpu-errors/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">Error surface</a> and <a href=\"/d/gpu-nvlink-health/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">NVLink</a> boards.</div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Built from the same four selectors as the stat above, unioned by rack \u2014 the row count equals it exactly. A blank cell means that fault class is clean on that rack.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs w/ XID"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs w/ ECC or remap"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs < 18 NVLink"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trays w/o IMEX"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trays w/ XID"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 24,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "GPUs w/ XID"
+          }
+        ]
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(rack, su) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"})",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(rack, su) (max by(node, gpu, rack, su) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0 or max by(node, gpu, rack, su) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0 or max by(node, gpu, rack, su) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0 or max by(node, gpu, rack, su) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0 or max by(node, gpu, rack, su) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0 or max by(node, gpu, rack, su) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(rack, su) (count by(node, gpu, rack, su) (su1_nvlink_up{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}) < 18)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(rack, su) (su1_service_active{service=\"nvidia-imex\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"} == 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(rack, su) (count by(node, rack, su) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "E"
+        }
+      ],
+      "title": "Racks carrying a GPU fault \u2014 the exact racks, worst first",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "modelName": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "Value #D": 5,
+              "Value #E": 6,
+              "rack": 0,
+              "su": 1
+            },
+            "renameByName": {
+              "Value #A": "GPUs w/ XID",
+              "Value #B": "GPUs w/ ECC or remap",
+              "Value #C": "GPUs < 18 NVLink",
+              "Value #D": "Trays w/o IMEX",
+              "Value #E": "Trays w/ XID",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "gpu",
+    "home",
+    "health",
+    "iren_mkz",
+    "gb300",
+    "superpod",
+    "area-gpu-health"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "nvis-victoriametrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "clusterQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\"}, datahall)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Data hall",
+        "multi": true,
+        "name": "datahall",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\"}, datahall)",
+          "refId": "datahallQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\"}, su)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "SU",
+        "multi": true,
+        "name": "su",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\"}, su)",
+          "refId": "suQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\"}, rack)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rack",
+        "multi": true,
+        "name": "rack",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\"}, rack)",
+          "refId": "rackQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tray",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\"}, node)",
+          "refId": "nodeQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "GPU Health \u2014 Area Home",
+  "uid": "nvis-l2-gpu-health",
+  "version": 1,
+  "weekStart": ""
+}

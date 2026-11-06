@@ -1,0 +1,620 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "Select an SU. **Sustained counter increases plus queue growth identify back-pressure; queue occupancy alone is only a candidate.** Switch/interface labels let link remediation teams correlate the path to degraded NCCL performance.",
+        "mode": "markdown"
+      },
+      "title": "Congestion evidence",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(increase(nvswitch_interface_tx_wait{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range]) > 0) or on() count(nvswitch_interface_tx_wait{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}) * 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Increasing TX wait",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 3
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count((increase(nvswitch_interface_rx_buffer_almost_full{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range]) + increase(nvswitch_interface_rx_buffer_full{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range])) > 0) or on() count(nvswitch_interface_tx_wait{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}) * 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Buffer pressure",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 3
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count((increase(nvswitch_interface_discards_egress_hoq_stall{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range]) + increase(nvswitch_interface_tc_tx_no_buffer_discard_uc{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range])) > 0) or on() count(nvswitch_interface_tx_wait{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}) * 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Discarding",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Candidate only; requires a sustained counter increase to establish congestion.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 3
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(max by(net_host_name,interface)(max_over_time(nvswitch_interface_tc_tx_queue{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range])) > 0) or on() count(nvswitch_interface_tx_wait{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}) * 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Transient queue candidates",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Non-zero increases over the selected time range. Multiple evidence types on one interface strengthen the congestion finding.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_join(topk(100, sum by(net_host_name,interface)(increase(nvswitch_interface_tx_wait{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range]))) > 0, \"link\", \" \", \"net_host_name\", \"interface\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "tx wait",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_join(topk(100, sum by(net_host_name,interface)(increase(nvswitch_interface_rx_buffer_almost_full{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range]))) > 0, \"link\", \" \", \"net_host_name\", \"interface\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "RX almost full",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_join(topk(100, sum by(net_host_name,interface)(increase(nvswitch_interface_rx_buffer_full{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range]))) > 0, \"link\", \" \", \"net_host_name\", \"interface\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "RX full",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_join(topk(100, sum by(net_host_name,interface)(increase(nvswitch_interface_tc_tx_ecn_marked_tc{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range]))) > 0, \"link\", \" \", \"net_host_name\", \"interface\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "ECN marked",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_join(topk(100, sum by(net_host_name,interface)(increase(nvswitch_interface_discards_egress_hoq_stall{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range]))) > 0, \"link\", \" \", \"net_host_name\", \"interface\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "HOQ stall",
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_join(topk(100, sum by(net_host_name,interface)(increase(nvswitch_interface_tc_tx_no_buffer_discard_uc{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__range]))) > 0, \"link\", \" \", \"net_host_name\", \"interface\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "no-buffer discard",
+          "refId": "F"
+        }
+      ],
+      "title": "Exact switches and links with sustained pressure",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "link",
+            "mode": "outer"
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, rate(nvswitch_interface_tx_wait{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__rate_interval]))",
+          "legendFormat": "{{net_host_name}} {{interface}}",
+          "refId": "A"
+        }
+      ],
+      "title": "TX wait rate \u2014 top interfaces",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, nvswitch_interface_tc_tx_queue{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"})",
+          "legendFormat": "{{net_host_name}} {{interface}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Transient queue candidates (not proof)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, rate(nvswitch_interface_tc_tx_no_buffer_discard_uc{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__rate_interval]) + rate(nvswitch_interface_discards_egress_hoq_stall{net_host_name=~\"example50-02-(dh01|dh02)-p${su_ordinal}(g[0-9]+)?-.*\"}[$__rate_interval]))",
+          "legendFormat": "{{net_host_name}} {{interface}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Discard rate \u2014 top interfaces",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 41,
+  "tags": [
+    "IREN_MKZ",
+    "16kAIC-OVA",
+    "operator"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": "[0-9]+",
+        "current": {
+          "text": "SU14",
+          "value": "14"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "SU",
+        "multi": false,
+        "name": "su_ordinal",
+        "query": "SU1 : 1,SU2 : 2,SU3 : 3,SU4 : 4,SU5 : 5,SU6 : 6,SU7 : 7,SU8 : 8,SU9 : 9,SU10 : 10,SU11 : 11,SU12 : 12,SU13 : 13,SU14 : 14",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "IREN 16kAIC-OVA \u2014 Switch Congestion",
+  "uid": "iren16k-ova-congestion",
+  "version": 7
+}

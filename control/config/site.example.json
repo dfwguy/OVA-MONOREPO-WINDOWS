@@ -1,0 +1,46 @@
+{
+  "site": "IREN_MKZ",
+  "vpnInstructionsFile": "C:\\IREN-private\\vpn-instructions.md",
+  "sshAlias": "iren-mkz-management",
+  "remoteStageDirectory": "/var/tmp/iren-mkz/REPLACE_RELEASE_ID",
+  "controllerHost": "REPLACE_WITH_APPROVED_CONTROLLER_FQDN",
+  "sshPort": 22,
+  "linuxArchitecture": "REPLACE_WITH_x86_64_OR_aarch64",
+  "approvedNodesFile": "C:\\IREN-private\\approved-nodes.txt",
+  "partition": "REPLACE_WITH_APPROVED_PARTITION",
+  "remoteSharedRoot": "/REPLACE_WITH_APPROVED_SHARED_STORAGE/iren-mkz",
+  "tunnels": {
+    "rack-status": {
+      "localPort": 5050,
+      "remoteHost": "127.0.0.1",
+      "remotePort": 5050
+    },
+    "grafana": {
+      "localPort": 13001,
+      "remoteHost": "127.0.0.1",
+      "remotePort": 3001
+    },
+    "collection": {
+      "localPort": 4310,
+      "remoteHost": "127.0.0.1",
+      "remotePort": 4310
+    },
+    "p2p-console": {
+      "localPort": 4301,
+      "remoteHost": "127.0.0.1",
+      "remotePort": 4301,
+      "scheme": "https"
+    }
+  },
+  "optionalWorkloadCredentialFiles": {
+    "required_for_basic_dragonfly": false,
+    "ngc": null,
+    "huggingface": null,
+    "note": "Supply private file paths only if a selected protected workload asset actually requires them."
+  },
+  "p2pConsoleBootstrap": {
+    "username": "root",
+    "password": "dragonfly",
+    "scope": "Documented public default for a new Dragonfly Manager; not registry or SSH credentials."
+  }
+}

@@ -1,0 +1,3351 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Every DCGM fault counter for the GB300 estate. Split out of the GPU Health board to keep both boards under 25 panels. Every headline number has an exactly-matching offender table beneath it.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"font:13px/1.55 Inter,Roboto,sans-serif;color:#c7d0d9\"><div style=\"font-size:15px;font-weight:600;color:#e6edf3;margin-bottom:4px\">GPU Error Surface &mdash; ECC, remapped rows, PCIe, limit violations and XID</div><div style=\"color:#8b98a5;margin-bottom:8px\">Every fault counter DCGM publishes for the GB300 estate, each headline number backed by a table that names the exact GPUs, trays, racks and XID codes behind it. Coverage, temperature, power and clocks live on the Coverage board.</div><div style=\"font-size:12px\"><span style=\"color:#8b98a5\">GPU area&nbsp;&rsaquo;&nbsp;</span><a href=\"/d/nvis-l2-gpu-health/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">Area home</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/gpu-health/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">Coverage &middot; thermal &middot; power &middot; clocks</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<span style=\"color:#e6edf3;font-weight:600\">Error surface &mdash; ECC &middot; XID &middot; violations</span>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/gpu-nvlink-health/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">NVLink &amp; bandwidth</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/nvis-dcgm-diag/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">Readiness checks</a></div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "panels": [],
+      "title": "ECC, remapped rows and PCIe replay",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "A GPU counts once here if any of the eight DCGM error counters below is greater than zero. The offender table beneath names exactly these GPUs \u2014 its row count equals this number.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(count by(node, rack, su, gpu) (label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"dbe_volatile\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"sbe_volatile\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"dbe_aggregate\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"sbe_aggregate\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"correctable_remap\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"uncorrectable_remap\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"remap_failure\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"pcie_replay\", \"\", \"\"))) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs with any ECC, remap or PCIe fault",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the \"DBE volatile\" column of the offender table below: the number of rows with a non-zero value in that column equals this stat.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs \u2014 DBE volatile",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the \"SBE volatile\" column of the offender table below: the number of rows with a non-zero value in that column equals this stat.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs \u2014 SBE volatile",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the \"DBE aggregate\" column of the offender table below: the number of rows with a non-zero value in that column equals this stat.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs \u2014 DBE aggregate",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the \"SBE aggregate\" column of the offender table below: the number of rows with a non-zero value in that column equals this stat.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 8
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs \u2014 SBE aggregate",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the \"Remap rows corr\" column of the offender table below: the number of rows with a non-zero value in that column equals this stat.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs \u2014 remapped rows (correctable)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the \"Remap rows uncorr\" column of the offender table below: the number of rows with a non-zero value in that column equals this stat.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 8
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs \u2014 remapped rows (uncorrectable)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the \"Remap failure\" column of the offender table below: the number of rows with a non-zero value in that column equals this stat.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 8
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs \u2014 row-remap failure",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Row count equals \"GPUs with any ECC, remap or PCIe fault\". Every column is the same selector as its stat above, so the count of non-zero cells in a column equals that stat. A zero means that particular counter is clean on that GPU; a dash means DCGM does not publish it for that GPU.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DBE volatile"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 145
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SBE volatile"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 145
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DBE aggregate"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 155
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SBE aggregate"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 155
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Remap rows corr"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 165
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Remap rows uncorr"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Remap failure"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PCIe replays"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Fault types"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tray"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 215
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 112
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 62
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 68
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Fault types"
+          }
+        ]
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(node, rack, su, gpu) (label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"dbe_volatile\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"sbe_volatile\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"dbe_aggregate\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"sbe_aggregate\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"correctable_remap\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"uncorrectable_remap\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"remap_failure\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"fault\", \"pcie_replay\", \"\", \"\"))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) (max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) (max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) (max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) (max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) (max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) (max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) (max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "H"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) (max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_VOL_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_CORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "I"
+        }
+      ],
+      "title": "GPU fault offenders \u2014 the exact GPUs behind the counters above",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "modelName": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value #A": 4,
+              "Value #B": 5,
+              "Value #C": 6,
+              "Value #D": 7,
+              "Value #E": 8,
+              "Value #F": 9,
+              "Value #G": 10,
+              "Value #H": 11,
+              "Value #I": 12,
+              "gpu": 3,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "Value #A": "Fault types",
+              "Value #B": "DBE volatile",
+              "Value #C": "SBE volatile",
+              "Value #D": "DBE aggregate",
+              "Value #E": "SBE aggregate",
+              "Value #F": "Remap rows corr",
+              "Value #G": "Remap rows uncorr",
+              "Value #H": "Remap failure",
+              "Value #I": "PCIe replays",
+              "gpu": "GPU",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 12,
+      "panels": [],
+      "title": "Thermal and board-power limit violations",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "DCGM violation counters are lifetime nanoseconds spent throttled below the requested clock. A GPU counts once here if either counter is greater than zero. The table below names exactly these GPUs. Units: these DCGM counters accrue in NANOSECONDS on this fleet, not the microseconds the DCGM docs list. Proven empirically: on example50-dh01-h04-37 gpu 1 the low-utilisation counter advanced 3,593,599,858,112 over 3,600 s of wall clock = 0.998 units per nanosecond of elapsed time. A microsecond reading would imply 998 seconds of throttle per second, which is impossible.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 25
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(count by(node, rack, su, gpu) (label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_THERMAL_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"viol\", \"thermal\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_BOARD_LIMIT_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"viol\", \"board_limit\", \"\", \"\"))) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs with a thermal or board-limit violation on record",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the \"Thermal violation\" column of the table below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 25
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_THERMAL_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs \u2014 thermal violation time",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the \"Board-limit violation\" column of the table below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 25
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_BOARD_LIMIT_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"} > 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs \u2014 board-limit violation time",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Row count equals the \"thermal or board-limit violation\" stat. The two violation columns are the same selectors as their stats, so their non-zero cell counts equal those stats. \"Thermal\" and \"Board limit\" are the DCGM thermal-violation and board-limit-violation counters, cumulative since driver load. Units: these DCGM counters accrue in NANOSECONDS on this fleet, not the microseconds the DCGM docs list. Proven empirically: on example50-dh01-h04-37 gpu 1 the low-utilisation counter advanced 3,593,599,858,112 over 3,600 s of wall clock = 0.998 units per nanosecond of elapsed time. A microsecond reading would imply 998 seconds of throttle per second, which is impossible.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Thermal"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "unit",
+                "value": "ns"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 135
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Board limit"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "unit",
+                "value": "ns"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Violation types"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Core temp"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tray"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 210
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 62
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 68
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 14,
+        "x": 0,
+        "y": 29
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Thermal"
+          }
+        ]
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(node, rack, su, gpu) (label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_THERMAL_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"viol\", \"thermal\", \"\", \"\") or label_replace(max by(node, rack, su, gpu) (DCGM_FI_DEV_BOARD_LIMIT_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0, \"viol\", \"board_limit\", \"\", \"\"))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_THERMAL_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) (max by(node, gpu) (DCGM_FI_DEV_THERMAL_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_BOARD_LIMIT_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_BOARD_LIMIT_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) (max by(node, gpu) (DCGM_FI_DEV_THERMAL_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_BOARD_LIMIT_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by(node, rack, su, gpu) (DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) and on(node, gpu) (max by(node, gpu) (DCGM_FI_DEV_THERMAL_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0 or max by(node, gpu) (DCGM_FI_DEV_BOARD_LIMIT_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "D"
+        }
+      ],
+      "title": "Limit-violation offenders \u2014 the exact GPUs",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "modelName": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value #A": 4,
+              "Value #B": 5,
+              "Value #C": 6,
+              "Value #D": 7,
+              "gpu": 3,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "Value #A": "Violation types",
+              "Value #B": "Thermal",
+              "Value #C": "Board limit",
+              "Value #D": "Core temp",
+              "gpu": "GPU",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Rate of change of the two cumulative violation counters, summed over every GPU in scope. The unit is nanoseconds of throttle accrued per wall-clock second, so 1 s here would mean one GPU throttled continuously. Flat at zero means nothing is being throttled right now. The GPUs behind any non-zero reading are the ones listed in \"Limit-violation offenders\" to the left. Power-cap and reliability accrual are owned by the Readiness checks board, which carries their own backing table. Counter units verified empirically as nanoseconds, not the microseconds the DCGM docs list.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ns"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 10,
+        "x": 14,
+        "y": 29
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(DCGM_FI_DEV_THERMAL_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[10m]))",
+          "instant": false,
+          "legendFormat": "Thermal",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(DCGM_FI_DEV_BOARD_LIMIT_VIOLATION{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}[10m]))",
+          "instant": false,
+          "legendFormat": "Board limit",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Thermal / board-limit throttle accrued per second \u2014 fleet total",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "id": 18,
+      "panels": [],
+      "title": "XID errors",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Definition used on every NVIS board: count of DCGM_FI_DEV_XID_ERRORS series, unfiltered by code. DCGM publishes this series only for a GPU with an active XID, so its presence is the fault. No codes are excluded. The 249-row table below names exactly these GPUs.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 40
+      },
+      "id": 19,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs reporting an XID",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the per-tray table below; its row count equals this number.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 40
+      },
+      "id": 20,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(count by(node) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"})) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Trays affected",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the per-rack table below; its row count equals this number.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 40
+      },
+      "id": 21,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(count by(rack) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"})) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Racks affected",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Backed by the XID-code table below; its row count equals this number.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 40
+      },
+      "id": 22,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(count by(err_code) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"})) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Distinct XID codes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Same selector as the \"GPUs reporting an XID\" stat: the row count equals it exactly. Filter the XID column to isolate a single code.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "XID"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tray"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 260
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 135
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 75
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 44
+      },
+      "id": 23,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "XID"
+          }
+        ]
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(node, rack, su, gpu, err_code, err_msg) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"})",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "XID offenders \u2014 the exact GPUs, with the decoded reason",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "Value": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "modelName": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "err_code": 4,
+              "err_msg": 5,
+              "gpu": 3,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "err_code": "XID",
+              "err_msg": "Reason",
+              "gpu": "GPU",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Row count equals the \"Trays affected\" stat.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs w/ XID"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 125
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Codes"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tray"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 250
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 125
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 9,
+        "x": 0,
+        "y": 55
+      },
+      "id": 24,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "GPUs w/ XID"
+          }
+        ]
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(node, rack, su) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"})",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(node, rack, su) (count by(node, rack, su, err_code) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        }
+      ],
+      "title": "Trays carrying an XID \u2014 the exact trays",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "modelName": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value #A": 3,
+              "Value #B": 4,
+              "node": 0,
+              "rack": 1,
+              "su": 2
+            },
+            "renameByName": {
+              "Value #A": "GPUs w/ XID",
+              "Value #B": "Codes",
+              "node": "Tray",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Row count equals the \"Racks affected\" stat.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs w/ XID"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 125
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trays"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Rack"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SU"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 6,
+        "x": 9,
+        "y": 55
+      },
+      "id": 25,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "GPUs w/ XID"
+          }
+        ]
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(rack, su) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"})",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(rack, su) (count by(node, rack, su) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        }
+      ],
+      "title": "Racks carrying an XID \u2014 the exact racks",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "modelName": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value #A": 2,
+              "Value #B": 3,
+              "rack": 0,
+              "su": 1
+            },
+            "renameByName": {
+              "Value #A": "GPUs w/ XID",
+              "Value #B": "Trays",
+              "rack": "Rack",
+              "su": "SU"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Row count equals the \"Distinct XID codes\" stat.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "XID"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 65
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GPUs"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 75
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trays"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 75
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 9,
+        "x": 15,
+        "y": 55
+      },
+      "id": 26,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "GPUs"
+          }
+        ]
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(err_code, err_msg) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"})",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(err_code, err_msg) (count by(node, err_code, err_msg) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"}))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        }
+      ],
+      "title": "XID codes present \u2014 the exact codes",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "DCGM_FI_DRIVER_VERSION": true,
+              "Hostname": true,
+              "Time": true,
+              "UUID": true,
+              "__name__": true,
+              "cluster": true,
+              "datahall": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "modelName": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Value #A": 2,
+              "Value #B": 3,
+              "err_code": 0,
+              "err_msg": 1
+            },
+            "renameByName": {
+              "Value #A": "GPUs",
+              "Value #B": "Trays",
+              "err_code": "XID",
+              "err_msg": "Reason"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Per-code decomposition of the \"GPUs reporting an XID\" stat; the series sum to it. The per-SU and per-rack breakdown is in the tables above.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 65
+      },
+      "id": 27,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by(err_code) (DCGM_FI_DEV_XID_ERRORS{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\", gpu=~\"$gpu\"})",
+          "instant": false,
+          "legendFormat": "XID {{err_code}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs reporting an XID, by code",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "gpu",
+    "dcgm",
+    "ecc",
+    "xid",
+    "remap",
+    "errors",
+    "health",
+    "iren_mkz",
+    "gb300",
+    "superpod",
+    "area-gpu-health"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "nvis-victoriametrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "clusterQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\"}, datahall)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Data hall",
+        "multi": true,
+        "name": "datahall",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\"}, datahall)",
+          "refId": "datahallQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\"}, su)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "SU",
+        "multi": true,
+        "name": "su",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\"}, su)",
+          "refId": "suQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\"}, rack)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rack",
+        "multi": true,
+        "name": "rack",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\"}, rack)",
+          "refId": "rackQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tray",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\"}, node)",
+          "refId": "nodeQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}, gpu)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "GPU",
+        "multi": true,
+        "name": "gpu",
+        "options": [],
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\", datahall=~\"$datahall\", su=~\"$su\", rack=~\"$rack\", node=~\"$node\"}, gpu)",
+          "refId": "gpuQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "GPU Error Surface \u2014 ECC \u00b7 Remapped Rows \u00b7 PCIe \u00b7 Limit Violations \u00b7 XID",
+  "uid": "gpu-errors",
+  "version": 1,
+  "weekStart": ""
+}

@@ -1,0 +1,132 @@
+{
+  "syntax": {
+    "python_files": 45,
+    "json_files": 117,
+    "pass": true
+  },
+  "checks": [
+    {
+      "check": "shell-0",
+      "exit_code": 0,
+      "log": "shell-0.log"
+    },
+    {
+      "check": "shell-1",
+      "exit_code": 0,
+      "log": "shell-1.log"
+    },
+    {
+      "check": "shell-2",
+      "exit_code": 0,
+      "log": "shell-2.log"
+    },
+    {
+      "check": "shell-3",
+      "exit_code": 0,
+      "log": "shell-3.log"
+    },
+    {
+      "check": "shell-4",
+      "exit_code": 0,
+      "log": "shell-4.log"
+    },
+    {
+      "check": "shell-5",
+      "exit_code": 0,
+      "log": "shell-5.log"
+    },
+    {
+      "check": "shell-6",
+      "exit_code": 0,
+      "log": "shell-6.log"
+    },
+    {
+      "check": "shell-7",
+      "exit_code": 0,
+      "log": "shell-7.log"
+    },
+    {
+      "check": "compose-configuration",
+      "exit_code": 0,
+      "log": "compose-configuration.log"
+    },
+    {
+      "check": "grafana-overlay-verifier",
+      "exit_code": 0,
+      "log": "grafana-overlay-verifier.log"
+    },
+    {
+      "check": "grafana-import-dryrun",
+      "exit_code": 0,
+      "log": "grafana-import-dryrun.log"
+    },
+    {
+      "check": "grafana-import-idempotency-mock",
+      "exit_code": 0,
+      "log": "grafana-import-idempotency-mock.log"
+    },
+    {
+      "check": "promtool-config",
+      "exit_code": 0,
+      "log": "promtool-config.log"
+    },
+    {
+      "check": "loki-config",
+      "exit_code": 0,
+      "log": "loki-config.log"
+    },
+    {
+      "check": "alloy-config",
+      "exit_code": 0,
+      "log": "alloy-config.log",
+      "scope": "Alloy fmt parser/format check (v1.5.1 has no validate subcommand); no runtime gateway acceptance"
+    },
+    {
+      "check": "lake-offline-unit-tests",
+      "exit_code": 0,
+      "log": "lake-offline-unit-tests.log"
+    }
+  ],
+  "scope": "Offline Linux amd64 containers with --network none; no cluster access; no Windows/VPN acceptance.",
+  "alloy_route_smoke": [
+    {
+      "route": "/api/v1/metrics/write",
+      "port": 9099,
+      "status_line": "HTTP/1.1 400 Bad Request",
+      "response": "HTTP/1.1 400 Bad Request\nContent-Type: text/plain; charset=utf-8\nX-Content-Type-Options: nosniff\nDate: Thu, 05 Nov 2026 04:19:37 GMT\nContent-Length: 22\nConnection: close\n\nsnappy: corrupt input\n"
+    },
+    {
+      "route": "/api/v1/write",
+      "port": 9099,
+      "status_line": "HTTP/1.1 404 Not Found",
+      "response": "HTTP/1.1 404 Not Found\nContent-Type: text/plain; charset=utf-8\nX-Content-Type-Options: nosniff\nDate: Thu, 05 Nov 2026 04:19:37 GMT\nContent-Length: 19\nConnection: close\n\n404 page not found\n"
+    },
+    {
+      "route": "/loki/api/v1/push",
+      "port": 9098,
+      "status_line": "HTTP/1.1 400 Bad Request",
+      "response": "HTTP/1.1 400 Bad Request\nContent-Type: text/plain; charset=utf-8\nX-Content-Type-Options: nosniff\nDate: Thu, 05 Nov 2026 04:19:38 GMT\nContent-Length: 20\nConnection: close\n\nmime: no media type\n"
+    }
+  ],
+  "important_limits": [
+    "No live IREN/Windows/Fortinet/GPU acceptance",
+    "arm64 staged and hashed, not executed",
+    "No full image vulnerability scan",
+    "Source topology/Slurm path naming must be adapted to IREN",
+    "DCGM/driver and target OS Docker packages not included"
+  ],
+  "dependency_zip_payload_validation": [
+    {
+      "platform": "linux/amd64",
+      "archive_payload_files_verified": 21,
+      "pass": true
+    },
+    {
+      "platform": "linux/arm64",
+      "archive_payload_files_verified": 21,
+      "pass": true
+    }
+  ],
+  "dependency_prepare_helper": "Passed on linux/amd64 against selected archive metadata; extracted node binaries reported pinned versions; no services or Docker load invoked during this helper check",
+  "grafana_cached_selectors": "308 cached query-variable selections/options cleared; overlay verifier + two mock import passes repeated and passed"
+}

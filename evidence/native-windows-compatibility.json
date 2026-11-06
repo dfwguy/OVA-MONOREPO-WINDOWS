@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-06T03:15:11.028377+00:00",
+  "assessment_type": "static_source_and_payload_audit",
+  "requested_architecture": "Native Windows VM hosts most or all six services; cluster hosts only thin collectors and workloads; no WSL or Linux virtualization",
+  "overall_status": "NATIVE_SIX_BACKEND_ACCEPTANCE_NOT_ESTABLISHED",
+  "existing_windows_vm_deployment": "Reported by operator; files and runtime evidence not yet reconciled with this repository",
+  "windows_control_layer": {
+    "status": "NATIVE_RUNTIME_CI_PREPARED",
+    "entrypoint": "tests/Test-WindowsControls.ps1",
+    "scope": "PowerShell parsing, bundled native Python, manifests, all six source ZIP extractions, mocked SSH/SFTP guard checks",
+    "does_not_prove": [
+      "VPN connectivity",
+      "Live transport",
+      "Six backend runtimes",
+      "Cluster functional acceptance"
+    ]
+  },
+  "tools": [
+    {
+      "name": "Exemplar recipe",
+      "status": "WINDOWS_PREPARATION_POSSIBLE_LINUX_WORKLOAD_ROUTE_REQUIRED",
+      "evidence": [
+        {
+          "path": "components/nvisova-exemplar_recipe/source/README.md",
+          "line": 9,
+          "finding": "Bundled route implements Slurm + Enroot + Pyxis; an unsupported platform needs a reviewed adapter"
+        }
+      ],
+      "required_resolution": "Retain native Windows recipe preparation and SSH orchestration; validate selected GPU workload on approved cluster nodes. Reconcile any existing Windows orchestration adapter."
+    },
+    {
+      "name": "P2P",
+      "status": "SHIPPED_CORE_PAYLOAD_IS_LINUX_ONLY",
+      "evidence": [
+        {
+          "path": "components/nvis-p2p/offline/image-inventory.json",
+          "line": 6,
+          "finding": "Redis, nginx and PostgreSQL supplied as Linux amd64 container archives"
+        },
+        {
+          "path": "components/nvis-p2p/scripts/render-minimal.py",
+          "line": 83,
+          "finding": "Minimal runtime renders systemd units"
+        }
+      ],
+      "required_resolution": "Obtain and qualify native Windows core binaries/services and their dependency closure, or reconcile a proven native implementation from the existing VM; Linux containers do not satisfy the requested architecture."
+    },
+    {
+      "name": "Rack Status (PythonCM)",
+      "status": "DIRECT_NATIVE_IMPORT_BLOCKERS",
+      "evidence": [
+        {
+          "path": "components/rack-status-pythoncm/backend/app.py",
+          "line": 62,
+          "finding": "Backend imports Unix-only fcntl directly"
+        },
+        {
+          "path": "components/rack-status-pythoncm/backend/rack_locks.py",
+          "line": 33,
+          "finding": "Advisory locking implementation imports fcntl"
+        },
+        {
+          "path": "components/rack-status-pythoncm/backend/requirements.txt",
+          "line": 11,
+          "finding": "Runtime requirements include gunicorn"
+        }
+      ],
+      "required_resolution": "Reconcile deployed native fork; preserve locking semantics using a Windows implementation, use a qualified Windows application server, and exercise durable activity/lock behavior plus BCM PythonCM access."
+    },
+    {
+      "name": "Auto action trigger (single-node tests)",
+      "status": "BUNDLED_AGENT_IS_CLUSTER_LINUX_RUNTIME",
+      "evidence": [
+        {
+          "path": "components/auto-action-trigger/source/README.md",
+          "line": 3,
+          "finding": "Agent is invoked by per-node systemd user timers and sequences Slurm benchmark jobs"
+        }
+      ],
+      "required_resolution": "Keep node tests and their scoped runtime on cluster nodes; reconcile or implement native Windows scheduling/control without running Bash/systemd locally. Keep remediation disabled until bounded commissioning."
+    },
+    {
+      "name": "Observability",
+      "status": "SHIPPED_CENTRAL_DEPLOYMENT_IS_LINUX_COMPOSE",
+      "evidence": [
+        {
+          "path": "control/DEPENDENCIES.json",
+          "line": 10,
+          "finding": "External runtime packs target linux/amd64 and linux/arm64"
+        },
+        {
+          "path": "components/observability/deploy/compose.yml",
+          "line": 73,
+          "finding": "Lake writer/browser depend on python:3.11-slim and sh command execution"
+        }
+      ],
+      "required_resolution": "Reconcile native Windows service versions of monitoring backends, exporters and lake functions; retain native-capable central components and only scoped node collectors remotely. Validate actual ingestion, persistence and dashboard queries."
+    },
+    {
+      "name": "OVA collection framework",
+      "status": "NATIVE_DURABILITY_AND_INSTALLER_BLOCKERS",
+      "evidence": [
+        {
+          "path": "components/OVA_Collection_Framework/source/app/durable.py",
+          "line": 6,
+          "finding": "Directory synchronization relies on os.O_DIRECTORY"
+        },
+        {
+          "path": "components/OVA_Collection_Framework/source/app/history.py",
+          "line": 221,
+          "finding": "Writer coordination imports fcntl"
+        },
+        {
+          "path": "components/OVA_Collection_Framework/source/README.md",
+          "line": 26,
+          "finding": "Installer creates 13 systemd units"
+        }
+      ],
+      "required_resolution": "Reconcile Windows implementation of atomic durable storage, writer exclusion, service/timer supervision and remote Slurm reads; validate capture completeness and restart recovery on the real VM."
+    }
+  ],
+  "next_action": "Obtain the existing Windows agent endpoint/session or export its deployed code and per-tool service evidence, then reconcile and execute native acceptance against the resulting exact commit."
+}

@@ -1,0 +1,231 @@
+---
+description: Backend Flask API patterns, async jobs, and testing conventions
+globs: backend/**/*.py
+alwaysApply: false
+---
+
+# Backend API Conventions
+
+## Where new endpoints go — `backend/api/`, never `app.py`
+
+**Add a module. Do not edit `app.py`, and do not edit `backend/api/__init__.py` either.** The
+loader walks the package, so a new file registers itself.
+
+```python
+# backend/api/rack_locks.py  ->  serves /api/rack-locks/...
+from flask import Blueprint, jsonify
+
+bp = Blueprint("rack_locks", __name__)      # no url_prefix -> derived from the filename
+
+@bp.route("/claim", methods=["POST"])       # -> /api/rack-locks/claim
+def claim(): ...
+```
+
+`app.py` reached 20,000 lines holding 135 of the 199 routes, because every feature had to touch it.
+Two people working in parallel then collide by construction — which is how an entire feature ended up
+living uncommitted on a customer deployment for days. One file per domain is the fix; keeping the
+registry implicit is what stops the registry becoming the new bottleneck.
+
+**That migration is finished.** All 199 routes live in 38 modules under `api/`; `app.py` is ~2,000
+lines and keeps only the Flask object, the startup bootstraps, the auth gate, the middleware pairs and
+the SPA catch-alls. There is no longer a reason to edit it to add an endpoint.
+
+### The rules the loader enforces
+
+| Rule | Why |
+|---|---|
+| Expose `bp`, **or** `install(app)` | `install` is for things Flask routing cannot express — `/ws/terminal` is WSGI middleware below the router. A module with neither raises at startup. |
+| Underscore-prefixed modules are skipped | `api/_common.py` holds Flask-dependent shared helpers. Endpoints only in named modules. |
+| Imports are **not** wrapped in `try` | A module that fails to import must take startup down and name itself. A swallowed import cost us an afternoon: the feature was simply absent, with no error anywhere. |
+| `url_prefix=None` → filename | `rack_locks.py` → `/api/rack-locks`. Underscores become hyphens, because a module cannot be named `rack-locks`. |
+| `url_prefix="/api/x"` → honoured | For URLs a module name cannot spell, or a module owning several prefixes. |
+| `url_prefix=""` → routes carry full paths | **Migration mode only.** Existing routes keep their exact decorator strings, so a move cannot change a URL through prefix arithmetic. New modules should not use it. |
+
+### Where shared code goes
+
+Pick by what the code *is*, not by what needs it:
+
+| Module | Holds | Never imports |
+|---|---|---|
+| `backend/core.py` | small pure helpers, predicates, shared regexes | Flask, `app` |
+| `backend/config_env.py` | the whole config ladder: `_eget`, `_env_int`, `_subprocess_env`, the Settings registry, the file-locked overrides store | Flask, `app` |
+| `backend/paths.py` | execution-host paths: `_scripts_dir`, `_script_exists`, `_resolve_log_dir` | Flask, `app` |
+| `backend/naming.py` | `_nvis_naming`, `_normalize_rack_id` | Flask, `app` |
+| `backend/job_registry.py` | the seven async job registries + their locks, `_track_sync_op` | Flask, `app` |
+| `backend/slurm_query.py` | `squeue` / `sinfo -R` / `sacct` command runners | Flask, `app` |
+| `backend/app_version.py` | the one answer to "what build is this?" | Flask, `app` |
+| `backend/api/_common.py` | shared helpers that *need* Flask: `operator_from_request`, `client_id_from_request` | `app` |
+
+**Never** `from app import ...` inside an `api/` module. If you need something from `app.py`, move
+it to one of the above. `workflow_engine.py` and `bcm_query.py` still do `import app` inside
+function bodies to dodge the cycle; that is debt, not a pattern to copy.
+
+Command runners are not endpoints. `slurm_query.py` exists because `app.py` *and* a route both
+needed `_run_squeue`; putting it in the route module would have made `app.py` import from `api/`,
+inverting the one direction this package exists to protect.
+
+### The aliasing trap — the single most expensive thing in this migration
+
+`app.py` imports moved helpers under their original private names so call sites did not change.
+That works because a function or dict is shared by reference. But:
+
+- **Rebinding is not sharing.** `monkeypatch.setattr(app, "_nvis_naming", ...)` does *not* change
+  what `naming._normalize_rack_id` resolves, because that function reads `naming`'s own globals.
+  Nine tests failed with confusing assertion errors — not `AttributeError` — the first time this
+  was missed. **Patch the module that owns the name.**
+- Same for module state: `_reset_jobs = {}` in another module gives it a private dict while the
+  lock still guards the original. Mutate these, never rebind them.
+- A helper that is still *called from `app.py`* is unaffected, which is why only some patches
+  break. That asymmetry is what makes it confusing; check with a run, not by reasoning.
+- **A silently-ignored stub is worse than a missing one.** When the patch target is wrong, the real
+  function runs: one test failed as `assert 'fresh' == 'failed'`, which reads like a behaviour
+  regression, and the truth was that the actual fleet scan had executed. If a "logic" failure appears
+  in the same commit as a move, suspect the patch target before the logic.
+- **Two more shapes of the same trap, both of which broke real code paths here.** A test that
+  hand-lists its patch targets (`naming`, `app`, `validation_launch`, …) needs a new entry on every
+  extraction — discover the binders instead, as `test_pdsh_slurm_expand` and `test_job_registry` now
+  do. And a structural guard that greps a *named file* for a forbidden pattern silently stops checking
+  anything once the code moves; read the source through `inspect.getsource` so it follows the function.
+
+### A name read off `app` at call time is a live grenade
+
+`import app` inside a function body, then `app.<name>`, defers the lookup to runtime — so the name is
+never checked until that path runs. During this migration it broke three modules the same way: a name
+became legitimately unused in `app.py`, ruff removed the import, and nothing complained until the code
+executed. `workflow_engine` lost `validation_target_for_rack` (5 sites) and `_run_scontrol_node_update`;
+`agent/registrations` lost the five job registries and `_validation_ct_inner`; `bcm_query` lost
+`SCRIPTS_DIR`, which had always lived in `paths.py`.
+
+`test_no_deferred_app_lookups.py` bans the pattern. Import from the module that **owns** the name.
+The one allowed exception is `agent/registrations.py`, which looks up Flask *view* functions and so
+genuinely needs the app object.
+
+### Splitting a module that has outgrown itself
+
+Nothing is left to migrate out of `app.py`, but the same recipe applies when an `api/` module grows too
+large or a helper turns out to be shared. **Measure the helper-sharing first, then cut where it is
+zero** — that is how rack actions became `rack_power` / `fabric_ops` / `diagnostics`, and why the split
+needed no test changes. A cut through shared helpers is what forces the ugly compromises.
+
+The recipe, in order:
+
+1. **Move the route functions and their private helpers.** Change `@app.route` to `@bp.route`,
+   keep the path strings byte-for-byte, and give the blueprint `url_prefix=""`.
+2. **`ruff check backend/api/<mod>.py --select F821`.** This is the workhorse: it lists exactly
+   what the new module cannot see. Do not skip it — a missing import here fails only when a route
+   is *called*, so `import app` reports fine while the endpoint is broken.
+3. **Place each missing name deliberately.** Used only by the moved routes → move it too. Used
+   elsewhere in `app.py` as well → `core.py` (or `api/_common.py` if it touches Flask).
+4. **Run `backend/tests/test_route_parity.py`.** It snapshots every URL and its verbs, and fails
+   by name if one disappears or changes methods. This is the safety net for the whole exercise:
+   the SPA calls these paths by hand, so a silent rename surfaces only as a broken page.
+   *Adding* a route needs no snapshot update — only changing or removing one does, which is
+   exactly the review signal we want. Regeneration instructions are in that file's docstring.
+5. **Leave coupled routes behind rather than dragging half of `app.py` with them.**
+   `/api/history/capture-job` stayed because it needs four Slurm helpers and is Slurm
+   introspection wearing a history URL. Migrating what is ready beats migrating what is adjacent.
+
+Domains sharing module-level job dicts (`_validation_jobs`, `_xrack_jobs`, …) must move as a unit
+with their state — the launch route and its status route are one module, not two.
+
+**Migrated so far:** `terminal` (via `install`), `help`, `vault`, `history`, `deep_audits`, `node_issues`,
+`workflows`, `nvftp_sync`, `cluster_health`, `ds_diag`, `openapi_spec`, `job_status`,
+`fabric_probe`, `ai`, `sn_llama_logs`, `slurm_queries`.
+**The configuration subsystem is no longer the blocker** — it moved to `config_env.py`, along
+with the job registries, host paths and naming. What remains is coupled to the *launch* side of
+the async tools: the `_prepare_*` builders and `_worker` threads, which reach
+`_record_validation_activity`, `_validation_node_eligibility`, `_rack_node_hostnames_from_inventory`
+and friends. Moving one drags a large connected component, so those want their own extraction
+(a `validation_launch.py` alongside `slurm_query.py`) before the routes can follow.
+
+A worked example of stopping: the six validation-preset routes look ready (their bodies need
+nothing from `app.py`), but the three helpers behind them need eight more private functions.
+That attempt was reverted rather than forced — which is the recipe's step 5 in practice.
+
+## Demo Mode
+
+When `RACK_STATUS_DEMO=1`, endpoints should return synthetic data without calling cluster tools:
+
+```python
+if _truthy_env("RACK_STATUS_DEMO"):
+    return _demo_parser_results()
+```
+
+`demo_data.py` generates `/api/status` mock. `/api/parser-results` has an inline `_demo_parser_results()` function.
+
+## Async Job Pattern
+
+**New long-running work should use the workflow state machine, not this pattern.** See
+`core-designs.mdc` §1: `workflow_engine.start_workflow_run()` already gives a uuid, a durable
+run that survives a restart, per-step output and bounded-concurrency fan-out, with the HTTP
+surface (`/api/workflows/<id>/run`, `/api/workflow-runs/<run_id>`) built. Repeating the pattern
+below is how this repo acquired four independent job tables, none of which survive a deploy.
+
+The pattern is documented here because a lot of existing code uses it and you will read it:
+
+1. `POST /api/<action>-async` — starts background thread, returns `{ ok, job_id }`
+2. `GET /api/<action>-status?job_id=...` — poll for progress, returns `{ ok, phase, stdout, stderr, ... }`
+3. Worker uses `host_exec.popen_on_host()` and updates an in-memory dict
+4. Phases: `starting` -> `running` -> `done` | `error` | `timeout`
+5. Jobs purge from memory after ~15 minutes
+
+If you do extend it (touching an existing route, say), two things that were learned the hard way:
+a job table must be **bounded** and evict oldest-first, and a document produced by the job should
+be **collected separately** rather than riding along on every poll — at fleet scale it is several
+MB per poll.
+
+### Durable validation activities (validation-family only)
+
+Ephemeral `job_id` polling still exists for the SPA live dialog. **Validation-family**
+launches (Stage 1/2, Llama, mnubergemm, nvloom, ClusterKit, multirack NEMO/LLMB) are
+**also** persisted via `validation_activities.py` → the capped live working set
+`var/cache/validation_activities.json` (fcntl flock; override
+`RACK_VALIDATION_ACTIVITIES_FILE`) and the append-preserving acceptance archive
+`var/history/validation_activities.sqlite3` (override
+`RACK_VALIDATION_ACTIVITIES_ARCHIVE_DB`). Canonical id is `activity_id` (UUID); async APIs still
+return `job_id` as the same UUID.
+
+- Record at launch with `_record_validation_activity(...)` before starting the worker.
+- Workers mirror phase/stdout into the store; stdout `jobid=` lines become `tasks[]`.
+- External SA logs are adopted on first parser/log access (`adopt_log`).
+- List/detail GET lazily refreshes Slurm `scheduler_state` / `StdOut=` for open tasks. A
+  lease-controlled whole-store background sweep also refreshes unseen racks; tune it with
+  `RACK_VALIDATION_ACTIVITIES_REFRESH_{BUDGET,INTERVAL}_SEC`.
+- The live JSON cap never evicts open work. `completion_rollup` is monotonic per tool+rack and
+  comes from the unpruned archive, so a failed retry/cache replacement does not erase a pass.
+- HTTP: `GET/DELETE /api/validation-activities[/<id>]`, `POST …/adopt`.
+  `GET/DELETE /api/multirack-jobs` remains a compat alias (`scope=multirack`).
+- `multirack_jobs.py` is a thin shim over `validation_activities` (legacy migration on first read).
+
+## Slurm Commands
+
+All Slurm commands go through the platform provider:
+
+```python
+plat = _get_platform()
+proc = host_exec.run_on_host(plat.scontrol_cmd("update nodename=..."), timeout=120)
+```
+
+`RACK_SLURM_MODULE`, `RACK_SLURM_SKIP_MODULE_LOAD`, `RACK_SLURM_SCONTROL`, etc. are read by the provider.
+
+## Script Path Resolution
+
+Scripts resolve from `SCRIPTS_DIR` (set by `RACK_REMOTE_BASE_PATH` or defaults to `APP_DIR/bin/scripts/`). Use `_script_exists(path)` not `path.is_file()` — the latter fails in SSH mode.
+
+## Auth Bypass
+
+The `_require_dashboard_auth()` before_request hook must allow these endpoints without auth: `login`, `api_login`, `static`.
+
+## Error Responses
+
+Return `{"ok": false, "error": "message"}` with HTTP status: 400 (bad input), 403 (disabled), 404 (not found), 500 (server), 502 (subprocess), 504 (timeout).
+
+## Testing
+
+- Tests in `backend/tests/` directory, pytest framework
+- Run from the repo root so backend modules resolve repo-root assets: `python -m pytest backend/tests/ -v`
+- Set env vars before importing app: `RACK_STATUS_DEMO=1`, `RACK_WEB_AUTH_DISABLED=1` (demo serves synthetic data, so the app never reaches a cluster; `backend/tests/conftest.py` already pins local execution for the suite)
+- Use Flask test client via `app.test_client()`
+- SPA serving test must check `static/spa/index.html` exists before requesting (file not present in CI)
+- CI runs: `pip install -r backend/requirements.txt pytest && python -m pytest backend/tests/ -v`
+- Ruff lint must pass: `ruff check backend/ --exclude tests`

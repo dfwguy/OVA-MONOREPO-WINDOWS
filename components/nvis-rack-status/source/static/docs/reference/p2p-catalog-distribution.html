@@ -1,0 +1,1091 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>P2P catalog distribution — components, parameters, and scripts &#8212; NVIS Greenlight</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/local-fonts.css?v=64a3f04a" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f6167d25" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=1657e09f"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/p2p-catalog-distribution';</script>
+
+    <link rel="icon" href="../_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Collective settings by job size" href="collective-settings-by-job-size.html" />
+    <link rel="prev" title="Action vocabulary" href="identity/action-vocabulary.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.1" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials — learning by doing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/distribute-your-first-image.html">Distribute your first image with NVIS-P2P</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides — getting something done</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../how-to/configure-a-deployment.html">How to configure a deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/authenticate-to-the-api.html">How to authenticate to the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/grant-a-team-access.html">How to grant a team access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/diagnose-a-refused-request.html">How to diagnose a refused request</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/add-your-own-script.html">How to add your own script and register it as a tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/use-the-terminal.html">How to use the terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/stage-observability-agents.html">How to stage the observability node-agents to a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/connect-a-pythoncm-cluster.html">How to connect a PythonCM (BCM) cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/distribute-a-catalog-image.html">How to distribute a catalog image to the fleet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/recover-p2p-peers-after-a-reimage.html">How to bring P2P peers up on new or reimaged nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/publish-the-deployment-tracker.html">How to publish the deployment tracker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/forecast-cluster-completion.html">How to forecast when the cluster finishes validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/write-a-rack-handover-report.html">How to write a rack handover report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/place-a-multirack-job.html">How to place a multi-rack job for best collective performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/list-bcm-racks-without-templates.html">How to list saved BCM racks without naming templates</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference — the machinery, described</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="configuration/settings.html">Configuration settings — every setting, generated</a></li>
+<li class="toctree-l1"><a class="reference internal" href="catalog/projects-and-clusters.html">Projects and clusters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="catalog/tools.html">Tool documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions-by-scope.html">Actions by scope — node, rack, multirack</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="identity/index.html">Identity and authorization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="identity/actions-and-resources.html">Actions and resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="identity/policy-schema.html">Policy schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="identity/evaluation.html">How a decision is made</a></li>
+<li class="toctree-l2"><a class="reference internal" href="identity/action-vocabulary.html">Action vocabulary — every service and action</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">P2P catalog distribution — components, parameters, scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collective-settings-by-job-size.html">Collective settings by job size</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation — why it is like this</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../explanation/the-parametric-platform.html">The parametric platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/why-authorization-is-default-deny.html">Why authorization is default-deny</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/how-a-script-path-is-chosen.html">How a script path is chosen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/the-cluster-home-directory.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/how-cluster-paths-reach-scripts.html">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/geometry-and-hostnames.html">Geometry and hostnames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/which-storage-engine.html">Which storage engine, and why</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/why-no-pythoncm-broker.html">Why there is no PythonCM broker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/porting-the-pythoncm-fork.html">Porting the PythonCM fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/p2p-module-integration.html">NVIS-P2P as a per-cluster capability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/active-passive-and-blue-green.html">Active/passive and blue/green (roadmap)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/p2p-catalog-distribution.html">How catalog images reach every node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/rack-placement-and-collective-performance.html">Rack placement and collective performance</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">P2P catalog distribution — components, parameters, and scripts</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="p2p-catalog-distribution-components-parameters-and-scripts">
+<h1>P2P catalog distribution — components, parameters, and scripts<a class="headerlink" href="#p2p-catalog-distribution-components-parameters-and-scripts" title="Link to this heading">#</a></h1>
+<div class="nvis-diataxis nvis-diataxis-reference docutils">
+<p>Reference — a description of the machinery. Look things up here.</p>
+</div>
+<p><em>Reference — the components, ports, configuration keys, scripts and parameters of NVIS-P2P catalog
+distribution. For the model behind it see
+<a class="reference internal" href="../explanation/p2p-catalog-distribution.html"><span class="std std-doc">How catalog images reach every node</span></a>.</em></p>
+<section id="glossary">
+<h2>Glossary<a class="headerlink" href="#glossary" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Term</p></th>
+<th class="head"><p>Definition</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Catalog</p></td>
+<td><p>The manifest of distributable images and their pinned <code class="docutils literal notranslate"><span class="pre">sha256</span></code>/size, in <code class="docutils literal notranslate"><span class="pre">images.tsv</span></code> and <code class="docutils literal notranslate"><span class="pre">images.json</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Task</p></td>
+<td><p>One image’s content-addressed transfer. Task-id is <code class="docutils literal notranslate"><span class="pre">nvis-p2p-sha256:&lt;sha256&gt;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Roster</p></td>
+<td><p>A file of target hostnames, one per line, consumed by a campaign.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Campaign</p></td>
+<td><p>One image driven onto one roster with per-node tracking (<code class="docutils literal notranslate"><span class="pre">ready</span></code>/<code class="docutils literal notranslate"><span class="pre">deferred</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p>Seed</p></td>
+<td><p>A registered Dragonfly daemon permitted to fetch from the origin and serve peers. Two on the appserver.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Peer</p></td>
+<td><p>A compute-node daemon that pulls from seeds/peers and shares pieces; never contacts the origin.</p></td>
+</tr>
+<tr class="row-even"><td><p>Origin</p></td>
+<td><p>The nginx service that serves the image files and catalog over HTTP.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Offload</p></td>
+<td><p>Bytes delivered to nodes ÷ bytes served by the seeds. Higher is better.</p></td>
+</tr>
+<tr class="row-even"><td><p>Back-to-source</p></td>
+<td><p>A seed fetching an image from the origin (the only path that reads the origin).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="server-components-appserver">
+<h2>Server components (appserver)<a class="headerlink" href="#server-components-appserver" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Component</p></th>
+<th class="head"><p>Runs as</p></th>
+<th class="head"><p>Role</p></th>
+<th class="head"><p>Ports</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Origin (<code class="docutils literal notranslate"><span class="pre">nvis-p2p-seed-origin</span></code>)</p></td>
+<td><p>Docker container (nginx)</p></td>
+<td><p>Serves <code class="docutils literal notranslate"><span class="pre">/cluster/containers</span></code> — image files + catalog manifest</p></td>
+<td><p>12130 (HTTP)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Manager (<code class="docutils literal notranslate"><span class="pre">nvis-p2p-manager</span></code>)</p></td>
+<td><p>host process, <code class="docutils literal notranslate"><span class="pre">User=nvis-p2p</span></code></p></td>
+<td><p>Seed-peer registry, auth, dynamic config</p></td>
+<td><p>12003 gRPC, 12004 REST (localhost), 12005</p></td>
+</tr>
+<tr class="row-even"><td><p>Scheduler (<code class="docutils literal notranslate"><span class="pre">nvis-p2p-scheduler</span></code>)</p></td>
+<td><p>Docker container</p></td>
+<td><p>Builds the per-task piece-distribution plan</p></td>
+<td><p>internal</p></td>
+</tr>
+<tr class="row-odd"><td><p>Seed 1 (<code class="docutils literal notranslate"><span class="pre">nvis-p2p-seed</span></code>)</p></td>
+<td><p>host <code class="docutils literal notranslate"><span class="pre">dfdaemon</span></code>, <code class="docutils literal notranslate"><span class="pre">User=nvis-p2p</span></code></p></td>
+<td><p>Holds full images, back-to-sources from origin, serves peers</p></td>
+<td><p>12110 upload, 12114 metrics</p></td>
+</tr>
+<tr class="row-even"><td><p>Seed 2 (<code class="docutils literal notranslate"><span class="pre">nvis-p2p-seed2</span></code>)</p></td>
+<td><p>host <code class="docutils literal notranslate"><span class="pre">dfdaemon</span></code>, <code class="docutils literal notranslate"><span class="pre">User=nvis-p2p</span></code></p></td>
+<td><p>Second seed</p></td>
+<td><p>12120 upload, 12124 metrics</p></td>
+</tr>
+<tr class="row-odd"><td><p>Redis (<code class="docutils literal notranslate"><span class="pre">nvis-p2p-redis</span></code>)</p></td>
+<td><p>Docker container</p></td>
+<td><p>Manager backing store</p></td>
+<td><p>15379 (localhost)</p></td>
+</tr>
+<tr class="row-even"><td><p>Postgres (<code class="docutils literal notranslate"><span class="pre">nvis-p2p-postgres</span></code>)</p></td>
+<td><p>Docker container</p></td>
+<td><p>Manager backing store</p></td>
+<td><p>15432 (localhost)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Object store (<code class="docutils literal notranslate"><span class="pre">nvis-p2p-object-store</span></code>)</p></td>
+<td><p>Docker container (MinIO)</p></td>
+<td><p>Optional object storage; not on the catalog peer path</p></td>
+<td><p>19000/19001</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Seeds are host <code class="docutils literal notranslate"><span class="pre">dfdaemon</span></code> processes, not containers. They are distinguished from peers by their
+config (<code class="docutils literal notranslate"><span class="pre">seedPeer.enable:</span> <span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">type:</span> <span class="pre">super</span></code>) <strong>and</strong> by registration in the manager
+(<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/seed-peers</span></code>); both are required.</p>
+</section>
+<section id="node-components-compute-node">
+<h2>Node components (compute node)<a class="headerlink" href="#node-components-compute-node" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Component</p></th>
+<th class="head"><p>Role</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nvis-p2p-peer.service</span></code></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">dfdaemon</span></code> peer. Config at <code class="docutils literal notranslate"><span class="pre">/opt/containers/.nvis-p2p/peer.yaml</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nvis-p2p-catalog-sync.service</span></code> (timer-driven)</p></td>
+<td><p>Periodically reconciles the node against the catalog by running <code class="docutils literal notranslate"><span class="pre">dfstore-sync-catalog.sh</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Node-local paths:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Path</p></th>
+<th class="head"><p>Contents</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/opt/containers/*.sqsh</span></code></p></td>
+<td><p>Delivered image files (what jobs read).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/opt/containers/.nvis-p2p/catalog/images.tsv</span></code></p></td>
+<td><p>The node’s local copy of the catalog manifest.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/opt/containers/.nvis-p2p/receipts/&lt;image&gt;.sha256</span></code></p></td>
+<td><p>Per-image completion receipts.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/opt/containers/.nvis-p2p/bin/</span></code></p></td>
+<td><p>Node-side scripts (<code class="docutils literal notranslate"><span class="pre">download-catalog-image.sh</span></code>, …).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/opt/containers/.nvis-p2p/storage/</span></code></p></td>
+<td><p>Dragonfly piece storage (GC’d per <code class="docutils literal notranslate"><span class="pre">gc.taskTTL</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="peer-configuration-keys-peer-yaml">
+<h2>Peer configuration keys (<code class="docutils literal notranslate"><span class="pre">peer.yaml</span></code>)<a class="headerlink" href="#peer-configuration-keys-peer-yaml" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Example</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">manager.addr</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">http://&lt;appserver&gt;:12003</span></code></p></td>
+<td><p>Where the peer finds the scheduler/seeds.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scheduler.enableBackToSource</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>A peer never pulls from the origin — seeds/peers only.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scheduler.announceInterval</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10s</span></code></p></td>
+<td><p>How often the peer announces to the scheduler.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scheduler.maxScheduleCount</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p></td>
+<td><p>Max scheduling attempts per task.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">download.concurrentPieceCount</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">16</span></code></p></td>
+<td><p>Pieces pulled in parallel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">download.pieceTimeout</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">90s</span></code></p></td>
+<td><p>Per-piece timeout.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">download.bandwidthLimit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">50GB</span></code></p></td>
+<td><p>Download rate cap.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">upload.disableShared</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>The peer serves its pieces to other peers (the mesh).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">upload.bandwidthLimit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">50GB</span></code></p></td>
+<td><p>Upload rate cap.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seedPeer.enable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>This daemon is a plain peer, not a seed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">storage.dir</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/opt/containers/.nvis-p2p/storage</span></code></p></td>
+<td><p>Piece storage.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gc.policy.taskTTL</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">86400s</span></code></p></td>
+<td><p>How long a completed task’s pieces remain servable.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="seed-configuration-keys-seed-yaml">
+<h2>Seed configuration keys (<code class="docutils literal notranslate"><span class="pre">seed.yaml</span></code>)<a class="headerlink" href="#seed-configuration-keys-seed-yaml" title="Link to this heading">#</a></h2>
+<p>Same schema as a peer, with the distinguishing values:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seedPeer.enable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seedPeer.type</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">super</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scheduler.enableBackToSource</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> (seeds may read the origin)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">upload.server.port</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">12110</span></code> (seed) / <code class="docutils literal notranslate"><span class="pre">12120</span></code> (seed2)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">storage.dir</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/cluster/OVA/NVIS-P2P/seed-cache/seed1</span></code> (and <code class="docutils literal notranslate"><span class="pre">…/seed2</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="campaign-parameters">
+<h2>Campaign parameters<a class="headerlink" href="#campaign-parameters" title="Link to this heading">#</a></h2>
+<p>Environment variables read by <code class="docutils literal notranslate"><span class="pre">rollout-catalog-image-fleet.sh</span></code>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROLLOUT_PARALLELISM</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">48</span></code> (max 128)</p></td>
+<td><p>Concurrent ssh launches/checks per wave.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROLLOUT_POLL_SECONDS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">60</span></code></p></td>
+<td><p>Pause between poll iterations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROLLOUT_MAX_LAUNCHES</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>Re-launch attempts before a node is deferred.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROLLOUT_MAX_UNREACHABLE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>Failed reachability checks before a node is deferred.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROLLOUT_TIMEOUT_SECONDS</span></code></p></td>
+<td><p>—</p></td>
+<td><p>Overall campaign timeout.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROLLOUT_STALL_SECONDS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">600</span></code></p></td>
+<td><p>Stop and relaunch a download whose written bytes have not moved for this long; <code class="docutils literal notranslate"><span class="pre">0</span></code> disables.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NVIS_P2P_DOWNLOAD_TIMEOUT_SECONDS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3600</span></code></p></td>
+<td><p>Hard limit on one node’s download of one image, passed to every launch and enforced on the node.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROOT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/opt/nvis-p2p</span></code></p></td>
+<td><p>Install root; set to <code class="docutils literal notranslate"><span class="pre">/opt/nvis-p2p/current</span></code> for the live release.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Invocation: <code class="docutils literal notranslate"><span class="pre">rollout-catalog-image-fleet.sh</span> <span class="pre">&lt;image-filename&gt;</span> <span class="pre">&lt;roster-file&gt;</span> <span class="pre">[&lt;label&gt;]</span></code>.</p>
+<section id="wave-plan-operations-worker">
+<h3>Wave plan (operations worker)<a class="headerlink" href="#wave-plan-operations-worker" title="Link to this heading">#</a></h3>
+<p>A distribute launched from Rack Status is split into waves by the operations worker
+(<code class="docutils literal notranslate"><span class="pre">deploy/p2p/scripts/operations-worker.py</span></code>), which then runs <code class="docutils literal notranslate"><span class="pre">rollout-catalog-image-fleet.sh</span></code> once
+per wave, in order. Cluster defaults live in <strong>Dragonfly Settings</strong>; a campaign overrides them
+(0 or blank inherits).</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting (cluster)</p></th>
+<th class="head"><p>Campaign override</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rollout_strategy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">strategy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sequential</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sequential</span></code> slices the roster in order. <code class="docutils literal notranslate"><span class="pre">rack-staged</span></code> plans by placement — see below.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rollout_wave_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">wave_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p></td>
+<td><p>Nodes per wave; under <code class="docutils literal notranslate"><span class="pre">rack-staged</span></code>, the size of the first-stage (seed-loading) waves.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rollout_fill_wave_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fill_wave_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rack-staged</span></code> only: nodes per wave in every later stage. <code class="docutils literal notranslate"><span class="pre">0</span></code> = the wave size.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rollout_stages</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">stages</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1,</span> <span class="pre">50%,</span> <span class="pre">100%</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rack-staged</span></code> only: the stage ladder.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rollout_stall_seconds</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">stall_seconds</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">600</span></code></p></td>
+<td><p>Becomes <code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROLLOUT_STALL_SECONDS</span></code>; <code class="docutils literal notranslate"><span class="pre">0</span></code> (cluster only) disables.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rollout_verify_mb_per_second</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">verify_mb_per_second</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
+<td><p>Becomes <code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROLLOUT_VERIFY_MBPS</span></code>. A download with every byte written is checksumming; its stall window is the larger of 2 x <code class="docutils literal notranslate"><span class="pre">stall_seconds</span></code> and the image size at this rate (a 36.8 GB image at 100 MB/s gets 368 s). <code class="docutils literal notranslate"><span class="pre">0</span></code> keeps the flat 2 x stall.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rollout_download_timeout_seconds</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">download_timeout_seconds</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3600</span></code></p></td>
+<td><p>Becomes <code class="docutils literal notranslate"><span class="pre">NVIS_P2P_DOWNLOAD_TIMEOUT_SECONDS</span></code>; at least <code class="docutils literal notranslate"><span class="pre">60</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Stage ladder.</strong> Each rung is a cumulative per-rack target: a node count (<code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>) or a share of
+the rack, rounded up (<code class="docutils literal notranslate"><span class="pre">50%</span></code>). Counts must rise, shares must rise, and the last rung must be <code class="docutils literal notranslate"><span class="pre">100%</span></code>.
+Counts and shares may be mixed (<code class="docutils literal notranslate"><span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">50%,</span> <span class="pre">100%</span></code>); a rack smaller than a count reaches that rung
+early and skips it. For a 17-node rack the default ladder gives cuts of 1, 9 and 17 nodes.</p>
+<p><strong>How <code class="docutils literal notranslate"><span class="pre">rack-staged</span></code> plans.</strong></p>
+<ol class="arabic simple">
+<li><p>Stage one takes one node from every rack, paced at <code class="docutils literal notranslate"><span class="pre">wave_size</span></code>. These are the only pulls with no
+holder in their rack, so the only stage that loads the seeds.</p></li>
+<li><p>Each later stage takes every rack from its previous rung to its next, paced at
+<code class="docutils literal notranslate"><span class="pre">fill_wave_size</span></code>. A rack’s slice of a stage is never split across two waves unless it is larger
+than a whole wave.</p></li>
+<li><p>Racks are visited round-robin across SUs (natural order: <code class="docutils literal notranslate"><span class="pre">U7</span></code> before <code class="docutils literal notranslate"><span class="pre">U19</span></code>), so each wave spreads
+over the fabric.</p></li>
+<li><p>Roster nodes missing from the topology go last, paced at <code class="docutils literal notranslate"><span class="pre">wave_size</span></code>.</p></li>
+</ol>
+<p><strong>Using the fleet snapshot.</strong> When the cluster’s fleet snapshot
+(<code class="docutils literal notranslate"><span class="pre">&lt;state&gt;/p2p-snapshots/&lt;cluster&gt;.json</span></code>, beside the operations directory; the worker’s <code class="docutils literal notranslate"><span class="pre">--snapshot</span></code>
+overrides it) is less than an hour old, the plan also uses what is already on the fleet:</p>
+<ul class="simple">
+<li><p>A rack’s rungs are measured against the whole rack in the topology, and nodes that already hold
+the image count toward them. A rack with a copy gets no first-stage node; a rack already past 50%
+goes straight to its last stage.</p></li>
+<li><p>Within a rack, the reachable node with the most verified catalog images is taken first, so a rack
+is seeded by a peer that has finished downloads before.</p></li>
+<li><p>Nodes the snapshot could not reach, and roster nodes that already hold the image, go to their
+rack’s last stage.</p></li>
+</ul>
+<p>A missing, unreadable or older snapshot is logged and the plan uses placement alone.</p>
+<p><strong>Topology contract.</strong> The plan reads <code class="docutils literal notranslate"><span class="pre">$NVIS_TOPOLOGY_FILE</span></code>, default
+<code class="docutils literal notranslate"><span class="pre">&lt;install_root&gt;/current/inventory/topology.tsv</span></code>: one row per compute node,
+<code class="docutils literal notranslate"><span class="pre">&lt;hostname&gt;\t&lt;su&gt;\t&lt;rack&gt;</span></code>, captured from the cluster manager’s placement. It is the file the peers’
+scheduler labels (<code class="docutils literal notranslate"><span class="pre">idc</span></code> = SU, <code class="docutils literal notranslate"><span class="pre">location</span></code> = rack) are rendered from, so the plan and the scheduler
+agree on what a rack is. If the file is missing or has no placed node, the worker logs
+<code class="docutils literal notranslate"><span class="pre">falling</span> <span class="pre">back</span> <span class="pre">to</span> <span class="pre">sequential</span> <span class="pre">waves</span></code> and runs <code class="docutils literal notranslate"><span class="pre">sequential</span></code>.</p>
+<p>The worker logs the plan before the first wave, for example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[worker] rack-staged plan from /opt/nvis-p2p/current/inventory/topology.tsv: 93 racks in 15 SUs, ladder 1 → 50% → 100%, seed waves 25, fill waves 72
+[worker]   fleet snapshot (723s old): 55 racks already hold the image, 55 roster nodes hold it, 22 roster nodes were unreachable (placed last)
+[worker]   stage 1: 93 nodes over 93 racks in 4 waves
+[worker]   stage 50%: 647 nodes over 93 racks in 10 waves
+[worker]   stage 100%: 707 nodes over 93 racks in 11 waves
+[worker] wave 0 — 25 nodes (stage 1)
+</pre></div>
+</div>
+<p>Run-directory artifacts (under <code class="docutils literal notranslate"><span class="pre">$NVIS_P2P_ROOT/state/rollout-&lt;label&gt;-&lt;image&gt;-&lt;stamp&gt;/</span></code>):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>File</p></th>
+<th class="head"><p>Contents</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tracking.tsv</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">node</span>&#160; <span class="pre">launches</span>&#160; <span class="pre">unreachable</span>&#160; <span class="pre">last_state</span>&#160; <span class="pre">last_detail</span></code> — the live ledger.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ready.tsv</span></code></p></td>
+<td><p>Nodes confirmed present + verified, with timestamp.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferred.tsv</span></code></p></td>
+<td><p>Nodes given up on, with reason (<code class="docutils literal notranslate"><span class="pre">launch_limit_N</span></code>, <code class="docutils literal notranslate"><span class="pre">unreachable_after_N_checks</span></code>, <code class="docutils literal notranslate"><span class="pre">stalled_&lt;S&gt;s_after_&lt;N&gt;_launches</span></code>, <code class="docutils literal notranslate"><span class="pre">timeout_after_&lt;S&gt;s</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">progress.tsv</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">node</span>&#160; <span class="pre">written</span>&#160; <span class="pre">since_epoch</span></code> — each active download’s written bytes and when they last changed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rollout.log</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ROLLOUT_BEGIN</span></code> / <code class="docutils literal notranslate"><span class="pre">PREHEAT_READY</span></code> / <code class="docutils literal notranslate"><span class="pre">ROLLOUT_PROGRESS</span></code> / <code class="docutils literal notranslate"><span class="pre">ROLLOUT_STALLED</span></code> / <code class="docutils literal notranslate"><span class="pre">ROLLOUT_COMPLETE</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Stalled downloads.</strong> Each poll, <code class="docutils literal notranslate"><span class="pre">check-catalog-image-node.sh</span></code> reports an active download as
+<code class="docutils literal notranslate"><span class="pre">ACTIVE</span>&#160; <span class="pre">pid=&lt;pid&gt;</span> <span class="pre">written=&lt;bytes&gt;</span></code>, where <code class="docutils literal notranslate"><span class="pre">written</span></code> is the bytes allocated to the node’s staging
+partial (dfget preallocates its length, so only the allocated blocks move; <code class="docutils literal notranslate"><span class="pre">-1</span></code> until a partial
+exists). A download whose <code class="docutils literal notranslate"><span class="pre">written</span></code> has not changed for <code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROLLOUT_STALL_SECONDS</span></code> is stalled,
+and a download whose <code class="docutils literal notranslate"><span class="pre">written</span></code> has reached the image size (it may be checksumming) gets twice that
+window. A stalled node is stopped with <code class="docutils literal notranslate"><span class="pre">stop-catalog-image-node.sh</span></code> and relaunched; once it has used
+<code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROLLOUT_MAX_LAUNCHES</span></code> it is stopped and deferred as <code class="docutils literal notranslate"><span class="pre">stalled_&lt;S&gt;s_after_&lt;N&gt;_launches</span></code>. The
+peer keeps the pieces it already holds, so a relaunch resumes rather than restarts. A node still
+downloading when the wave reaches <code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ROLLOUT_TIMEOUT_SECONDS</span></code> is deferred <strong>and stopped</strong>
+(<code class="docutils literal notranslate"><span class="pre">ROLLOUT_TIMEOUT_STOPPED</span></code>), so a deferred node never keeps a transfer running.</p>
+<p><strong>Download limit on the node.</strong> <code class="docutils literal notranslate"><span class="pre">launch-catalog-image-node.sh</span> <span class="pre">NODE</span> <span class="pre">FILENAME</span> <span class="pre">[SECONDS]</span></code> passes the
+limit to <code class="docutils literal notranslate"><span class="pre">download-catalog-image.sh</span></code>, which runs dfget under <code class="docutils literal notranslate"><span class="pre">timeout</span> <span class="pre">--kill-after=60</span></code>: dfget is told
+the limit, and is killed when it passes even if it ignores it (the log ends with
+<code class="docutils literal notranslate"><span class="pre">CATALOG_DOWNLOAD_TIMEOUT</span></code>, exit 124). A launch that finds a “running” download older than the limit
+plus <code class="docutils literal notranslate"><span class="pre">NVIS_P2P_STALE_GRACE_SECONDS</span></code> (default <code class="docutils literal notranslate"><span class="pre">60</span></code>) replaces it (<code class="docutils literal notranslate"><span class="pre">replaced_stale_pid=</span></code> in
+<code class="docutils literal notranslate"><span class="pre">CATALOG_LAUNCH_STARTED</span></code>) instead of reporting it active. The download script takes the seed origin
+from the node’s <code class="docutils literal notranslate"><span class="pre">catalog-refresh.env</span></code> (scheme, host and port of <code class="docutils literal notranslate"><span class="pre">NVIS_P2P_CATALOG_URL</span></code>) unless
+<code class="docutils literal notranslate"><span class="pre">NVIS_P2P_ORIGIN</span></code> is set, and refuses with <code class="docutils literal notranslate"><span class="pre">CATALOG_ORIGIN_UNKNOWN</span></code> when it has neither.</p>
+</section>
+</section>
+<section id="catalog-manifest-images-tsv">
+<h2>Catalog manifest (<code class="docutils literal notranslate"><span class="pre">images.tsv</span></code>)<a class="headerlink" href="#catalog-manifest-images-tsv" title="Link to this heading">#</a></h2>
+<p>Tab-separated, one row per image:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>order	name	filename	bytes	sha256
+2	HPC Benchmarks	nvidia+hpc-benchmarks+26.02-arm.sqsh	9818501120	8f2e92ba…
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">images.json</span></code> carries the same records plus a <code class="docutils literal notranslate"><span class="pre">required_by</span></code> list. Both live at
+<code class="docutils literal notranslate"><span class="pre">NVIS_CATALOG_PATH</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">/cluster/containers/.nvis-p2p/catalog/</span></code>) and are served by the origin at
+<code class="docutils literal notranslate"><span class="pre">http://&lt;appserver&gt;:12130/.nvis-p2p/catalog/images.tsv</span></code>.</p>
+<section id="required-by-which-launch-runs-which-image">
+<h3>Required by — which launch runs which image<a class="headerlink" href="#required-by-which-launch-runs-which-image" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">required_by</span></code> names the launches that run an image. Every launch that stages a container finds its
+image here, and nowhere else: the filename, the byte size and the SHA256 that the stage gates check
+are this entry’s. No launcher carries an image name or digest of its own.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Required by</p></th>
+<th class="head"><p>Launch</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nemo-26.04.01</span></code></p></td>
+<td><p>NeMo 26.04.01 validation preset (rack and multi-rack)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">exemplar-system-info</span></code></p></td>
+<td><p>DGXC Exemplar system_info preset</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">llama31-405b-fp8</span></code></p></td>
+<td><p>Llama 3.1 405B FP8 preset</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gpt-oss-cpu</span></code></p></td>
+<td><p>GPT-OSS CPU microbenchmark preset (from the LLMB image store)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mnubergemm-26.03-v1.17</span></code></p></td>
+<td><p>MNUberGEMM preset</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nemo-xrack</span></code></p></td>
+<td><p>Multirack NEMO</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">validation-singlerack</span></code></p></td>
+<td><p>NeMo single-rack validation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">llmb-nccl-container</span></code></p></td>
+<td><p>LLMB NCCL container sweep (24 tests)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The Catalog Editor offers exactly these names (<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/p2p/catalog</span></code> returns them as <code class="docutils literal notranslate"><span class="pre">consumers</span></code>).
+A launch is refused before it reaches Slurm when no image names it, when two images name it, or when
+the image it names has no bytes or SHA256 — the message says which, and what to set. The resolved
+image is part of the reviewed plan, so editing the catalog between review and launch changes the
+plan hash and the launch must be reviewed again. The launcher receives it as <code class="docutils literal notranslate"><span class="pre">NVIS_LAUNCH_IMAGE</span></code>,
+<code class="docutils literal notranslate"><span class="pre">NVIS_LAUNCH_IMAGE_BYTES</span></code> and <code class="docutils literal notranslate"><span class="pre">NVIS_LAUNCH_IMAGE_SHA256</span></code>. A manual run may set <code class="docutils literal notranslate"><span class="pre">NVIS_LAUNCH_IMAGE</span></code>
+alone; the size and digest then come from the catalog published beside the scripts
+(<code class="docutils literal notranslate"><span class="pre">config/image-catalog.tsv</span></code>).</p>
+</section>
+</section>
+<section id="script-inventory">
+<h2>Script inventory<a class="headerlink" href="#script-inventory" title="Link to this heading">#</a></h2>
+<p>Server-side (<code class="docutils literal notranslate"><span class="pre">$NVIS_P2P_ROOT/current/scripts/</span></code>):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Script</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">install-nvis-p2p.py</span></code></p></td>
+<td><p>Stage and activate a release; owns the tree to <code class="docutils literal notranslate"><span class="pre">nvis-p2p:cmods</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preheat-catalog-image.sh</span> <span class="pre">&lt;image&gt;</span></code></p></td>
+<td><p>Make both seeds hold an image (back-to-source once).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rollout-catalog-image-fleet.sh</span> <span class="pre">&lt;image&gt;</span> <span class="pre">&lt;roster&gt;</span> <span class="pre">[label]</span></code></p></td>
+<td><p>Run a campaign for one image over a roster.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preflight-catalog-node.sh</span></code> / <code class="docutils literal notranslate"><span class="pre">preflight-catalog-fleet.sh</span></code></p></td>
+<td><p>Readiness checks.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deploy-catalog-peer-node.sh</span></code> / <code class="docutils literal notranslate"><span class="pre">deploy-catalog-peer-fleet.sh</span></code></p></td>
+<td><p>Install the peer on nodes.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Node-side (<code class="docutils literal notranslate"><span class="pre">/opt/containers/.nvis-p2p/bin/</span></code>):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Script</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">download-catalog-image.sh</span> <span class="pre">&lt;image&gt;</span></code></p></td>
+<td><p>Pull one image via <code class="docutils literal notranslate"><span class="pre">dfget</span></code>; receipt-guarded and <code class="docutils literal notranslate"><span class="pre">sha</span></code>-verified.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dfstore-sync-catalog.sh</span></code></p></td>
+<td><p>Reconcile the node against the whole catalog (the sync service’s entry point).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">check-catalog-image-node.sh</span></code> / <code class="docutils literal notranslate"><span class="pre">verify-catalog-node.sh</span></code></p></td>
+<td><p>Report a node’s state for one image.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="node-side-download-command">
+<h2>Node-side download command<a class="headerlink" href="#node-side-download-command" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">download-catalog-image.sh</span></code> resolves the row from the local catalog and invokes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dfget</span> \
+  <span class="o">--</span><span class="n">endpoint</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">containers</span><span class="o">/.</span><span class="n">nvis</span><span class="o">-</span><span class="n">p2p</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">dfdaemon</span><span class="o">.</span><span class="n">sock</span> \
+  <span class="o">--</span><span class="n">digest</span> <span class="s2">"sha256:&lt;expected_sha&gt;"</span> \
+  <span class="o">--</span><span class="n">content</span><span class="o">-</span><span class="k">for</span><span class="o">-</span><span class="n">calculating</span><span class="o">-</span><span class="n">task</span><span class="o">-</span><span class="nb">id</span> <span class="s2">"nvis-p2p-sha256:&lt;expected_sha&gt;"</span> \
+  <span class="o">--</span><span class="n">application</span> <span class="n">NVIS</span><span class="o">-</span><span class="n">P2P</span><span class="o">-</span><span class="n">Catalog</span> \
+  <span class="o">--</span><span class="n">tag</span> <span class="s2">"catalog-v1-&lt;order&gt;"</span> \
+  <span class="o">--</span><span class="n">disable</span><span class="o">-</span><span class="n">back</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">source</span> \
+  <span class="s2">"http://&lt;appserver&gt;:12130/&lt;image&gt;"</span> \
+  <span class="o">-</span><span class="n">O</span> <span class="o">&lt;</span><span class="n">staging</span><span class="o">&gt;/&lt;</span><span class="n">image</span><span class="o">&gt;.</span><span class="n">partial</span>
+</pre></div>
+</div>
+<p>It exits early with <code class="docutils literal notranslate"><span class="pre">CATALOG_IMAGE_READY</span></code> if the image is already present with a matching receipt
+or on-disk <code class="docutils literal notranslate"><span class="pre">sha</span></code>; otherwise it verifies size and <code class="docutils literal notranslate"><span class="pre">sha</span></code> after the pull and writes a receipt.</p>
+</section>
+<section id="ownership-model">
+<h2>Ownership model<a class="headerlink" href="#ownership-model" title="Link to this heading">#</a></h2>
+<p>The deployed release and catalog are owned <code class="docutils literal notranslate"><span class="pre">nvis-p2p:cmods</span></code>. Operator-editable directories
+(<code class="docutils literal notranslate"><span class="pre">scripts</span></code>, <code class="docutils literal notranslate"><span class="pre">configs</span></code>, <code class="docutils literal notranslate"><span class="pre">catalog</span></code>, <code class="docutils literal notranslate"><span class="pre">state</span></code>) are <code class="docutils literal notranslate"><span class="pre">2775</span></code> (setgid + group-write); <code class="docutils literal notranslate"><span class="pre">dist/</span></code> binaries are
+owned by the service account but read-only; systemd unit files under <code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/</span></code> remain
+root-owned (a systemd requirement) while the services run as <code class="docutils literal notranslate"><span class="pre">nvis-p2p</span></code> via <code class="docutils literal notranslate"><span class="pre">User=</span></code>. The installer
+(<code class="docutils literal notranslate"><span class="pre">install-nvis-p2p.py</span></code>) applies this at release time.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="identity/action-vocabulary.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Action vocabulary</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="collective-settings-by-job-size.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Collective settings by job size</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#glossary">Glossary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#server-components-appserver">Server components (appserver)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#node-components-compute-node">Node components (compute node)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#peer-configuration-keys-peer-yaml">Peer configuration keys (<code class="docutils literal notranslate"><span class="pre">peer.yaml</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seed-configuration-keys-seed-yaml">Seed configuration keys (<code class="docutils literal notranslate"><span class="pre">seed.yaml</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#campaign-parameters">Campaign parameters</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#wave-plan-operations-worker">Wave plan (operations worker)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#catalog-manifest-images-tsv">Catalog manifest (<code class="docutils literal notranslate"><span class="pre">images.tsv</span></code>)</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#required-by-which-launch-runs-which-image">Required by — which launch runs which image</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#script-inventory">Script inventory</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#node-side-download-command">Node-side download command</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ownership-model">Ownership model</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

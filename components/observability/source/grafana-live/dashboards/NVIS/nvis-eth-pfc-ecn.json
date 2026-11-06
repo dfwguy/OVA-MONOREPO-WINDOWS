@@ -1,0 +1,1204 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Ethernet congestion signalling on the NVOS/Cumulus plane: ECN/CE marking, WRED congestion drops, RX buffer exhaustion and queue discards, per interface and traffic class. NVOS on this fleet exports no 802.3x/802.1Qbb pause-frame counters (0 series over full retention), so PFC is represented by buffer-full and WRED instead.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "\ud83c\udfe0 NVIS Home",
+      "tooltip": "Back to the NVIS Home hub",
+      "type": "link",
+      "url": "/d/nvis-home/?${__url_time_range}"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "\u2196 Ethernet Fabric Home (L2)",
+      "type": "link",
+      "url": "/d/nvis-l2-eth-fabric/?${__url_time_range}"
+    },
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "ethernet"
+      ],
+      "targetBlank": false,
+      "title": "Ethernet Fabric Boards",
+      "type": "dashboards",
+      "url": ""
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9900,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"padding:8px 14px;font-size:12px;line-height:1.7;color:#c7d0d9;border-left:3px solid #B77D34;background:rgba(183,125,52,0.07)\"><b style=\"color:#e6edf3\">Source: Cumulus / NVUE switch counters</b> (<code>cumulus_nvswitch_interface_*</code>, <code>lldpq_eth_*</code> via the <code>eth-prometheus</code> collector). <b>That collector is currently stopped</b>, so the panels on this board are idle; every panel is preserved unchanged and repopulates as soon as it restarts. ECN/CE marking, WRED discards and ingress-buffer exhaustion are the congestion signals this fleet publishes; NVOS on this platform does not export IEEE 802.3x / 802.1Qbb pause-frame counters.<br><b style=\"color:#e6edf3\">Ethernet boards:</b> <a style=\"color:#8ab4f8\" href=\"/d/nvis-l2-eth-fabric\">Ethernet area home</a> &nbsp;\u00b7&nbsp; <a style=\"color:#8ab4f8\" href=\"/d/nvis-eth-pfc-ecn\">Congestion signalling</a> &nbsp;\u00b7&nbsp; <a style=\"color:#8ab4f8\" href=\"/d/nvis-eth-jitter-latency\">Queueing delay</a> &nbsp;\u00b7&nbsp; <a style=\"color:#8ab4f8\" href=\"/d/nvis-eth-optical\">Optical DOM</a> &nbsp;\u00b7&nbsp; <a style=\"color:#8ab4f8\" href=\"/d/nvis-eth-fabric-overview\">Tray NIC health</a> &nbsp;\u00b7&nbsp; <a style=\"color:#8ab4f8\" href=\"/d/nvis-home\">NVIS Home</a></div>",
+        "mode": "html"
+      },
+      "title": null,
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 9990,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 12
+          },
+          "id": 1,
+          "title": "Congestion & backpressure \u2014 buffer exhaustion and queue drops (NVOS exports no PFC pause counters)",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "count(cumulus_nvswitch_interface_performance_marked_packets > 0) \u2014 interfaces where the switch has CE-marked at least one packet. 14,648 counter series are reporting (8 traffic classes x 1,831 ports); 0 of them are non-zero, so this is a genuine 'no ECN marking' reading, not a missing counter.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "interfaces ECN-marked",
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 50
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 13
+          },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "count(last_over_time(cumulus_nvswitch_interface_performance_marked_packets{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\"}[2h]) > 0)",
+              "refId": "A"
+            }
+          ],
+          "title": "Interfaces with ECN/CE marking",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "count(lldpq_eth_wred_discards_total > 0). WRED discards are the switch dropping on a congested queue \u2014 the closest real equivalent to PFC backpressure on this fleet. 14,648 counter series reporting, 0 non-zero.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "interfaces WRED-dropping",
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 50
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 13
+          },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "count(last_over_time(lldpq_eth_wred_discards_total{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\"}[2h]) > 0)",
+              "refId": "A"
+            }
+          ],
+          "title": "Interfaces with WRED congestion drops",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "count(cumulus_nvswitch_interface_rx_buffer_full > 0) \u2014 ingress buffer exhaustion, i.e. the switch ran out of RX buffer for that port. 1,831 series reporting, 0 non-zero.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "interfaces buffer-full",
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 50
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 13
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "count(last_over_time(cumulus_nvswitch_interface_rx_buffer_full{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\"}[2h]) > 0)",
+              "refId": "A"
+            }
+          ],
+          "title": "Interfaces hitting RX buffer-full",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "count(cumulus_nvswitch_interface_if_in_discards > 0). Currently ~1,574 of 1,831 \u2014 but with 0 ECN marks, 0 WRED drops and 0 buffer-full events, these discards are not congestion-driven (policy / unknown-VLAN / STP-blocked traffic). Drill into Ethernet Buffers & Drops for the breakdown.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "interfaces discarding",
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "orange",
+                    "value": 500
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 13
+          },
+          "id": 5,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "count(last_over_time(cumulus_nvswitch_interface_if_in_discards{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\"}[2h]) > 0)",
+              "refId": "A"
+            }
+          ],
+          "title": "Interfaces with ingress discards",
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 25
+          },
+          "id": 8,
+          "title": "ECN & WRED \u2014 Explicit Congestion Notification and congestion drops (per traffic class)",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "rate(cumulus_nvswitch_interface_performance_marked_packets) by device/interface/tc. This family is live with 14,648 series. A flat-zero graph is a real reading: no CE marking is occurring on this fabric.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "noValue": "\u2014",
+              "unit": "pps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 26
+          },
+          "id": 9,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "topk(20, sum by (device, interface, tc) (rate(cumulus_nvswitch_interface_performance_marked_packets{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\",interface=~\"$interface\"}[$__rate_interval])))",
+              "legendFormat": "{{device}} {{interface}} tc{{tc}}",
+              "refId": "A"
+            }
+          ],
+          "title": "ECN/CE-marked packets/s \u2014 top interface + traffic class",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "Replaces the former cumulus_nvswitch_ar_congestion_changes_total panel \u2014 that family has 0 series over the full 30d retention and has never been emitted by NVOS here. lldpq_eth_wred_discards_total (14,648 series) is the real congestion-drop signal.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "noValue": "\u2014",
+              "unit": "pps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 26
+          },
+          "id": 10,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "topk(20, sum by (device, interface, tc) (rate(lldpq_eth_wred_discards_total{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\",interface=~\"$interface\"}[$__rate_interval])))",
+              "legendFormat": "{{device}} {{interface}} tc{{tc}}",
+              "refId": "A"
+            }
+          ],
+          "title": "WRED congestion discards/s \u2014 top interface + traffic class",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "Interfaces ranked by ingress discards, joined with egress discards, ECN marks, WRED drops and buffer-full events. All five columns are latest-sample counter values (2h window). __name__ / job / instance columns are dropped by the organize transform.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "filterable": true
+              },
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 24,
+            "x": 0,
+            "y": 34
+          },
+          "id": 11,
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "In discards"
+              }
+            ]
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "topk(30, sum by (device, interface) (last_over_time(cumulus_nvswitch_interface_if_in_discards{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\",interface=~\"$interface\"}[2h])))",
+              "format": "table",
+              "instant": true,
+              "range": false,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (device, interface) (last_over_time(cumulus_nvswitch_interface_if_out_discards{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\",interface=~\"$interface\"}[2h]))",
+              "format": "table",
+              "instant": true,
+              "range": false,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (device, interface) (last_over_time(cumulus_nvswitch_interface_performance_marked_packets{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\",interface=~\"$interface\"}[2h]))",
+              "format": "table",
+              "instant": true,
+              "range": false,
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (device, interface) (last_over_time(lldpq_eth_wred_discards_total{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\",interface=~\"$interface\"}[2h]))",
+              "format": "table",
+              "instant": true,
+              "range": false,
+              "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (device, interface) (last_over_time(cumulus_nvswitch_interface_rx_buffer_full{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\",interface=~\"$interface\"}[2h]))",
+              "format": "table",
+              "instant": true,
+              "range": false,
+              "refId": "E"
+            }
+          ],
+          "title": "Congestion offenders per interface \u2014 ECN \u00b7 WRED \u00b7 buffer-full \u00b7 discards",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Time 1": true,
+                  "Time 2": true,
+                  "Time 3": true,
+                  "Time 4": true,
+                  "Time 5": true,
+                  "__name__": true,
+                  "cluster": true,
+                  "instance": true,
+                  "job": true,
+                  "plane": true,
+                  "role": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "Value #A": "In discards",
+                  "Value #B": "Out discards",
+                  "Value #C": "ECN marked",
+                  "Value #D": "WRED drops",
+                  "Value #E": "RX buffer-full",
+                  "device": "Switch",
+                  "interface": "Interface"
+                }
+              }
+            },
+            {
+              "id": "sortBy",
+              "options": {
+                "fields": "",
+                "sort": [
+                  {
+                    "desc": true,
+                    "field": "In discards"
+                  }
+                ]
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 43
+          },
+          "id": 9950,
+          "title": "Collector health & platform companion (independent of the switch plane)",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "count(eth_switch_nvue_api_reachable == 1) of eth_targets_total. The netq-eth job is intentionally not counted here: it has 1 target and has never emitted a single netq_* metric, so it carries no signal.",
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 0,
+              "displayName": "of 66 switches",
+              "mappings": [],
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "green",
+                    "value": 50
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 0,
+            "y": 44
+          },
+          "id": 9951,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count(last_over_time(eth_switch_nvue_api_reachable{cluster=~\"$cluster\"}[2h]) == 1)",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Ethernet switches reachable over NVUE",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "count(cumulus_nvswitch_interface_if_in_octets) \u2014 live per-interface counter series feeding the scope variables.",
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 0,
+              "displayName": "counter series",
+              "mappings": [],
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 6,
+            "y": 44
+          },
+          "id": 9952,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count(last_over_time(cumulus_nvswitch_interface_if_in_octets{cluster=~\"$cluster\"}[2h]))",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Cumulus counter series reporting",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "count(cumulus_interface_oper_state == 1) of 4,634 interface series across the 66 switches.",
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 0,
+              "displayName": "of 4634 interfaces UP",
+              "mappings": [],
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "green",
+                    "value": 1500
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 12,
+            "y": 44
+          },
+          "id": 9953,
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "\u2192 List these nodes",
+              "url": "/d/nvis-nodes-detail"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count(last_over_time(cumulus_interface_oper_state{cluster=~\"$cluster\"}[2h]) == 1)",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Ethernet interfaces oper-UP",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "count(cumulus_bgp_session_state != 1) of 1,735 sessions. Non-zero here is the underlay problem to chase before reading congestion counters.",
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 0,
+              "displayName": "of 1735 sessions down",
+              "mappings": [],
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 100
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 18,
+            "y": 44
+          },
+          "id": 9954,
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "\u2192 List these fabric devices",
+              "url": "/d/nvis-fabric-detail"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count(last_over_time(cumulus_bgp_session_state{cluster=~\"$cluster\"}[2h]) != 1)",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "title": "BGP sessions NOT established",
+          "type": "stat"
+        }
+      ],
+      "title": "Cumulus / NVUE panels \u2014 collector stopped; 11 panels preserved and will repopulate on restart",
+      "type": "row"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "iren_mkz",
+    "ethernet",
+    "cumulus",
+    "fabric",
+    "pfc",
+    "ecn",
+    "congestion"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Datasource",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "label": "Loki",
+        "multi": false,
+        "name": "loki_datasource",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "ClusterQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(cumulus_nvswitch_interface_if_in_octets{cluster=~\"$cluster\"}, datahall)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "DataHall",
+        "multi": false,
+        "name": "datahall",
+        "options": [],
+        "query": {
+          "query": "label_values(cumulus_nvswitch_interface_if_in_octets{cluster=~\"$cluster\"}, datahall)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(cumulus_nvswitch_interface_if_in_octets{cluster=~\"$cluster\",datahall=~\"$datahall\"}, su)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "SU",
+        "multi": false,
+        "name": "su",
+        "options": [],
+        "query": {
+          "query": "label_values(cumulus_nvswitch_interface_if_in_octets{cluster=~\"$cluster\",datahall=~\"$datahall\"}, su)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(cumulus_nvswitch_interface_if_in_octets{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\"}, rack)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rack",
+        "multi": true,
+        "name": "rack",
+        "options": [],
+        "query": {
+          "query": "label_values(cumulus_nvswitch_interface_if_in_octets{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\"}, rack)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(cumulus_nvswitch_interface_if_in_octets{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\"}, device)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Switch",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(cumulus_nvswitch_interface_if_in_octets{cluster=~\"$cluster\",datahall=~\"$datahall\",su=~\"$su\",rack=~\"$rack\"}, device)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(cumulus_nvswitch_interface_if_in_octets{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\"}, interface)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Interface",
+        "multi": true,
+        "name": "interface",
+        "options": [],
+        "query": {
+          "query": "label_values(cumulus_nvswitch_interface_if_in_octets{cluster=~\"$cluster\",su=~\"$su\",rack=~\"$rack\",device=~\"$node\"}, interface)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Ethernet \u2014 Congestion Signalling (ECN \u00b7 WRED \u00b7 buffers \u00b7 discards)",
+  "uid": "nvis-eth-pfc-ecn",
+  "version": 1,
+  "weekStart": ""
+}

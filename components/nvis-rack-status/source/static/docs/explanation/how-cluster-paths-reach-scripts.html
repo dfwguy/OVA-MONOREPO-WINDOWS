@@ -1,0 +1,789 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>How cluster paths reach scripts &#8212; NVIS Greenlight</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/local-fonts.css?v=64a3f04a" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f6167d25" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=1657e09f"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'explanation/how-cluster-paths-reach-scripts';</script>
+
+    <link rel="icon" href="../_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Geometry and hostnames" href="geometry-and-hostnames.html" />
+    <link rel="prev" title="The cluster home directory" href="the-cluster-home-directory.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.1" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIS Greenlight - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIS Greenlight - Home"/>
+  
+  
+    <p class="title logo__title">NVIS Greenlight</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials — learning by doing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/distribute-your-first-image.html">Distribute your first image with NVIS-P2P</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides — getting something done</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../how-to/configure-a-deployment.html">How to configure a deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/authenticate-to-the-api.html">How to authenticate to the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/grant-a-team-access.html">How to grant a team access</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/diagnose-a-refused-request.html">How to diagnose a refused request</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/add-your-own-script.html">How to add your own script and register it as a tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/use-the-terminal.html">How to use the terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/stage-observability-agents.html">How to stage the observability node-agents to a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/connect-a-pythoncm-cluster.html">How to connect a PythonCM (BCM) cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/distribute-a-catalog-image.html">How to distribute a catalog image to the fleet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/recover-p2p-peers-after-a-reimage.html">How to bring P2P peers up on new or reimaged nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/publish-the-deployment-tracker.html">How to publish the deployment tracker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/forecast-cluster-completion.html">How to forecast when the cluster finishes validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/write-a-rack-handover-report.html">How to write a rack handover report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/place-a-multirack-job.html">How to place a multi-rack job for best collective performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/list-bcm-racks-without-templates.html">How to list saved BCM racks without naming templates</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference — the machinery, described</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/configuration/settings.html">Configuration settings — every setting, generated</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/projects-and-clusters.html">Projects and clusters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/catalog/tools.html">Tool documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/actions-by-scope.html">Actions by scope — node, rack, multirack</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/identity/index.html">Identity and authorization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/actions-and-resources.html">Actions and resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/policy-schema.html">Policy schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/evaluation.html">How a decision is made</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/identity/action-vocabulary.html">Action vocabulary — every service and action</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/p2p-catalog-distribution.html">P2P catalog distribution — components, parameters, scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/collective-settings-by-job-size.html">Collective settings by job size</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation — why it is like this</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="the-parametric-platform.html">The parametric platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-authorization-is-default-deny.html">Why authorization is default-deny</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-a-script-path-is-chosen.html">How a script path is chosen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="the-cluster-home-directory.html">The cluster home directory</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">The cluster home directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry-and-hostnames.html">Geometry and hostnames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="which-storage-engine.html">Which storage engine, and why</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-no-pythoncm-broker.html">Why there is no PythonCM broker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="porting-the-pythoncm-fork.html">Porting the PythonCM fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="p2p-module-integration.html">NVIS-P2P as a per-cluster capability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="active-passive-and-blue-green.html">Active/passive and blue/green (roadmap)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="p2p-catalog-distribution.html">How catalog images reach every node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rack-placement-and-collective-performance.html">Rack placement and collective performance</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">How cluster paths reach scripts</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="how-cluster-paths-reach-scripts">
+<h1>How cluster paths reach scripts<a class="headerlink" href="#how-cluster-paths-reach-scripts" title="Link to this heading">#</a></h1>
+<div class="nvis-diataxis nvis-diataxis-explanation docutils">
+<p>Explanation — background and reasoning. No instructions.</p>
+</div>
+<p>Rack Status ships one set of scripts to many clusters. Each cluster keeps its scripts, logs,
+toolchains and container images in different places, so the scripts must not know any of those
+places. This page explains the design that makes that true, why it is shaped this way, and the
+procedure to follow when a path or prefix goes wrong. It complements
+<a class="reference internal" href="the-cluster-home-directory.html"><span class="std std-doc">the cluster home directory</span></a>, which argues for consolidating the
+roots under one home, and <a class="reference internal" href="how-a-script-path-is-chosen.html"><span class="std std-doc">how a script path is chosen</span></a>, which
+covers which <em>copy</em> of a script runs.</p>
+<section id="the-rule">
+<h2>The rule<a class="headerlink" href="#the-rule" title="Link to this heading">#</a></h2>
+<blockquote>
+<div><p><strong>A path is a site fact. It lives in the project/cluster record, travels as an environment
+variable, and is turned into concrete paths by exactly one shell resolver. A script never
+carries a site path, and never guesses one.</strong></p>
+</div></blockquote>
+<p>Changing a project or cluster setting must be enough to move everything that depends on it. If a
+new deployment needs a script edited, the design has been bypassed somewhere.</p>
+</section>
+<section id="why-the-bugs-this-replaced">
+<h2>Why: the bugs this replaced<a class="headerlink" href="#why-the-bugs-this-replaced" title="Link to this heading">#</a></h2>
+<p>Every one of these reached a real cluster (most on Nscale NC, 2026-10) and every one had the same
+cause — a path baked into a script, or a default that pointed at another site:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symptom</p></th>
+<th class="head"><p>Baked-in path</p></th>
+<th class="head"><p>Where it really was</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Single-rack NeMo died at <code class="docutils literal notranslate"><span class="pre">mkdir</span> <span class="pre">-p</span> <span class="pre">/raid/data</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/raid/data</span></code> (Boston/Mayo DGX)</p></td>
+<td><p>NC nodes have no <code class="docutils literal notranslate"><span class="pre">/raid</span></code>; images at <code class="docutils literal notranslate"><span class="pre">/opt/containers</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>NCCL sweep: <code class="docutils literal notranslate"><span class="pre">mkdir:</span> <span class="pre">cannot</span> <span class="pre">create</span> <span class="pre">directory</span> <span class="pre">'/cluster'</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/cluster/benchmark/harish/rack_status/logs</span></code></p></td>
+<td><p>the cluster’s <code class="docutils literal notranslate"><span class="pre">log_dir</span></code>, <code class="docutils literal notranslate"><span class="pre">/home/cmods/nvis/logs</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>NCCL sweep: <code class="docutils literal notranslate"><span class="pre">libnccl.so.2</span> <span class="pre">not</span> <span class="pre">found</span> <span class="pre">(looked:</span> <span class="pre">/home/*/workspace/...)</span></code></p></td>
+<td><p>a <code class="docutils literal notranslate"><span class="pre">/home/*</span></code> glob standing in for a missing setting</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/home/cmods/workspace</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Tools installed somewhere the launchers never read</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/home/cmsupport/workspace</span></code> fallback</p></td>
+<td><p>that directory exists on no current cluster</p></td>
+</tr>
+<tr class="row-even"><td><p>NCCL Benchmark (Stage-1): <code class="docutils literal notranslate"><span class="pre">llmb-run</span> <span class="pre">not</span> <span class="pre">found</span> <span class="pre">(searched</span> <span class="pre">under</span> <span class="pre">LLMB_INSTALL=/home/nvis/dgxc-benchmarking)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/home/nvis/...</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/home/cmods/workspace/llmb</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Every launch on NC: <code class="docutils literal notranslate"><span class="pre">image</span> <span class="pre">is</span> <span class="pre">missing</span> <span class="pre">or</span> <span class="pre">empty</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">launch</span> <span class="pre">host</span></code></p></td>
+<td><p>assumed the launch host sees the shared image store</p></td>
+<td><p>the BCM head mounts only <code class="docutils literal notranslate"><span class="pre">/home</span></code>; <code class="docutils literal notranslate"><span class="pre">/cluster</span></code> is on the app server only</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Each was “fixed” at least once by changing the literal to the next cluster’s value — which is how
+<code class="docutils literal notranslate"><span class="pre">/home/nvis</span></code>, <code class="docutils literal notranslate"><span class="pre">/home/cmods</span></code>, <code class="docutils literal notranslate"><span class="pre">/home/cmsupport</span></code> and <code class="docutils literal notranslate"><span class="pre">/home/*</span></code> all came to coexist in one tree.
+Per-script defaults do not converge; they drift.</p>
+</section>
+<section id="the-roots">
+<h2>The roots<a class="headerlink" href="#the-roots" title="Link to this heading">#</a></h2>
+<p>Every on-cluster path derives from one of these. The left column is what an operator edits
+(Projects → cluster); everything to the right follows from it.</p>
+<p>Since 2026-10-23 every row below derives from <strong>one</strong> folder on the cluster record, <code class="docutils literal notranslate"><span class="pre">connection.root</span></code>
+(<code class="docutils literal notranslate"><span class="pre">backend/cluster_paths.py</span></code>): the “Project/cluster setting” column is now each path’s <em>override</em>, and a
+cluster that sets only its root gets <code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/nvis-rack-status</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/nvis/logs</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/workspace</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/bringup</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/bringup-data/{logs,reports}</span></code>. The images are the exception: they belong to
+P2P. See <a class="reference internal" href="the-cluster-home-directory.html"><span class="std std-doc">the cluster home directory</span></a>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Root</p></th>
+<th class="head"><p>Project/cluster setting</p></th>
+<th class="head"><p>Exported as</p></th>
+<th class="head"><p>Resolved by</p></th>
+<th class="head"><p>Derives</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Scripts</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">connection.remote_base_path</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RACK_REMOTE_BASE_PATH</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">backend/script_tree.py</span></code> (layers); scripts self-locate</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">scripts/{project-&lt;id&gt;,custom,&lt;platform&gt;,multi-platform}/</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Logs</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">connection.log_dir</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NVIS_LOG_DIR</span></code>, launch cwd, <code class="docutils literal notranslate"><span class="pre">RACK_JOB_LOG_DIR</span></code></p></td>
+<td><p>each launcher: <code class="docutils literal notranslate"><span class="pre">${RACK_JOB_LOG_DIR:-${RACK_STATUS_LOG_DIR:-$PWD}}</span></code></p></td>
+<td><p>job <code class="docutils literal notranslate"><span class="pre">--output</span></code>, collectors</p></td>
+</tr>
+<tr class="row-even"><td><p>Workspace</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">connection.workspace_dir</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NVIS_WORKSPACE_DIR</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bin/scripts/workspace-dir-common.sh</span></code> (the root); <code class="docutils literal notranslate"><span class="pre">bin/scripts/lib/llmb_paths.inc.sh</span></code> (LLMB)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">LLMB_INSTALL</span></code> (<code class="docutils literal notranslate"><span class="pre">&lt;ws&gt;/llmb</span></code>; an explicit value is complete on its own), <code class="docutils literal notranslate"><span class="pre">LLMB_VENV</span></code> (<code class="docutils literal notranslate"><span class="pre">&lt;ws&gt;/llmb_venv</span></code>), HPC-X, CUDA, host NCCL + nccl-tests, nvloom, built images</p></td>
+</tr>
+<tr class="row-odd"><td><p>Shared images</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">connection.shared_container_dir</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RACK_VALIDATION_CONTAINER_ROOT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">validation_presets.shared_container_root()</span></code>; scripts read the env</p></td>
+<td><p>origin store (<code class="docutils literal notranslate"><span class="pre">/cluster/containers</span></code> on NC)</p></td>
+</tr>
+<tr class="row-even"><td><p>Node image cache</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">connection.node_container_dir</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NVIS_NODE_CONTAINER_DIR</span></code> (+ <code class="docutils literal notranslate"><span class="pre">NVIS_NODE_IMAGES_P2P=1</span></code> when P2P is on)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bin/scripts/lib/node_images.inc.sh</span></code></p></td>
+<td><p>where jobs run images from (<code class="docutils literal notranslate"><span class="pre">/opt/containers</span></code> on NC)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Published settings</p></td>
+<td><p>— (follows the scripts root)</p></td>
+<td><p>—</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bin/scripts/lib/node_config.inc.sh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;scripts</span> <span class="pre">dir&gt;/config/</span></code> — the image catalog today</p></td>
+</tr>
+<tr class="row-even"><td><p>Bring-up tree</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">evidence.bringup_home</span></code> (+ <code class="docutils literal notranslate"><span class="pre">evidence.bringup_enabled</span></code>, <code class="docutils literal notranslate"><span class="pre">evidence.stage2_bringup_job</span></code>)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RACK_BRINGUP_HOME</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">backend/bringup.py:</span> <span class="pre">bringup_home()</span></code>, <code class="docutils literal notranslate"><span class="pre">is_enabled()</span></code></p></td>
+<td><p>its reporting scripts and <code class="docutils literal notranslate"><span class="pre">results/</span></code>; the node Stage 2 verdict. Switched off means the cluster runs no bring-up framework: no Stage 2, and Stage 1 is the node ladder</p></td>
+</tr>
+<tr class="row-odd"><td><p>Reports</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">connection.bug_report_dir</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RACK_BUG_REPORT_REMOTE_DIR</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">paths._bug_report_remote_dir()</span></code></p></td>
+<td><p>bug-report archives; NVLMapper’s base and the parser Excel copies default under it</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Three of these are the roots agreed on 2026-10-08 — <strong>scripts, logs, workspace</strong> — with the plan
+to consolidate them under one cluster home (<code class="docutils literal notranslate"><span class="pre">/home/cmods</span></code> on NC); see
+<a class="reference internal" href="the-cluster-home-directory.html"><span class="std std-doc">the cluster home directory</span></a>. The image directories are the same
+idea for container data, and the P2P instance derives its own <code class="docutils literal notranslate"><span class="pre">container_path</span></code> and <code class="docutils literal notranslate"><span class="pre">peer_root</span></code>
+from them (<code class="docutils literal notranslate"><span class="pre">P2pSettings.aligned_to</span></code>) so P2P and the launchers can never disagree.</p>
+<p><code class="docutils literal notranslate"><span class="pre">RACK_STATUS_ALLOWED_PREFIXES</span></code> and <code class="docutils literal notranslate"><span class="pre">RACK_BUG_REPORT_REMOTE_DIR</span></code> are still deployment-wide env
+settings; when the cluster home lands they should derive from it like everything above.</p>
+</section>
+<section id="how-a-value-travels">
+<h2>How a value travels<a class="headerlink" href="#how-a-value-travels" title="Link to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Projects → cluster record (catalog store)
+   │  catalog.context.high_overlay()          one function maps fields → env names
+   ▼
+config resolution (_eget): cluster overlay &gt; Settings job-env &gt; process env &gt; platform defaults
+   │  over SSH: NVIS_* / RACK_* forward automatically (transport.factory.FORWARD_ENV_PREFIXES);
+   │  anything else must be in the launch's env_extra
+   ▼
+launcher on the execution host (e.g. the BCM head)
+   │  sources the resolver lib → concrete paths, or a loud error naming the setting
+   │  into Slurm: --export=ALL (or an explicit --export list)
+   ▼
+batch script on a compute node
+      runs from Slurm's spool, so it finds lib/ via NVIS_SCRIPTS_DIR, never via BASH_SOURCE
+</pre></div>
+</div>
+<p>Four properties keep this honest:</p>
+<ol class="arabic simple">
+<li><p><strong>One mapping from field to env.</strong> <code class="docutils literal notranslate"><span class="pre">high_overlay()</span></code> is the only place a cluster field becomes an
+environment variable. Precedence is defined there, so the cluster record beats a stale
+Settings value or a variable inherited from someone’s shell.</p></li>
+<li><p><strong>One resolver per root, in shell.</strong> <code class="docutils literal notranslate"><span class="pre">workspace-dir-common.sh</span></code> (the workspace),
+<code class="docutils literal notranslate"><span class="pre">lib/llmb_paths.inc.sh</span></code> (LLMB under it) and <code class="docutils literal notranslate"><span class="pre">lib/node_images.inc.sh</span></code> are where <code class="docutils literal notranslate"><span class="pre">&lt;ws&gt;/llmb</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&lt;cache&gt;/&lt;image&gt;</span></code> is spelled — once. A launcher sources the resolver;
+it does not repeat the derivation. The installers source the same resolver, so the place a
+tool is installed and the place a launcher looks for it cannot diverge.</p></li>
+<li><p><strong>No ghost defaults.</strong> An unset root is an error that names the setting (“set it under
+Projects → cluster → Workspace”), raised before anything is submitted. A fallback to some
+other site’s directory is worse than an error: it fails later, far from the cause, with a
+message about the wrong thing.</p></li>
+<li><p><strong>Overrides stay overrides.</strong> <code class="docutils literal notranslate"><span class="pre">LLMB_INSTALL</span></code>, <code class="docutils literal notranslate"><span class="pre">NVIS_NODE_CONTAINER_DIR</span></code>, an installer’s
+explicit argument and the like still win when set — they describe the rare cluster whose layout
+departs from its root, not a second source of truth.</p></li>
+</ol>
+</section>
+<section id="which-host-can-see-what">
+<h2>Which host can see what<a class="headerlink" href="#which-host-can-see-what" title="Link to this heading">#</a></h2>
+<p>A path is only meaningful relative to the host that resolves it. On Nscale NC:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Host</p></th>
+<th class="head"><p>Sees</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>App server (<code class="docutils literal notranslate"><span class="pre">appserver-nc</span></code>, the container host)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/home</span></code> (NFS), <code class="docutils literal notranslate"><span class="pre">/cluster</span></code> (its own md0, the P2P origin)</p></td>
+</tr>
+<tr class="row-odd"><td><p>BCM head (where launches and <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> run)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/home</span></code> only — no <code class="docutils literal notranslate"><span class="pre">/cluster</span></code>, no <code class="docutils literal notranslate"><span class="pre">/opt/containers</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Compute nodes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/home</span></code>, node-local <code class="docutils literal notranslate"><span class="pre">/opt/containers</span></code> (P2P cache)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>So: anything a launcher must <em>read on the head</em> lives under a shared mount (<code class="docutils literal notranslate"><span class="pre">/home</span></code>). Images are
+checked <em>on the nodes</em>, by <code class="docutils literal notranslate"><span class="pre">pdsh</span></code>, against the catalog Rack Status publishes beside the scripts
+(<code class="docutils literal notranslate"><span class="pre">&lt;scripts&gt;/config/image-catalog.tsv</span></code>) — never by stat-ing the shared store from the head. That
+catalog is script execution’s own copy; the P2P control plane keeps its own manifest and receipts
+to know whether <em>it</em> is in sync, and the two checks stay separate on purpose.</p>
+</section>
+<section id="fixing-the-next-path-or-prefix-bug">
+<h2>Fixing the next path or prefix bug<a class="headerlink" href="#fixing-the-next-path-or-prefix-bug" title="Link to this heading">#</a></h2>
+<p>Work through this in order; stop at the first step that applies.</p>
+<ol class="arabic simple">
+<li><p><strong>Name the root.</strong> Which of scripts / logs / workspace / shared images / node cache does the
+path belong to? Almost every path is “a root plus a well-known suffix”.</p></li>
+<li><p><strong>If the root exists, derive.</strong> Add the suffix to that root’s resolver
+(<code class="docutils literal notranslate"><span class="pre">workspace-dir-common.sh</span></code>, <code class="docutils literal notranslate"><span class="pre">lib/llmb_paths.inc.sh</span></code>, <code class="docutils literal notranslate"><span class="pre">lib/node_images.inc.sh</span></code>, <code class="docutils literal notranslate"><span class="pre">lib/node_config.inc.sh</span></code>) and source the
+resolver from the script. Do not write <code class="docutils literal notranslate"><span class="pre">${X:-/some/site/path}</span></code> in the script.</p></li>
+<li><p><strong>If no root fits, add one properly</strong> — a new path is a new cluster setting, not a new
+default:</p>
+<ul class="simple">
+<li><p>field on <code class="docutils literal notranslate"><span class="pre">ClusterConnection</span></code> (<code class="docutils literal notranslate"><span class="pre">backend/catalog/models.py</span></code>), validated with <code class="docutils literal notranslate"><span class="pre">valid_data_dir</span></code>;</p></li>
+<li><p>export in <code class="docutils literal notranslate"><span class="pre">catalog.context.high_overlay()</span></code> under an <code class="docutils literal notranslate"><span class="pre">NVIS_</span></code>/<code class="docutils literal notranslate"><span class="pre">RACK_</span></code> name (so it forwards
+over SSH);</p></li>
+<li><p>a registry entry or <code class="docutils literal notranslate"><span class="pre">JOB_ENV_UI_DEFINITIONS</span></code> row as the deployment-wide fallback, plus a
+hint in <code class="docutils literal notranslate"><span class="pre">docs/settings-hints.toml</span></code> (regenerate <code class="docutils literal notranslate"><span class="pre">docs/reference/configuration/settings.md</span></code>);</p></li>
+<li><p>an editable field in the cluster editor (<code class="docutils literal notranslate"><span class="pre">ProjectsView.tsx</span></code>) and <code class="docutils literal notranslate"><span class="pre">types/catalog.ts</span></code> — a
+setting nobody can see or edit is not a setting;</p></li>
+<li><p>the derivation in a resolver lib, and the table on this page.</p></li>
+</ul>
+</li>
+<li><p><strong>Fail loudly when unset</strong>, naming where to set it. Never fall back to a literal path.</p></li>
+<li><p><strong>Check every hop</strong>: the overlay export, SSH forwarding (prefix or <code class="docutils literal notranslate"><span class="pre">env_extra</span></code>), the Slurm
+<code class="docutils literal notranslate"><span class="pre">--export</span></code>, and <code class="docutils literal notranslate"><span class="pre">NVIS_SCRIPTS_DIR</span></code> inside batch scripts.</p></li>
+<li><p><strong>Check which host resolves it</strong> (table above). A head-side <code class="docutils literal notranslate"><span class="pre">stat</span></code> of a node-local or
+app-server-only path is a bug, not a missing file.</p></li>
+<li><p><strong>Test it the way it runs.</strong> <code class="docutils literal notranslate"><span class="pre">backend/tests/test_cluster_workspace.py</span></code> fails the build if any
+script’s code carries a <code class="docutils literal notranslate"><span class="pre">/home/&lt;user&gt;/</span></code> or <code class="docutils literal notranslate"><span class="pre">/home/*/</span></code> literal and pins the resolver contract;
+<code class="docutils literal notranslate"><span class="pre">test_node_config.py</span></code> deploys a real instance into a local tree and follows published settings
+to where each project runs; <code class="docutils literal notranslate"><span class="pre">test_cluster_container_dirs.py</span></code> pins the image roots. Extend the
+one that matches. Run both suites in the CI images (<code class="docutils literal notranslate"><span class="pre">bin/ci-local.sh</span></code>), not on macOS.</p></li>
+</ol>
+<section id="anti-patterns-by-their-tells">
+<h3>Anti-patterns, by their tells<a class="headerlink" href="#anti-patterns-by-their-tells" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>A <code class="docutils literal notranslate"><span class="pre">/home/&lt;user&gt;/</span></code> literal in a script</strong> — another site’s path; derive it from a root.</p></li>
+<li><p><strong>A glob like <code class="docutils literal notranslate"><span class="pre">/home/*/workspace</span></code></strong> — a wildcard standing in for a setting nobody made.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">${VAR:-/somewhere}</span></code> repeated across scripts</strong> — N copies of one default that will drift; it
+belongs in the root’s resolver, once.</p></li>
+<li><p><strong>A backend default that “usually works”</strong> (<code class="docutils literal notranslate"><span class="pre">/home/cmsupport/workspace</span></code>) — a ghost: it turns a
+configuration gap into a wrong-directory failure.</p></li>
+<li><p><strong>Stat-ing a shared store from the launch host</strong> — the launch host may not mount it.</p></li>
+<li><p><strong>Writing into a shipped script layer</strong> — only a deploy writes <code class="docutils literal notranslate"><span class="pre">multi-platform/</span></code>; published
+settings go to <code class="docutils literal notranslate"><span class="pre">config/</span></code> (shipped with only a README, which both deploy paths preserve), and
+publishing never creates a script layer.</p></li>
+<li><p><strong>Fixing it on the host</strong> (editing a deployed script or exporting a variable in someone’s
+shell) — the next deploy or the next operator loses it. Fix the setting.</p></li>
+</ul>
+</section>
+</section>
+<section id="related">
+<h2>Related<a class="headerlink" href="#related" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="the-cluster-home-directory.html"><span class="std std-doc">The cluster home directory</span></a> — consolidating the roots under one
+home; the roadmap item.</p></li>
+<li><p><a class="reference internal" href="how-a-script-path-is-chosen.html"><span class="std std-doc">How a script path is chosen</span></a> — which copy of a script runs.</p></li>
+<li><p><a class="reference internal" href="../reference/catalog/projects-and-clusters.html"><span class="std std-doc">Projects and clusters</span></a> — the connection fields.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.cursor/rules/cluster-paths.mdc</span></code> — the condensed version of this page for coding agents.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="the-cluster-home-directory.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">The cluster home directory</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="geometry-and-hostnames.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Geometry and hostnames</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-rule">The rule</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-bugs-this-replaced">Why: the bugs this replaced</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-roots">The roots</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-a-value-travels">How a value travels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#which-host-can-see-what">Which host can see what</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fixing-the-next-path-or-prefix-bug">Fixing the next path or prefix bug</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anti-patterns-by-their-tells">Anti-patterns, by their tells</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related">Related</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

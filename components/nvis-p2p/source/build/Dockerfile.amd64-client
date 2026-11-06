@@ -1,0 +1,17 @@
+FROM rust@sha256:4727898c104ecd2e22d780925832502faee9fe4e70581b8572af081370b315a0
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       protobuf-compiler \
+       libprotobuf-dev \
+       libclang-dev \
+       cmake \
+       make \
+       perl \
+       pkg-config \
+       patch \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src

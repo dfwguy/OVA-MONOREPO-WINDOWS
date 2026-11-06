@@ -1,0 +1,167 @@
+# IREN_MKZ GB300 — Parquet data-lake lane (parallel to VictoriaMetrics).
+# Stock python:3.11-slim + bind-mounted code (repo convention, no custom image).
+# Deps installed at container start into a persistent venv volume for reboot survival.
+services:
+  nvis-lakewriter:
+    image: python:3.11-slim
+    container_name: nvis-lakewriter
+    restart: always
+    network_mode: host                 # receive remote_write/loki-push on :9410
+    cpus: 16                           # cap encode so it never starves VM/Grafana
+    mem_limit: 96g
+    working_dir: /app
+    environment:
+      CLUSTER_NAME: IREN_MKZ
+      LAKE_ROOT: /data/lake
+      PORT: "9410"
+      FLUSH_BYTES: "67108864"
+      FLUSH_SECONDS: "60"
+      SPOOL_MAX: "53687091200"          # 50 GiB
+      MIN_FREE_BYTES: "214748364800"    # 200 GiB
+      # run_artifacts: blobs above this go to LAKE_ROOT/blobs/sha256=<hex>/ and
+      # the parquet row keeps only content_ref. Suite conf/sbatch files are
+      # 0.5-25 KiB so they all stay inline; this only bounds a pathological push.
+      ARTIFACT_INLINE_MAX: "1048576"    # 1 MiB
+      IB_ALIAS_JSON: /data/lake/_identity/alias.json
+      PIP_ROOT: /opt/pip
+      PYTHONPATH: /opt/pip/lib/python3.11/site-packages:/app
+      PYTHONUSERBASE: /opt/pip
+    volumes:
+      - ./:/app:ro
+      - /data/lake:/data/lake
+      - /data/spool:/data/lake/raw_spool
+      - lake-pip:/opt/pip
+    command: >
+      bash -lc "PYTHONUSERBASE=/opt/pip pip install --user -q -r /app/requirements.txt &&
+                PYTHONPATH=/opt/pip/lib/python3.11/site-packages:/app
+                python /app/lakewriter.py"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:9410/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── METRICS MIRROR: VictoriaMetrics -> Parquet ─────────────────────────────
+  # Implements "whatever goes into VictoriaMetrics and Prometheus also goes into
+  # Parquet" BY CONSTRUCTION: it reads the system of record, so it covers the 4
+  # Prometheus shards, central Alloy, vmalert AND VM's own promscrape of the
+  # firehose targets. A second remote_write on the shards would capture only
+  # 33.7% of live ingest (93% of series never touch a shard) and could never
+  # cover vmalert at all. READ-ONLY against VM: it cannot stall ingest.
+  nvis-lake-vmexport:
+    image: python:3.11-slim
+    container_name: nvis-lake-vmexport
+    restart: always
+    network_mode: host                 # reach VM on the host port :8429
+    cpus: 4
+    mem_limit: 16g
+    working_dir: /app
+    environment:
+      CLUSTER_NAME: IREN_MKZ
+      LAKE_ROOT: /data/lake
+      VM_EXPORT_URL: http://127.0.0.1:8429/api/v1/export
+      VM_LABEL_API: http://127.0.0.1:8429/api/v1/label/job/values
+      METRICS_PORT: "9412"             # self-metrics; scraped via firehose.json
+      EXPORT_INTERVAL_S: "300"         # mirror every 5 min
+      EXPORT_LAG_S: "120"              # trail now() so late remote_write lands
+      EXPORT_MAX_WINDOW_S: "900"       # bound one catch-up window
+      EXPORT_BACKFILL_S: "600"         # cold start reaches back 10 min
+      EXPORT_CHUNK_BY_JOB: "1"         # per-job match[] bounds memory at scale
+      EXPORT_BATCH_ROWS: "200000"
+      MIN_FREE_BYTES: "214748364800"   # 200 GiB — skip (never drop) below this
+      IB_ALIAS_JSON: /data/lake/_identity/alias.json
+      PIP_ROOT: /opt/pip
+      PYTHONPATH: /opt/pip/lib/python3.11/site-packages:/app
+      PYTHONUSERBASE: /opt/pip
+    volumes:
+      - ./:/app:ro
+      - /data/lake:/data/lake
+      - lake-pip:/opt/pip
+    command: >
+      bash -lc "PYTHONUSERBASE=/opt/pip pip install --user -q -r /app/requirements.txt &&
+                PYTHONPATH=/opt/pip/lib/python3.11/site-packages:/app
+                python /app/lake_vmexport.py"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:9412/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── COMPACTION + RETENTION (the disk-safety guard) ─────────────────────────
+  # Preferred deployment is the systemd timers in datalake/systemd/, but
+  # installing them requires root (denied in this environment). This service
+  # keeps compaction and retention ACTUALLY RUNNING instead of leaving them as
+  # uninstalled templates — which is exactly how the lake ended up with a
+  # 90d/180d policy that nothing enforced. Retention env below is the
+  # authoritative policy; it mirrors nvis-lake-compact@.service.
+  nvis-lake-compact:
+    image: python:3.11-slim
+    container_name: nvis-lake-compact
+    restart: always
+    network_mode: host
+    cpus: 4
+    mem_limit: 32g
+    working_dir: /app
+    environment:
+      LAKE_ROOT: /data/lake
+      LATE_GRACE_HOURS: "2"            # let late data land before sealing an hour
+      RAW_RETENTION_DAYS: "30"         # metrics / fabric_phy / switch_events
+      LOG_RETENTION_DAYS: "45"         # logs
+      ROLLUP_RETENTION_DAYS: "365"     # metrics_1m long-term tier
+      LAKE_MAX_BYTES: "4398046511104"  # 4 TiB HARD ceiling (7.0T shared w/ VM+Loki)
+      COMPACT_MIN_FREE_BYTES: "322122547200"  # 300 GiB device floor
+      PYTHONPATH: /opt/pip/lib/python3.11/site-packages:/app
+      PYTHONUSERBASE: /opt/pip
+    volumes:
+      - ./:/app:ro
+      - /data/lake:/data/lake
+      - lake-pip:/opt/pip
+    command: >
+      bash -lc "PYTHONUSERBASE=/opt/pip pip install --user -q -r /app/requirements.txt &&
+                PYTHONPATH=/opt/pip/lib/python3.11/site-packages:/app
+                python /app/lake_compact.py scheduler"
+
+  # ⛔ HALTED — one of the 14 network/switch scrapers stopped in the 2026-07-25
+  # incident. It polls the IB fabric via UFM and MUST NOT run until the user
+  # gives an explicit all-clear.
+  #
+  # The `profiles:` key is the enforcement: a service with a profile is EXCLUDED
+  # from `docker compose up -d` unless that profile is explicitly selected. On
+  # 2026-07-27T00:07:12Z a bare `docker compose up -d` (no service names) started
+  # this container by accident and it ran for 72s before being killed. Without a
+  # profile, any future bare `up`, or a host reboot with `restart: always`, would
+  # silently resume fabric polling. To deliberately re-enable after an all-clear:
+  #   docker compose -f compose.datalake.yml --profile fabric up -d nvis-lake-fabric
+  nvis-lake-fabric:
+    image: python:3.11-slim
+    container_name: nvis-lake-fabric
+    profiles: ["fabric"]
+    # `no` (not `always`): a host reboot must NOT resurrect a halted scraper.
+    restart: "no"
+    network_mode: host
+    cpus: 2
+    working_dir: /app
+    environment:
+      CLUSTER_NAME: IREN_MKZ
+      LAKE_ROOT: /data/lake
+      UFM_HOST: "192.0.2.1"          # UFM-01 active (RESOLVED)
+      UFM_USER: "admin"
+      UFM_USERNAME: ${UFM_USERNAME:?set UFM_USERNAME in the new secret overlay}
+      UFM_PASSWORD: ${UFM_PASSWORD:?set UFM_PASSWORD in the new secret overlay}
+      UFM_VERIFY_SSL: "false"
+      UFM_TELEMETRY_PORT: "9001"
+      POLL_SECONDS: "30"
+      PYTHONPATH: /opt/pip/lib/python3.11/site-packages:/app
+      PYTHONUSERBASE: /opt/pip
+    volumes:
+      - ./:/app:ro
+      - /data/lake:/data/lake
+      - lake-pip:/opt/pip
+    command: >
+      bash -lc "PYTHONUSERBASE=/opt/pip pip install --user -q -r /app/requirements.txt &&
+                PYTHONPATH=/opt/pip/lib/python3.11/site-packages:/app
+                python /app/lake_fabric_poller.py"
+
+volumes:
+  lake-pip:
+    name: nvis-lake-pip        # explicit name so the compaction timer shares this venv

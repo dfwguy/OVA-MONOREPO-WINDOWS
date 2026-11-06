@@ -1,0 +1,14 @@
+# Merge into %USERPROFILE%\.ssh\config after filling private values.
+# These are placeholders. Do not copy prior customer/lab connection defaults.
+Host iren-mkz-management
+    HostName REPLACE_WITH_APPROVED_MANAGEMENT_FQDN
+    User REPLACE_WITH_SSH_USER
+    Port 22
+    IdentityFile C:/IREN-private/id_ed25519_iren
+    IdentitiesOnly yes
+    StrictHostKeyChecking yes
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+# Obtain the host-key fingerprint independently from the site administrator.
+# Do not set StrictHostKeyChecking=no. Configure ProxyJump only if required
+# by the actual VPN/bastion instructions.

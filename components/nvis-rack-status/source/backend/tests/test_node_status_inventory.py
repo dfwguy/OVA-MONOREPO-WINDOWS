@@ -1,0 +1,848 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+"""Actual compute inventory survives absent racks, naming mismatches and query failures."""
+
+import subprocess
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock
+
+import native_status as ns
+import nvis_id_templates as ids
+import pytest
+import rack_status_engine as engine
+import slurm_query
+
+
+@pytest.fixture(autouse=True)
+def isolated_inventory(monkeypatch):
+    naming = ids.get_nvis_naming(
+        ids.DEFAULT_NVIS_RACK_ID, ids.DEFAULT_NVIS_CT_ID, ids.DEFAULT_NVIS_NVSW_ID
+    )
+    monkeypatch.setattr(ns, "_nvis_naming", lambda: naming)
+    monkeypatch.setattr(ns, "_host_resolve", lambda path: path)
+    monkeypatch.setattr(ns, "_RACK_ALIAS_CACHE", None)
+    monkeypatch.delenv("RACK_ID_ALIAS_RULES", raising=False)
+    monkeypatch.delenv("SINFO_OPTS", raising=False)
+    monkeypatch.setattr(ns, "_env_int", lambda _key, default: default)
+    monkeypatch.setattr(ns.config_env, "_eget", lambda _key, default="": default)
+    monkeypatch.setattr(engine, "_nvis_naming", lambda: naming)
+    monkeypatch.setattr(engine, "_env_int", lambda _key, default: default)
+    monkeypatch.delenv("RACK_PHYSICAL_RF0_LOOSE_HOSTNAMES", raising=False)
+    monkeypatch.delenv("RACK_PHYSICAL_RF0_MAP_DISABLED", raising=False)
+    monkeypatch.setattr(ns, "_get_platform", lambda: SimpleNamespace(
+        sinfo_cmd=lambda opts: ("sinfo", opts),
+        scontrol_hostnames_cmd=lambda spec: ("scontrol-hostnames", spec),
+    ))
+    monkeypatch.setattr(slurm_query, "_get_platform", lambda: ns._get_platform())
+    for name in ("run_slurm_on_host", "run_on_host", "which", "resolve"):
+        monkeypatch.setattr(ns.host_exec, name, Mock(side_effect=AssertionError("unexpected host call")))
+
+
+def slurm_response(stdout="", returncode=0):
+    return subprocess.CompletedProcess(["mock-slurm"], returncode, stdout, "")
+
+
+def test_rackless_nodes_are_retained_without_invented_geometry(monkeypatch):
+    run = Mock(return_value=slurm_response("GPU01 idle\nGPU02 down*\n"))
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", run)
+    monkeypatch.setenv("RACK_CLUSTER_GPU_PER_TRAY", "8")
+    monkeypatch.setenv("RACK_COMPUTE_NODES_PER_RACK", "72")
+
+    state = ns.NativeRackTableState("rackless", Path("/logs"))
+    state._worker_sinfo()
+    payload = state.node_inventory_snapshot()
+
+    assert payload["nodes"] == [
+        {"id": "GPU01", "rack": None, "status": "up", "scheduler_state": "idle", "scheduler_status": "idle", "ip": ""},
+        {"id": "GPU02", "rack": None, "status": "down", "scheduler_state": "down", "scheduler_status": "down", "ip": ""},
+    ]
+    assert payload["node_inventory_error"] == ""
+    assert state.sinfo_counts == {}
+    assert state.racks == []
+    run.assert_called_once()
+    assert ns.build_node_inventory({}, ["p5-r01"]) == []
+
+
+def test_duplicate_partition_rows_preserve_spelling_and_all_states(monkeypatch):
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", Mock(return_value=slurm_response(
+        "GPU01 idle\ngpu01 idle\nGpu01 down*\nGPU02 alloc+comp\nGPU02 alloc\n"
+    )))
+
+    nodes = ns.collect_sinfo_nodes()
+
+    assert nodes == {"GPU01": "down+idle", "GPU02": "alloc+comp"}
+    assert [node["status"] for node in ns.build_node_inventory(nodes, [])] == ["down", "up"]
+
+
+# A hostname the CT template CAN parse into a rack, so the two modes diverge observably.
+_MAP_NODES = {"p1-r5-ct3": "idle"}
+_MAP_RACKS = ["p1-r5"]
+
+
+class TestRackMappingMode:
+    """Direct parses the rack from the hostname; translate refuses to, taking placement only
+    from the provider record. The divergence is the whole point of the flag: on Nscale NC the
+    hostname carries no rack, so parsing it would invent a wrong one from a mis-set CT template.
+    """
+
+    def test_direct_parses_the_rack_out_of_the_hostname(self, monkeypatch):
+        monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "direct")
+        inv = ns.build_node_inventory(_MAP_NODES, _MAP_RACKS, records=[])
+        assert inv[0]["rack"] == "p1-r5"
+
+    def test_translate_ignores_the_hostname_when_provider_is_silent(self, monkeypatch):
+        """No provider placement -> ungrouped, rather than a hostname-guessed rack."""
+        monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "translate")
+        inv = ns.build_node_inventory(_MAP_NODES, _MAP_RACKS, records=[])
+        assert inv[0]["rack"] is None
+
+    def test_translate_places_from_the_provider_rack_attribute(self, monkeypatch):
+        """The NC path: rack/slot come from the cluster manager's device record, not the name."""
+        monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "translate")
+        records = [{"id": "p1-r5-ct3", "rack": "p1-r5", "ip": ""}]
+        inv = ns.build_node_inventory(_MAP_NODES, _MAP_RACKS, records=records)
+        assert inv[0]["rack"] == "p1-r5"
+
+
+class TestRackUnitPlacement:
+    """The rack page shows where the cluster manager placed each node. That position travels as
+    ``rack_unit`` from the provider record -- never parsed out of a hostname or a tray template.
+    """
+
+    def test_bcm_records_carry_the_rack_unit_when_reported(self):
+        from platforms.base import _compute_node_records
+
+        rows = _compute_node_records(
+            [
+                {"hostname": "sys1-gso1-p-phy-gpu19-su19", "rack_id": "U20", "rack_unit": "11", "bmc_ip": "10.0.0.1"},
+                {"hostname": "sys1-gso1-p-phy-gpu20-su19", "rack_id": "U20", "rack_unit": 12, "bmc_ip": ""},
+                {"hostname": "sys1-gso1-p-phy-gpu21-su19", "rack_id": "U20", "rack_unit": "", "bmc_ip": ""},
+            ],
+            provider="BCM", rack_field="rack_id", ip_field="bmc_ip", rack_unit_field="rack_unit",
+        )
+        assert [r.get("rack_unit") for r in rows] == ["11", "12", None]
+        assert "rack_unit" not in rows[2]
+
+    def test_without_a_unit_field_records_are_unchanged(self):
+        from platforms.base import _compute_node_records
+
+        rows = _compute_node_records(
+            [{"hostname": "n1", "rack_id": "R1", "rack_unit": "7"}], provider="X", rack_field="rack_id",
+        )
+        assert rows == [{"id": "n1", "rack": "R1", "status": "unknown", "ip": "", "scheduler_state": ""}]
+
+    def test_translate_inventory_carries_the_provider_unit_for_placed_nodes(self, monkeypatch):
+        monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "translate")
+        nodes = {"sys1-gso1-p-phy-gpu19-su19": "idle", "sys1-gso1-p-phy-gpu99-su19": "idle"}
+        records = [
+            {"id": "sys1-gso1-p-phy-gpu19-su19", "rack": "U20", "ip": "10.0.0.1", "rack_unit": "11"},
+            {"id": "sys1-gso1-p-phy-gpu99-su19", "rack": None, "ip": "", "rack_unit": "5"},
+        ]
+        inv = {n["id"]: n for n in ns.build_node_inventory(nodes, ["U20"], records=records)}
+        assert inv["sys1-gso1-p-phy-gpu19-su19"]["rack"] == "U20"
+        assert inv["sys1-gso1-p-phy-gpu19-su19"]["rack_unit"] == "11"
+        # Unplaced: a unit with no rack locates nothing, so it is not published.
+        assert "rack_unit" not in inv["sys1-gso1-p-phy-gpu99-su19"]
+
+    def test_bcm_provider_asks_for_the_unit(self, monkeypatch):
+        from platforms import bcm
+
+        monkeypatch.setattr(
+            bcm.bcm_query, "nodes",
+            lambda: {"ok": True, "data": [{"hostname": "h1", "rack_id": "U20", "rack_unit": "11", "bmc_ip": "1.2.3.4"}]},
+        )
+        rows = bcm.BCMProvider().compute_node_inventory()
+        assert rows[0]["rack"] == "U20" and rows[0]["rack_unit"] == "11" and rows[0]["ip"] == "1.2.3.4"
+
+
+class TestTrayNumbering:
+    """Trays are numbered 1..N per rack in natural hostname order -- the site's install order --
+    because the cluster manager places nodes at rack units, not trays."""
+
+    def test_nc_rack_numbers_by_gpu_sequence_not_by_string_order(self, monkeypatch):
+        monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "translate")
+        hosts = [f"sys1-gso1-p-phy-gpu{i}-su19" for i in (36, 19, 100, 9, 20)]
+        records = [{"id": h, "rack": "U20", "ip": "", "rack_unit": str(i)} for i, h in enumerate(hosts)]
+        inv = ns.build_node_inventory({h: "idle" for h in hosts}, ["U20"], records=records)
+        trays = {n["id"]: n["tray"] for n in inv}
+        assert [trays[f"sys1-gso1-p-phy-gpu{i}-su19"] for i in (9, 19, 20, 36, 100)] == [1, 2, 3, 4, 5]
+
+    def test_each_rack_numbers_from_one_and_unplaced_nodes_get_none(self, monkeypatch):
+        monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "translate")
+        records = [
+            {"id": "a2", "rack": "R1", "ip": ""}, {"id": "a1", "rack": "R1", "ip": ""},
+            {"id": "b7", "rack": "R2", "ip": ""}, {"id": "loose", "rack": None, "ip": ""},
+        ]
+        inv = {n["id"]: n for n in ns.build_node_inventory({r["id"]: "idle" for r in records}, ["R1", "R2"], records=records)}
+        assert (inv["a1"]["tray"], inv["a2"]["tray"], inv["b7"]["tray"]) == (1, 2, 1)
+        assert "tray" not in inv["loose"]
+
+    def test_tray_hostnames_keep_their_own_numbers(self, monkeypatch):
+        """Direct mode on a cluster whose hostnames are tray ids: numbering reproduces them."""
+        monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "direct")
+        nodes = {f"p5-r01-ct{i:02d}": "idle" for i in (3, 1, 10, 2)}
+        inv = ns.build_node_inventory(nodes, ["p5-r01"], records=[])
+        assert {n["id"]: n["tray"] for n in inv} == {"p5-r01-ct01": 1, "p5-r01-ct02": 2, "p5-r01-ct03": 3, "p5-r01-ct10": 4}
+
+
+class TestProviderRackCounts:
+    """A BCM/pythoncm cluster has no sinfo, so the rack tiles' node totals must come from the
+    placed roster. Without this every provider rack showed 0/0 even with 18 nodes enumerated.
+    """
+
+    def test_counts_are_grouped_by_rack_and_state(self):
+        inv = (
+            [{"id": f"n{i}", "rack": "U19", "status": "inst"} for i in range(16)]
+            + [{"id": "nd", "rack": "U19", "status": "down"}]
+            + [{"id": "nu", "rack": "U19", "status": "up"}]
+        )
+        counts = ns.counts_from_node_inventory(inv)
+        assert counts == {("U19", "inst"): 16, ("U19", "down"): 1, ("U19", "up"): 1}
+        assert ns.rack_total_sinfo_nodes("U19", counts) == 18  # the total the tile was missing
+
+    def test_unplaced_nodes_do_not_count(self):
+        inv = [{"id": "app", "rack": None, "status": "up"}, {"id": "n", "rack": "R2", "status": "down"}]
+        assert ns.counts_from_node_inventory(inv) == {("R2", "down"): 1}
+
+
+def test_translated_slurm_uses_bcm_placement_without_changing_roster(monkeypatch):
+    from platforms.bcm import BCMProvider
+
+    monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "translate")
+    naming = ids.get_nvis_naming("F[41-42]", "dgx-b300-[01-04]", "")
+    monkeypatch.setattr(ns, "_nvis_naming", lambda: naming)
+    monkeypatch.setattr(ns, "_get_platform", BCMProvider)
+    monkeypatch.setattr("bcm_query.nodes", lambda: {"ok": True, "data": [
+        {"hostname": f"dgx-b300-{i:02}", "rack_id": rack, "rack_unit": unit}
+        for i, rack, unit in [(1, "F41", "2"), (2, "F41", "36"),
+                              (3, "F42", "2"), (4, "F42", "36"), (5, "F42", "20")]
+    ]})
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", Mock(return_value=slurm_response(
+        "".join(f"dgx-b300-{i:02} idle gpu:nvidia:8\n" for i in range(1, 5))
+    )))
+    state = ns.NativeRackTableState("beacon", Path("/logs"))
+    state.racks = ["F41", "F42"]
+    state._worker_sinfo()
+    nodes = state.node_inventory_snapshot()["nodes"]
+    assert [(n["id"], n["rack"], n["rack_unit"]) for n in nodes] == [
+        ("dgx-b300-01", "F41", "2"), ("dgx-b300-02", "F41", "36"),
+        ("dgx-b300-03", "F42", "2"), ("dgx-b300-04", "F42", "36"),
+    ]
+    assert all(n["gpu_count"] == 8 and n["scheduler_state"] == "idle" for n in nodes)
+    rows, *_ = state.build_table_rows()
+    assert {r["rack"]: r["sinfo"] for r in rows} == {"F41": "up=2", "F42": "up=2"}
+
+
+def test_saved_bcm_racks_and_real_slurm_nodes_render_without_templates(monkeypatch):
+    """Beacon's independent rack and hostname schemes require no operator templates."""
+    import naming
+    import node_targets
+    from platforms.bcm import BCMProvider
+
+    monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "translate")
+    # The fixture retains the default pN-rN naming, as a blank cluster record does.
+    monkeypatch.setattr(ns, "_get_platform", BCMProvider)
+    monkeypatch.setattr("bcm_query.query", lambda query: {
+        "ok": True, "data": ["F41", "Empty-Rack", "12"],
+    })
+    monkeypatch.setattr("bcm_query.nodes", lambda: {"ok": True, "data": [
+        {"hostname": f"dgx-b300-{i:02}", "rack_id": "F41", "rack_unit": str(i * 8)}
+        for i in range(1, 6)  # A BCM-only fifth device must not inflate Slurm's roster.
+    ]})
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", Mock(return_value=slurm_response(
+        "".join(f"dgx-b300-{i:02} idle gpu:nvidia:8\n" for i in range(1, 5))
+    )))
+    state = ns.NativeRackTableState("beacon-no-templates", Path("/logs"))
+    state.refresh_racks_blocking()
+    state._worker_sinfo()
+    rows, summary, *_ = state.build_table_rows()
+    assert {r["rack"]: r["sinfo"] for r in rows} == {"F41": "up=4", "Empty-Rack": "-", "12": "-"}
+    assert summary["pending"] == 1  # Empty racks are visible but not counted as compute.
+    nodes = state.node_inventory_snapshot()["nodes"]
+    assert len(nodes) == 4
+    assert all(n["rack"] == "F41" and n["gpu_count"] == 8 for n in nodes)
+    from api.dashboard import _merge_naming_into_status_payload
+
+    payload = {"rows": rows}
+    _merge_naming_into_status_payload(payload)
+    hierarchy = payload["hierarchy"]
+    assert hierarchy["unmatched"] == []
+    assert hierarchy["sections"][0]["rows"][0]["racks"] == [
+        {"rack": "12", "label": "12"}, {"rack": "Empty-Rack", "label": "Empty-Rack"},
+        {"rack": "F41", "label": "F41"},
+    ]
+    monkeypatch.setattr(slurm_query, "_all_slurm_nodenames", lambda: [n["id"] for n in nodes])
+    assert node_targets.validation_target_for_rack("F41", None) == ",".join(n["id"] for n in nodes)
+    assert naming._normalize_rack_id("F41") == "F41"
+    with pytest.raises(ValueError, match="invalid provider rack id"):
+        naming._normalize_rack_id("../F41; touch /tmp/file")
+
+
+@pytest.mark.parametrize("manager", ["bcm", "maas"])
+@pytest.mark.parametrize("scheduler", ["slurm", "pythoncm", "local"])
+def test_saved_racks_are_read_in_translate_whatever_runs_the_cluster(monkeypatch, manager, scheduler):
+    """Placement is the manager's answer, so the scheduler does not decide whether racks are listed."""
+    import naming
+
+    values = {"RACK_PLATFORM": manager, "RACK_SCHEDULER": scheduler,
+              "NVIS_RACK_MAPPING_MODE": "translate", "NVIS_RACK_ID": ""}
+    monkeypatch.setattr(ns.config_env, "_eget", lambda key, default="": values.get(key, default))
+    monkeypatch.setattr(naming, "_eget", lambda key, default="": values.get(key, default))
+    monkeypatch.setattr(ns, "_get_platform", lambda: SimpleNamespace(rack_inventory=lambda: ["F5", "F41"]))
+    assert ns._cmsh_rack_list() == ["F5", "F41"]  # digit runs in numeric order
+    assert naming.build_rack_hierarchy(["F5", "F41"])["unmatched"] == []
+
+
+@pytest.mark.parametrize(("mode", "template"), [
+    ("direct", ""), ("pool", ""), ("translate", "[A-Z][\\d+]"),
+])
+def test_saved_rack_reader_is_not_used_where_a_template_names_the_racks(monkeypatch, mode, template):
+    """Direct and pool keep the legacy reader, and so does translate once a template is configured:
+    there the template decides which saved racks are dashboard racks (NC holds a stray rack ``1``)."""
+    import naming
+
+    values = {"NVIS_RACK_MAPPING_MODE": mode, "NVIS_RACK_ID": template}
+    monkeypatch.setattr(ns.config_env, "_eget", lambda key, default="": values.get(key, default))
+    monkeypatch.setattr(naming, "_eget", lambda key, default="": values.get(key, default))
+    provider = SimpleNamespace(
+        rack_inventory=Mock(side_effect=AssertionError("must retain legacy rack discovery")),
+        list_racks_cmd=lambda: ["cmsh", "-c", "rack; list"],
+    )
+    monkeypatch.setattr(ns, "_get_platform", lambda: provider)
+    monkeypatch.setattr(ns.host_exec, "which", lambda executable: executable)
+    monkeypatch.setattr(ns.host_exec, "run_on_host", lambda *args, **kwargs: slurm_response("F41 nodes\n1 nodes\n"))
+    racks = ns._cmsh_rack_list()
+    provider.rack_inventory.assert_not_called()
+    assert "1" not in racks
+
+
+def test_blank_template_does_not_implicitly_rename_bcm_saved_racks(monkeypatch):
+    import naming
+
+    monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "translate")
+    monkeypatch.setattr(ns, "_get_platform", lambda: SimpleNamespace(rack_inventory=lambda: ["p5-r1", "p5-r0"]))
+    assert ns._cmsh_rack_list() == ["p5-r0", "p5-r1"]
+    assert naming._normalize_rack_id("p5-r1") == "p5-r1"
+    hierarchy = naming.build_rack_hierarchy(["p5-r1"])
+    assert hierarchy["sections"][0]["rows"][0]["racks"] == [{"rack": "p5-r1", "label": "p5-r1"}]
+
+
+def test_a_template_in_translate_maps_provider_spellings_and_decides_the_racks(monkeypatch):
+    import naming
+
+    schema = ids.get_nvis_naming(ids.CBR_NVIS_RACK_ID, ids.CBR_NVIS_CT_ID, "")
+    values = {"NVIS_RACK_ID": ids.CBR_NVIS_RACK_ID}
+    monkeypatch.setattr(ns.config_env, "_eget", lambda key, default="": values.get(key, default))
+    monkeypatch.setattr(naming, "_eget", lambda key, default="": values.get(key, default))
+    monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "translate")
+    monkeypatch.setattr(ns, "_nvis_naming", lambda: schema)
+    monkeypatch.setattr(naming, "_nvis_naming", lambda: schema)
+    monkeypatch.setattr(ns, "_get_platform", lambda: SimpleNamespace(
+        list_racks_cmd=lambda: ["cmsh", "-c", "rack; list"],
+        rack_inventory=Mock(side_effect=AssertionError("the template decides")),
+    ))
+    monkeypatch.setattr(ns.host_exec, "which", lambda executable: executable)
+    monkeypatch.setattr(ns.host_exec, "run_on_host",
+                        lambda *args, **kwargs: slurm_response("CBR1-DH2-RK0102 dgx01\nF41 dgx02\n"))
+    racks = ns._cmsh_rack_list()
+    assert racks == ["CBR1-DH2-SVR-CN0102"]
+    placed = naming.provider_node_racks(["dgx01"], racks, [{"id": "dgx01", "rack": "CBR1-DH2-RK0102"}])
+    assert placed == {"dgx01": "CBR1-DH2-SVR-CN0102"}
+    assert naming._normalize_rack_id("CBR1-DH2-RK0102") == "CBR1-DH2-SVR-CN0102"
+    hierarchy = naming.build_rack_hierarchy(racks)
+    rendered = [rack["rack"] for section in hierarchy["sections"] for row in section["rows"] for rack in row["racks"]]
+    assert rendered == racks
+
+
+def test_rack_mapping_mode_change_gets_separate_native_inventory_cache(monkeypatch):
+    keys = set()
+    for mode in ("direct", "translate", "pool"):
+        monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda mode=mode: mode)
+        keys.add(ns.native_state_key(Path("/logs")))
+    assert len(keys) == 3
+
+
+def test_translated_placement_failure_keeps_slurm_nodes_and_gpu_shape(monkeypatch):
+    monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "translate")
+    provider = SimpleNamespace(compute_node_inventory=Mock(side_effect=RuntimeError("BCM offline")))
+    monkeypatch.setattr(ns, "_get_platform", lambda: provider)
+    monkeypatch.setattr(ns, "collect_sinfo_nodes_and_shapes", lambda: (
+        {"dgx-b300-01": "idle"}, {"dgx-b300-01": {"gpu_count": 8}},
+    ))
+    state = ns.NativeRackTableState("unavailable-placement", Path("/logs"))
+    state._worker_sinfo()
+    node = state.node_inventory_snapshot()["nodes"][0]
+    assert (node["id"], node["rack"], node["gpu_count"]) == ("dgx-b300-01", None, 8)
+    assert state.node_inventory_error == ""
+
+
+@pytest.mark.parametrize("manager", ["bcm", "maas"])
+def test_pool_places_no_node_whatever_the_provider_reports(monkeypatch, manager):
+    """Pool is the cluster saying it has no placement; a stray provider rack never groups a node."""
+    monkeypatch.setattr(ns.config_env, "_eget", lambda key, default="": (
+        manager if key == "RACK_PLATFORM" else default
+    ))
+    monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "pool")
+    inv = ns.build_node_inventory(_MAP_NODES, _MAP_RACKS, records=[
+        {"id": "p1-r5-ct3", "rack": "p1-r5", "rack_unit": "3"},
+    ])
+    assert inv[0]["rack"] is None
+    assert "rack_unit" not in inv[0]
+
+
+def test_expanded_hostnames_are_actual_roster_and_expanded_only_once(monkeypatch):
+    run = Mock(side_effect=[
+        slurm_response("GPU[01-02] idle\nGPU01 idle\n"),
+        slurm_response("GPU01\nGPU02\n"),
+    ])
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", run)
+
+    assert ns.collect_sinfo_nodes() == {"GPU01": "idle", "GPU02": "idle"}
+    assert run.call_count == 2
+    assert run.call_args_list[1].args[0] == ("scontrol-hostnames", "GPU[01-02]")
+
+
+@pytest.mark.parametrize("response", [
+    slurm_response("GPU01 idle\n", 1),
+    OSError("controller unreachable"),
+    subprocess.TimeoutExpired("sinfo", 1),
+])
+def test_failed_slurm_query_is_not_confirmed_empty(monkeypatch, response):
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", Mock(side_effect=[response]))
+    with pytest.raises(RuntimeError, match="inventory"):
+        ns.collect_sinfo_nodes()
+
+
+@pytest.mark.parametrize("expansion", [
+    slurm_response("GPU01\n", 1),
+    slurm_response(""),
+    slurm_response("GPU01\nnot a hostname\n"),
+    slurm_response("GPU[01-02]\n"),
+    OSError("controller unreachable"),
+    subprocess.TimeoutExpired("scontrol", 1),
+])
+def test_failed_or_malformed_expansion_never_publishes_partial_inventory(monkeypatch, expansion):
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", Mock(side_effect=[
+        slurm_response("GPU00 idle\nGPU[01-02] idle\n"), expansion,
+    ]))
+    with pytest.raises(RuntimeError):
+        ns.collect_sinfo_nodes()
+
+
+def test_successful_empty_slurm_response_is_confirmed_empty(monkeypatch):
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", Mock(return_value=slurm_response()))
+    assert ns.collect_sinfo_nodes() == {}
+
+
+@pytest.mark.parametrize("text", ["GPU01\n", "GPU01 *\n", "GPU00 idle\nGPU01\n"])
+def test_malformed_nonempty_slurm_response_is_not_confirmed_empty_or_partial(monkeypatch, text):
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", Mock(return_value=slurm_response(text)))
+    with pytest.raises(RuntimeError):
+        ns.collect_sinfo_nodes()
+
+
+def test_rack_membership_requires_known_rack_and_exact_prefix_boundary():
+    nodes = {host: "idle" for host in (
+        "p5-r01-ct01", "p5-r02-ct01", "rack1-node", "rack10-node", "rack100-node",
+        "rack1-deep-node", "rack1other", "GPU01",
+    )}
+    rows = ns.build_node_inventory(nodes, ["p5-r01", "rack1", "rack10", "rack1-deep"])
+    assert {row["id"]: row["rack"] for row in rows} == {
+        "p5-r01-ct01": "p5-r01", "p5-r02-ct01": None,
+        "rack1-node": "rack1", "rack10-node": "rack10", "rack100-node": None,
+        "rack1-deep-node": "rack1-deep", "rack1other": None, "GPU01": None,
+    }
+
+
+def test_alias_mapping_applies_to_nodes_and_legacy_counts(monkeypatch):
+    monkeypatch.setenv("RACK_ID_ALIAS_RULES", r"^p5-r01$=>physical-rack-a")
+    nodes = {"p5-r01-ct01": "idle", "p5-r01-ct02": "alloc", "GPU01": "idle"}
+
+    rows = ns.build_node_inventory(nodes, ["physical-rack-a"])
+
+    assert {row["id"]: row["rack"] for row in rows} == {
+        "p5-r01-ct01": "physical-rack-a", "p5-r01-ct02": "physical-rack-a", "GPU01": None,
+    }
+    assert ns.sinfo_counts_for_nodes(nodes) == {
+        ("physical-rack-a", "idle"): 1, ("physical-rack-a", "alloc"): 1,
+    }
+    assert all(row["rack"] is None for row in ns.build_node_inventory(nodes, []))
+
+
+def test_device_status_enriches_only_exact_discovered_hosts():
+    ds_text = (
+        "[ UP ] gpu01\nGPU02 [ UNREACHABLE ]\n[ INSTALLING ] GPU03\n"
+        "GPU010 [ DOWN ]\n[ DOWN ] management01\nGPU04-extra [ DOWN ]\n"
+    )
+    nodes = {"GPU01": "down", "GPU02": "idle", "GPU03": "idle", "GPU04": "idle"}
+
+    rows = ns.build_node_inventory(nodes, [], ds_text)
+
+    assert {row["id"]: row["status"] for row in rows} == {
+        "GPU01": "up", "GPU02": "down", "GPU03": "inst", "GPU04": "up",
+    }
+    assert all(row["rack"] is None for row in rows)
+
+
+def test_worker_preserves_last_good_on_failure_then_clears_on_confirmed_empty(monkeypatch):
+    run = Mock(side_effect=[
+        slurm_response("p5-r01-ct01 idle\nGPU01 down\n"),
+        slurm_response("", 1),
+        slurm_response(),
+    ])
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", run)
+    state = ns.NativeRackTableState("last-good", Path("/logs"))
+    assert state.node_inventory_snapshot()["nodes"] is None
+
+    state._worker_sinfo()
+    previous = state.node_inventory_snapshot()["nodes"]
+    previous_counts = dict(state.sinfo_counts)
+    state._worker_sinfo()
+    failed = state.node_inventory_snapshot()
+    assert failed["nodes"] == previous
+    assert state.sinfo_counts == previous_counts
+    assert "last successful" in failed["node_inventory_error"]
+    assert "exit 1" in failed["node_inventory_error"]
+
+    state._worker_sinfo()
+    assert state.node_inventory_snapshot() == {
+        "nodes": [], "node_inventory_error": "", "rack_mapping_mode": "direct",
+        "node_sources": {"orchestrator": "", "scheduler": "slurm"},
+    }
+    assert state.sinfo_counts == {}
+
+
+def test_first_failed_worker_keeps_inventory_unknown(monkeypatch):
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", Mock(return_value=slurm_response("", 1)))
+    state = ns.NativeRackTableState("unavailable", Path("/logs"))
+    state._worker_sinfo()
+    payload = state.node_inventory_snapshot()
+    assert payload["nodes"] is None
+    assert "unavailable" in payload["node_inventory_error"]
+    assert state.sinfo_done is True
+
+
+@pytest.mark.parametrize("changed_key", [
+    "NVIS_PROJECT_ID", "NVIS_CLUSTER_ID", "RACK_SSH_HOST", "RACK_EXEC_MODE", "RACK_SCHEDULER",
+])
+def test_same_log_directory_cannot_reuse_other_cluster_state(monkeypatch, changed_key):
+    config = {"NVIS_PROJECT_ID": "project-a", "NVIS_CLUSTER_ID": "cluster-a",
+              "RACK_SSH_HOST": "head-a", "RACK_EXEC_MODE": "ssh"}
+    monkeypatch.setattr(ns.config_env, "_eget", lambda key, default="": config.get(key, default))
+    monkeypatch.setattr(ns, "_states", {})
+    first_key = ns.native_state_key(Path("/logs"))
+    first = ns._get_state(first_key, Path("/logs"))
+    first.node_states = {"GPU01": "idle"}
+    config[changed_key] = "other"
+    second_key = ns.native_state_key(Path("/logs"))
+    second = ns._get_state(second_key, Path("/logs"))
+    assert second_key != first_key
+    assert second.node_inventory_snapshot()["nodes"] is None
+    assert first.node_inventory_snapshot()["nodes"][0]["id"] == "GPU01"
+
+
+def test_naming_change_and_log_root_get_distinct_native_state_keys(monkeypatch):
+    monkeypatch.setattr(ns.config_env, "_eget", lambda _key, default="": default)
+    monkeypatch.setattr(ns, "_nvis_rack_id_template", lambda: "rack-a")
+    monkeypatch.setattr(ns, "_nvis_ct_id_template", lambda: "rack-a-node")
+    original = ns.native_state_key(Path("/logs"))
+    assert original != ns.native_state_key(Path("/other-logs"))
+    monkeypatch.setattr(ns, "_nvis_ct_id_template", lambda: "rack-a-compute")
+    assert original != ns.native_state_key(Path("/logs"))
+
+
+def use_nonslurm_provider(monkeypatch, provider):
+    monkeypatch.setattr(ns.config_env, "_eget", lambda key, default="": (
+        "pythoncm" if key == "RACK_SCHEDULER" else default
+    ))
+    monkeypatch.setattr(ns, "_get_platform", lambda: provider)
+
+
+def test_nonslurm_worker_uses_provider_inventory_and_keeps_unassigned_node_ip(monkeypatch):
+    records = [
+        {"id": "RTX6000-01", "rack": None, "ip": "10.0.0.1", "scheduler_state": ""},
+        {"id": "RTX6000-02", "rack": "p5-r01", "ip": "10.0.0.2", "scheduler_state": ""},
+        {"id": "RTX6000-03", "rack": "unlisted-rack", "ip": "", "scheduler_state": ""},
+    ]
+    provider = SimpleNamespace(compute_node_inventory=Mock(return_value=records))
+    use_nonslurm_provider(monkeypatch, provider)
+    state = ns.NativeRackTableState("provider", Path("/logs"))
+    state.racks = ["p5-r01"]
+    state.ds_text = "[ UP ] RTX6000-01\nRTX6000-02 [ DOWN ]\n"
+
+    state._worker_sinfo()
+
+    assert state.node_inventory_snapshot() == {
+        "nodes": [
+            {"id": "RTX6000-01", "rack": None, "ip": "10.0.0.1", "scheduler_state": "",
+             "scheduler_status": "unknown", "status": "up"},
+            {"id": "RTX6000-02", "rack": "p5-r01", "ip": "10.0.0.2", "scheduler_state": "",
+             "scheduler_status": "unknown", "status": "down", "tray": 1},
+            {"id": "RTX6000-03", "rack": None, "ip": "", "scheduler_state": "",
+             "scheduler_status": "unknown", "status": "unknown"},
+        ],
+        "node_inventory_error": "",
+        "rack_mapping_mode": "direct",
+        # A provider that reports no scheduler state, and no Slurm to ask: no scheduler view.
+        "node_sources": {"orchestrator": "", "scheduler": ""},
+    }
+    provider.compute_node_inventory.assert_called_once_with()
+    ns.host_exec.run_slurm_on_host.assert_not_called()
+
+
+def test_provider_failure_distinguishes_unavailable_stale_and_confirmed_empty(monkeypatch):
+    records = [{"id": "GPU01", "rack": None, "ip": "10.0.0.1", "scheduler_state": ""}]
+    provider = SimpleNamespace(compute_node_inventory=Mock(side_effect=[
+        RuntimeError("BCM unavailable"), records, RuntimeError("BCM unavailable"), [],
+    ]))
+    use_nonslurm_provider(monkeypatch, provider)
+    state = ns.NativeRackTableState("provider-errors", Path("/logs"))
+
+    state._worker_sinfo()
+    assert state.node_inventory_snapshot()["nodes"] is None
+    assert "unavailable" in state.node_inventory_snapshot()["node_inventory_error"]
+    state._worker_sinfo()
+    last_good = state.node_inventory_snapshot()["nodes"]
+    state._worker_sinfo()
+    assert state.node_inventory_snapshot()["nodes"] == last_good
+    assert "last successful" in state.node_inventory_snapshot()["node_inventory_error"]
+    state._worker_sinfo()
+    assert state.node_inventory_snapshot() == {
+        "nodes": [], "node_inventory_error": "", "rack_mapping_mode": "direct",
+        "node_sources": {"orchestrator": "", "scheduler": ""},
+    }
+    ns.host_exec.run_slurm_on_host.assert_not_called()
+
+
+def test_rf0_parser_accepts_known_arbitrary_hostname_without_naming_match():
+    text = "RTX6000-01\nrf0\n10.0.0.1/24\n"
+    assert engine._parse_physical_rf0_stdout(text) == {}
+    assert engine._parse_physical_rf0_stdout(text, ["rtx6000-01"]) == {"rtx6000-01": "10.0.0.1"}
+
+
+def test_rf0_host_missing_address_cannot_steal_following_known_host_address():
+    text = "GPU01\nrf0\nGPU02\nrf0\n10.0.0.2\n"
+    assert engine._parse_physical_rf0_stdout(text, ["GPU01", "GPU02"]) == {"gpu02": "10.0.0.2"}
+
+
+def test_rf0_host_missing_address_cannot_steal_management_server_address():
+    assert engine._parse_physical_rf0_stdout(
+        "GPU01\nhead01\n10.0.0.99\n", ["GPU01"]
+    ) == {}
+
+
+@pytest.mark.parametrize("noise", ["Welcome to the cluster", "Welcome operator", "GPU01 new_state"])
+def test_slurm_noise_cannot_become_a_compute_node(monkeypatch, noise):
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", Mock(return_value=slurm_response(
+        noise + "\nGPU02 idle\n"
+    )))
+    with pytest.raises(RuntimeError):
+        ns.collect_sinfo_nodes()
+
+
+@pytest.mark.parametrize("state", ["alloc+", "idle~", "idle!", "down%", "mix@", "idle^", "idle-", "block"])
+def test_slurm_compact_state_flags_are_accepted(monkeypatch, state):
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", Mock(return_value=slurm_response(
+        f"GPU01 {state}\n"
+    )))
+    assert list(ns.collect_sinfo_nodes()) == ["GPU01"]
+
+
+@pytest.mark.parametrize("state", [
+    "?", "ALLOC", "ALLOC+", "BLOCK", "BOOT", "BOOT*", "BOOT^", "CANC_R", "CLOUD",
+    "COMP", "DOWN", "DRAIN", "DRNG", "EXT", "FAIL", "FAILG", "FUTR", "IDLE", "INVAL",
+    "MAINT", "MIX", "PLND", "POW_DN", "POW_UP", "POWERED_DN", "POWERING_UP",
+    "POWRING_DN", "RESM", "RESV", "UNK",
+])
+def test_all_slurm_compact_states_preserve_the_fleet_inventory(monkeypatch, state):
+    # Values returned by SchedMD's node_state_string_compact, including states
+    # omitted by the sinfo manual's summary. One rebooting or invalid node must
+    # not turn an otherwise successful whole-fleet inventory into unavailable.
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", Mock(return_value=slurm_response(
+        f"GPU00 idle\nGPU01 {state}\n"
+    )))
+    assert set(ns.collect_sinfo_nodes()) == {"GPU00", "GPU01"}
+
+
+def test_invalid_registration_is_not_shown_as_healthy():
+    records = ns.build_node_inventory({"GPU01": "inval", "GPU02": "inval+idle"}, [])
+    assert all(record["status"] == "down" for record in records)
+
+
+def test_rf0_cache_is_scoped_to_cluster_and_known_roster(monkeypatch):
+    config = {"NVIS_CLUSTER_ID": "cluster-a"}
+    monkeypatch.setattr(ns.config_env, "_eget", lambda key, default="": config.get(key, default))
+    monkeypatch.setattr(engine, "_physical_rf0_loaded", False)
+    monkeypatch.setattr(engine, "_physical_rf0_map", {})
+    monkeypatch.setattr(engine, "_physical_rf0_context", None)
+    monkeypatch.setattr(engine, "_get_platform", lambda: SimpleNamespace(
+        physical_rf0_cmd=lambda: ["mock-cmsh", "physical-rf0"],
+    ))
+    monkeypatch.setattr(engine.host_exec, "which", Mock(return_value="/mock/cmsh"))
+    run = Mock(side_effect=[
+        slurm_response("GPU01\n10.0.0.1\n"),
+        slurm_response("GPU01\n10.0.0.1\nGPU02\n10.0.0.2\n"),
+        slurm_response("GPU01\n10.1.0.1\nGPU02\n10.1.0.2\n"),
+    ])
+    monkeypatch.setattr(engine.host_exec, "run_on_host", run)
+
+    first = engine.get_physical_rf0_map(["GPU01"])
+    assert first == {"gpu01": "10.0.0.1"}
+    first["gpu01"] = "mutated-response"
+    assert engine.get_physical_rf0_map(["gpu01"]) == {"gpu01": "10.0.0.1"}
+    assert run.call_count == 1
+    assert engine.get_physical_rf0_map(["GPU01", "GPU02"]) == {
+        "gpu01": "10.0.0.1", "gpu02": "10.0.0.2",
+    }
+    assert run.call_count == 2
+    config["NVIS_CLUSTER_ID"] = "cluster-b"
+    assert engine.get_physical_rf0_map(["GPU01", "GPU02"]) == {
+        "gpu01": "10.1.0.1", "gpu02": "10.1.0.2",
+    }
+    assert run.call_count == 3
+
+
+# ---------------------------------------------------------------------------
+# Per-node GPU shape (how many GPUs to draw) + pool mode (no placement at all).
+# The Akamai/Reno RTX 6000 cluster: 8 GPUs/node known from Slurm GRES, zero racks.
+# ---------------------------------------------------------------------------
+
+
+class TestParseGresGpu:
+    def test_typed_count_with_socket_suffix(self):
+        assert ns.parse_gres_gpu("gpu:nvidia:8(S:0-1)") == {"gpu_count": 8, "gpu_type": "nvidia"}
+
+    def test_untyped_count(self):
+        assert ns.parse_gres_gpu("gpu:4") == {"gpu_count": 4}
+
+    def test_null_and_cpu_only_and_empty_are_none(self):
+        assert ns.parse_gres_gpu("(null)") is None
+        assert ns.parse_gres_gpu("") is None
+        assert ns.parse_gres_gpu("mps:100") is None
+
+    def test_mixed_tokens_sum_and_keep_first_type(self):
+        assert ns.parse_gres_gpu("gpu:a100:4,gpu:a100:4") == {"gpu_count": 8, "gpu_type": "a100"}
+
+
+def test_collect_sinfo_nodes_and_shapes_reads_gres_in_one_call(monkeypatch):
+    run = Mock(return_value=slurm_response(
+        "gpu-rno-248 idle gpu:nvidia:8(S:0-1)\n"
+        "gpu-rno-249 down gpu:nvidia:8(S:0-1)\n"
+        "login-01 idle (null)\n"
+    ))
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", run)
+
+    nodes, shapes = ns.collect_sinfo_nodes_and_shapes()
+
+    assert nodes == {"gpu-rno-248": "idle", "gpu-rno-249": "down", "login-01": "idle"}
+    assert shapes == {
+        "gpu-rno-248": {"gpu_count": 8, "gpu_type": "nvidia"},
+        "gpu-rno-249": {"gpu_count": 8, "gpu_type": "nvidia"},  # GRES covers DOWN nodes
+    }
+    assert "login-01" not in shapes
+    run.assert_called_once()  # one sinfo call, not two
+
+
+def test_build_node_inventory_attaches_shape_when_known():
+    nodes = {"gpu-rno-248": "idle", "gpu-rno-249": "idle"}
+    shapes = {"gpu-rno-248": {"gpu_count": 8, "gpu_type": "nvidia"}}
+    inv = ns.build_node_inventory(nodes, [], shapes=shapes)
+    by_id = {n["id"]: n for n in inv}
+    assert by_id["gpu-rno-248"]["gpu_count"] == 8
+    assert by_id["gpu-rno-248"]["gpu_type"] == "nvidia"
+    assert "gpu_count" not in by_id["gpu-rno-249"]  # generic tile when unknown
+
+
+def test_shape_flows_through_worker_and_snapshot_carries_mode(monkeypatch):
+    run = Mock(return_value=slurm_response("gpu-rno-248 idle gpu:nvidia:8\n"))
+    monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", run)
+
+    state = ns.NativeRackTableState("shape", Path("/logs"))
+    state._worker_sinfo()
+    payload = state.node_inventory_snapshot()
+
+    assert payload["rack_mapping_mode"] == "direct"
+    assert payload["nodes"][0]["gpu_count"] == 8
+
+
+class TestPoolMode:
+    """No rack objects, no provider rack, no hostname rack: the node is the atom."""
+
+    def test_mode_resolves_and_is_detected(self, monkeypatch):
+        monkeypatch.setattr(ns.config_env, "_eget", lambda _k, _d="": "pool")
+        assert ns._rack_mapping_mode() == "pool"
+        assert ns.is_pool_mode() is True
+        assert ns._hostname_encodes_rack() is False
+
+    def test_unknown_mode_falls_back_to_direct(self, monkeypatch):
+        monkeypatch.setattr(ns.config_env, "_eget", lambda _k, _d="": "bananas")
+        assert ns._rack_mapping_mode() == "direct"
+
+    def test_pool_does_not_invent_a_rack_from_the_hostname(self, monkeypatch):
+        # A hostname the direct template WOULD parse; pool must still leave it ungrouped.
+        monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "pool")
+        inv = ns.build_node_inventory(_MAP_NODES, _MAP_RACKS, records=[])
+        assert inv[0]["rack"] is None
+
+    def test_pool_ignores_provider_placement(self, monkeypatch):
+        monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "pool")
+        inv = ns.build_node_inventory(_MAP_NODES, _MAP_RACKS, records=[
+            {"id": "p1-r5-ct3", "rack": "p1-r5", "rack_unit": "3"},
+        ])
+        assert inv[0]["rack"] is None
+        assert "rack_unit" not in inv[0]
+
+    def test_snapshot_reports_pool_and_keeps_shape(self, monkeypatch):
+        monkeypatch.setattr(ns.config_env, "rack_mapping_mode", lambda: "pool")
+        run = Mock(return_value=slurm_response("gpu-rno-248 idle gpu:nvidia:8\n"))
+        monkeypatch.setattr(ns.host_exec, "run_slurm_on_host", run)
+        state = ns.NativeRackTableState("pool", Path("/logs"))
+        state._worker_sinfo()
+        payload = state.node_inventory_snapshot()
+        assert payload["rack_mapping_mode"] == "pool"
+        assert payload["nodes"][0]["rack"] is None
+        assert payload["nodes"][0]["gpu_count"] == 8
+
+
+class TestNvidiaSmiFallback:
+    def test_parse_nvidia_smi_l(self):
+        text = (
+            "GPU 0: NVIDIA RTX 6000 Ada Generation (UUID: GPU-aaa)\n"
+            "GPU 1: NVIDIA RTX 6000 Ada Generation (UUID: GPU-bbb)\n"
+        )
+        assert ns.parse_nvidia_smi_l(text) == {
+            "gpu_count": 2, "gpu_type": "NVIDIA RTX 6000 Ada Generation",
+        }
+        assert ns.parse_nvidia_smi_l("") is None
+
+    def test_samples_one_up_node_per_category_and_skips_down(self, monkeypatch):
+        # Two nodes in category rtx6000; the first is DOWN so the UP one must be probed.
+        records = [
+            {"id": "gpu-rno-1", "category": "rtx6000"},
+            {"id": "gpu-rno-2", "category": "rtx6000"},
+        ]
+        node_states = {"gpu-rno-1": "down", "gpu-rno-2": "idle"}
+        run = Mock(return_value=slurm_response(
+            "gpu-rno-2: GPU 0: NVIDIA RTX 6000 (UUID: GPU-x)\n"
+            "gpu-rno-2: GPU 1: NVIDIA RTX 6000 (UUID: GPU-y)\n"
+        ))
+        monkeypatch.setattr(ns.host_exec, "run_on_host", run)
+        monkeypatch.setattr(ns, "_get_platform", lambda: SimpleNamespace(
+            pdsh_cmd=lambda host, cmd, fanout=None: ["pdsh", "-w", host, cmd],
+        ))
+
+        shapes = ns.sample_node_gpu_shapes_via_smi(records, node_states)
+
+        assert shapes["gpu-rno-1"] == {"gpu_count": 2, "gpu_type": "NVIDIA RTX 6000"}
+        assert shapes["gpu-rno-2"] == {"gpu_count": 2, "gpu_type": "NVIDIA RTX 6000"}
+        # Probed exactly once (one category, one representative), targeting the UP node.
+        run.assert_called_once()
+        assert run.call_args.args[0] == ["pdsh", "-w", "gpu-rno-2", "nvidia-smi -L"]

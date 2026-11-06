@@ -1,0 +1,511 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+# Author: Rafael M. Koike & Cursor Agent ("Ada")
+"""Per-node bring-up results from Travis's automation tree (``/home/cmods/bringup``).
+
+The automation runs continuously on the cluster (BCM triggers -> ``launch_job.sh``)
+and writes per-node results under ``results/<node>/``. Rather than re-implement the
+pass/fail logic (which lives in his ``parsers/<set>/verdict.sh`` and drifts as floors
+are tuned), this module shells out to his own read-only reporting scripts on the head
+node so verdicts stay authoritative:
+
+* ``report_benchmarks.sh -c`` (was ``daily-report.sh``) -- cluster-wide CSV,
+  ``node,slurm,<job columns...>``. Each job cell is the extracted **metric** (busbw GB/s,
+  min GB/s, triad MB/s, gflops) when the run produced one, otherwise a **status word**
+  (NOT_RUN/INCOMPLETE/RUNNING). It does NOT encode pass/fail for a numeric cell -- a FAIL
+  keeps its number.
+* ``report_job-status.sh <node>`` (was ``status-check.sh``) -- scoped, authoritative
+  per-job **status + reason** (DONE/FAIL/RETRY/INCOMPLETE/RUNNING/NOT_RUN).
+
+The script names moved with Travis's Oct-2026 ``build_/check_/report_/admin_`` rename;
+the basenames live in ``REPORT_BENCHMARKS``/``REPORT_JOB_STATUS`` (env-overridable for a
+site still on the pre-rename tree).
+
+``node_summary()`` merges the two: status/reason from report_job-status, metric from
+report_benchmarks. The cluster-wide benchmarks report is cached briefly because it scans
+every result directory and re-judges each on every call.
+"""
+from __future__ import annotations
+
+import logging
+import os
+import re
+import threading
+import time
+from collections.abc import Iterable
+
+import cluster_paths
+import host_exec
+from config_env import _eget, _eget_int
+
+_logger = logging.getLogger(__name__)
+
+
+class BringupNotConfigured(RuntimeError):
+    """This cluster names no bring-up framework, and something asked to run it."""
+
+
+#: The two reporting CLIs we shell out to on the head. Travis renamed the whole top-level
+#: script set to a ``build_/check_/report_/admin_`` scheme in Oct 2026
+#: (``daily-report.sh`` -> ``report_benchmarks.sh``, ``status-check.sh`` ->
+#: ``report_job-status.sh``); we call the current names. A site still on the pre-rename
+#: tree can point back with these env vars rather than pin an old checkout.
+REPORT_BENCHMARKS = (os.environ.get("RACK_BRINGUP_REPORT_BENCHMARKS") or "report_benchmarks.sh").strip()
+REPORT_JOB_STATUS = (os.environ.get("RACK_BRINGUP_REPORT_JOB_STATUS") or "report_job-status.sh").strip()
+
+#: Metric label per job, mirroring ``report_benchmarks.sh``'s ``metric_label()``. Jobs not
+#: listed here (dcgm, memtester, stressapptest, mnubergemm) report a status only.
+METRIC_LABELS: dict[str, str] = {
+    "hpl": "gflops",
+    "allreduce": "busbw GB/s",
+    "alltoall": "busbw GB/s",
+    "allreduce-nonvlink": "busbw GB/s",
+    "alltoall-nonvlink": "busbw GB/s",
+    "allreduce-forcesharp": "busbw GB/s",
+    "nvbandwidth": "min GB/s",
+    "stream": "triad MB/s",
+    "fio": "bw",
+}
+
+_STATUS_WORDS = ("DONE", "FAIL", "RETRY", "INCOMPLETE", "RUNNING", "NOT_RUN")
+# A status-check line is ``[<node>: ]<col>: <STATUS>[ -- <reason>]``. dshbak -c (when
+# present) strips the ``<node>: `` prefix and groups; the ungrouped fallback keeps it.
+# Either way the trailing ``<col>: <STATUS>`` is what we key on.
+_STATUS_LINE = re.compile(
+    r"(?:^|:\s)"
+    r"(?P<col>[A-Za-z0-9][\w.-]*)\s*:\s*"
+    r"(?P<status>" + "|".join(_STATUS_WORDS) + r")"
+    r"(?:\s*--\s*(?P<reason>.*\S))?\s*$"
+)
+_NUMERIC = re.compile(r"^-?\d+(?:\.\d+)?$")
+
+_cache_lock = threading.Lock()
+_daily_cache: dict[str, tuple[float, str]] = {}
+
+
+def bringup_home() -> str:
+    """Root of the bring-up tree on the execution host, or "" when this cluster runs none.
+
+    From the cluster record through ``cluster_paths`` -- ``<root>/bringup``, or the record's
+    ``evidence.bringup_home`` override -- then the ``RACK_BRINGUP_HOME`` setting for a deployment not
+    yet given a root. There is no built-in default any more. It used to be ``/home/cmods/bringup`` -- one site's tree -- so a
+    cluster with no bring-up framework still had one "configured", and the fleet check that
+    supplies Stage 2 failed there on every refresh, leaving every node's Stage 2 loading forever.
+    """
+    try:
+        from catalog import context as catalog_context
+
+        _project, cluster, _platform = catalog_context.resolve()
+        if cluster is not None and cluster_paths.path(cluster, "bringup"):
+            return cluster_paths.path(cluster, "bringup")
+    except Exception:  # no catalog is a bare deployment; the setting still applies
+        _logger.debug("bringup_home: no cluster record to read", exc_info=True)
+    return (_eget("RACK_BRINGUP_HOME") or "").strip().rstrip("/")
+
+
+def is_enabled() -> bool:
+    """Whether this cluster runs a bring-up framework to read, and it is not switched off.
+
+    On the cluster record it is a switch (``evidence.bringup_enabled``), separate from where the
+    framework lives: a root derives ``<root>/bringup`` for every cluster, including those that run
+    no bring-up at all. A record that names ``bringup_home`` explicitly counts as running it. A
+    deployment with no cluster record falls back to ``RACK_BRINGUP_HOME`` being set.
+    """
+    if os.environ.get("RACK_BRINGUP_DISABLED", "").strip().lower() in ("1", "true", "yes", "on"):
+        return False
+    try:
+        from catalog import context as catalog_context
+
+        _project, cluster, _platform = catalog_context.resolve()
+    except Exception:  # no catalog is a bare deployment; the setting still applies
+        _logger.debug("is_enabled: no cluster record to read", exc_info=True)
+        cluster = None
+    if cluster is not None and (cluster.evidence.bringup_enabled or cluster.evidence.bringup_home.strip()):
+        return bool(bringup_home())
+    if cluster is not None and cluster_paths.root(cluster):
+        return False  # a cluster on the root layout runs bring-up only when it says so
+    return bool((_eget("RACK_BRINGUP_HOME") or "").strip())
+
+
+def _home() -> str:
+    """The bring-up home for something about to run there; refuses, naming the setting, if none."""
+    home = bringup_home()
+    if not home:
+        raise BringupNotConfigured(
+            "this cluster has no bring-up framework configured: set Projects & Clusters > cluster > "
+            "Bring-up home (evidence.bringup_home), or RACK_BRINGUP_HOME"
+        )
+    return home
+
+
+#: Default limit for a fleet-wide bring-up report. A 4,608-node NC fleet's full report took
+#: 131-150 s before the burn-in fix and 66 s after; the one-column form node-stages runs, ~34 s.
+DEFAULT_REPORT_TIMEOUT_SEC = 180
+
+
+def report_timeout() -> int:
+    """Seconds a fleet-wide report may run (``RACK_BRINGUP_REPORT_TIMEOUT``, a Settings value)."""
+    return max(30, _eget_int("RACK_BRINGUP_REPORT_TIMEOUT", DEFAULT_REPORT_TIMEOUT_SEC))
+
+
+def _cache_ttl() -> int:
+    try:
+        return max(0, int(os.environ.get("RACK_BRINGUP_CACHE_TTL_SEC", "30")))
+    except ValueError:
+        return 30
+
+
+def _slurm_env_extra() -> dict[str, str]:
+    """Forward ``SLURM_CONF`` so the scripts' bare ``sinfo`` resolves the controller.
+
+    The scripts also try ``module load slurm`` themselves; this is belt-and-suspenders
+    for a non-login SSH invocation where the module hook may not fire. Values are
+    exported on the remote side by ``run_on_host(env_extra=...)``.
+    """
+    conf = (os.environ.get("RACK_SLURM_CONF") or "").strip()
+    return {"SLURM_CONF": conf} if conf else {}
+
+
+def _base_job(col: str) -> str:
+    """Strip a ``-runN`` / ``_runN`` suffix to the base job name."""
+    return re.sub(r"[-_]run\d+$", "", col)
+
+
+def parse_daily_report_csv(text: str) -> tuple[list[str], dict[str, dict[str, object]]]:
+    """Parse ``report_benchmarks.sh -c`` stdout.
+
+    Returns ``(columns, rows)`` where ``columns`` is the ordered job columns (``node``
+    and ``slurm`` removed) and ``rows`` maps a node name to
+    ``{"slurm": <state>, "cells": {col: cell}}``.
+    """
+    lines = [ln for ln in (text or "").splitlines() if ln.strip()]
+    if not lines:
+        return [], {}
+    header = [h.strip() for h in lines[0].split(",")]
+    if not header or header[0] != "node":
+        return [], {}
+    has_slurm = len(header) > 1 and header[1] == "slurm"
+    first_job = 2 if has_slurm else 1
+    columns = header[first_job:]
+    rows: dict[str, dict[str, object]] = {}
+    for ln in lines[1:]:
+        parts = ln.split(",")
+        if not parts or not parts[0].strip():
+            continue
+        node = parts[0].strip()
+        slurm = parts[1].strip() if has_slurm and len(parts) > 1 else ""
+        cells: dict[str, str] = {}
+        for i, col in enumerate(columns):
+            idx = first_job + i
+            cells[col] = parts[idx].strip() if idx < len(parts) else ""
+        rows[node] = {"slurm": slurm, "cells": cells}
+    return columns, rows
+
+
+def parse_status_check(text: str) -> dict[str, dict[str, str]]:
+    """Parse ``report_job-status.sh <node>`` stdout into ``{col: {status, reason}}``.
+
+    Handles both the dshbak-grouped form (``col: STATUS -- reason``) and the ungrouped
+    fallback (``node: col: STATUS -- reason``); only the trailing ``col: STATUS`` is
+    keyed on, so a single-node scope collapses to one entry per column.
+    """
+    out: dict[str, dict[str, str]] = {}
+    for ln in (text or "").splitlines():
+        m = _STATUS_LINE.search(ln.strip())
+        if not m:
+            continue
+        out[m.group("col")] = {
+            "status": m.group("status"),
+            "reason": (m.group("reason") or "").strip(),
+        }
+    return out
+
+
+def run_daily_report(*, timeout: int | None = None) -> str:
+    """Run (and briefly cache) ``report_benchmarks.sh -c`` on the head node."""
+    home = _home()
+    ttl = _cache_ttl()
+    now = time.time()
+    with _cache_lock:
+        hit = _daily_cache.get(home)
+        if hit and ttl and (now - hit[0]) < ttl:
+            return hit[1]
+    proc = host_exec.run_on_host(
+        ["bash", f"{home}/{REPORT_BENCHMARKS}", "-c"],
+        cwd=home,
+        timeout=timeout or report_timeout(),
+        env_extra=_slurm_env_extra(),
+    )
+    out = proc.stdout or ""
+    if proc.returncode != 0 and not out.strip():
+        raise RuntimeError((proc.stderr or "").strip() or f"{REPORT_BENCHMARKS} exited {proc.returncode}")
+    with _cache_lock:
+        _daily_cache[home] = (time.time(), out)
+    return out
+
+
+def run_status_check(node: str, *, timeout: int = 90) -> str:
+    """Run ``report_job-status.sh <node>`` (scoped to one node) on the head node."""
+    home = _home()
+    proc = host_exec.run_on_host(
+        ["bash", f"{home}/{REPORT_JOB_STATUS}", node],
+        cwd=home,
+        timeout=timeout,
+        env_extra=_slurm_env_extra(),
+    )
+    return proc.stdout or ""
+
+
+def run_status_check_all(*, tests: Iterable[str] = (), timeout: int | None = None) -> str:
+    """Run ``report_job-status.sh`` with no pattern: every node under ``results/``.
+
+    One round trip for the fleet instead of one per node. *tests* narrows the report to those
+    jobs (``-t``, repeatable): a caller that reads one column should not pay for every column --
+    on Nscale NC the full report took ~66 s and the one-column form ~34 s, with identical verdicts
+    for that column on all 4,608 nodes.
+    """
+    home = _home()
+    cmd = ["bash", f"{home}/{REPORT_JOB_STATUS}"]
+    for test in tests:
+        if test:
+            cmd += ["-t", test]
+    proc = host_exec.run_on_host(
+        cmd,
+        cwd=home,
+        timeout=timeout or report_timeout(),
+        env_extra=_slurm_env_extra(),
+    )
+    out = proc.stdout or ""
+    if proc.returncode != 0 and not out.strip():
+        raise RuntimeError((proc.stderr or "").strip() or f"{REPORT_JOB_STATUS} exited {proc.returncode}")
+    return out
+
+
+def _expand_nodeset(spec: str) -> list[str]:
+    """Expand ``a-[01-03,07],b-02`` into hostnames, reusing the tested expander.
+
+    Imported lazily: ``universal_parser`` is an optional module in some deployments, and a
+    missing expander must degrade to "treat the line as one host" rather than break the scan.
+    """
+    try:
+        import universal_parser
+
+        return universal_parser.expand_nodelist(spec)
+    except Exception:  # noqa: BLE001 - fall back to comma splitting
+        return [p.strip() for p in spec.split(",") if p.strip()]
+
+
+def parse_status_check_fleet(text: str) -> dict[str, dict[str, dict[str, str]]]:
+    """Parse the fleet form of ``report_job-status.sh`` into ``{node: {col: {status, reason}}}``.
+
+    With no pattern the script groups nodes that share an identical verdict set, ``dshbak -c``
+    style::
+
+        ----------------
+        rack-[11-18],rack-28
+        ----------------
+        allreduce: DONE
+        allreduce-nonvlink: FAIL -- run error
+
+    So a block is a nodeset line followed by ``col: STATUS[ -- reason]`` lines, and the
+    statuses apply to every node in the set. Blocks are separated by dashed rules; a node line
+    is simply the non-status line that follows one.
+    """
+    out: dict[str, dict[str, dict[str, str]]] = {}
+    pending: list[str] = []
+    for raw in (text or "").splitlines():
+        line = raw.strip()
+        if not line or set(line) == {"-"}:
+            continue
+        m = _STATUS_LINE.search(line)
+        if m and pending:
+            entry = {"status": m.group("status"), "reason": (m.group("reason") or "").strip()}
+            for node in pending:
+                out.setdefault(node, {})[m.group("col")] = entry
+            continue
+        if m:
+            continue  # a status line with no node scope yet — nothing to attribute it to
+        # Not a status line: this is the nodeset heading a new block.
+        pending = _expand_nodeset(line)
+    return out
+
+
+def fleet_summary() -> dict[str, object]:
+    """Bring-up state for every node, in two calls rather than one per node.
+
+    Statuses and reasons come from the fleet ``report_job-status.sh`` (authoritative verdicts);
+    metrics come from the ``report_benchmarks.sh -c`` CSV. This is the split ``node_summary()``
+    makes for a single node — the CSV alone is not enough because a FAIL keeps its number
+    there, so a numeric cell says nothing about pass/fail.
+    """
+    daily = run_daily_report()
+    columns, rows = parse_daily_report_csv(daily)
+    fleet = parse_status_check_fleet(run_status_check_all())
+
+    # Union so a node known to only one source still appears, ordered by name for a stable UI.
+    names = sorted(set(rows) | set(fleet))
+    cols = columns or sorted({c for per_node in fleet.values() for c in per_node})
+    nodes: list[dict[str, object]] = []
+    for name in names:
+        row = rows.get(name) or {}
+        cells = row.get("cells") if isinstance(row.get("cells"), dict) else {}
+        sc = fleet.get(name, {})
+        jobs: list[dict[str, object]] = []
+        for col in cols:
+            base = _base_job(col)
+            cell = str((cells or {}).get(col, ""))
+            st = _lookup_status(sc, col)
+            metric = cell if _NUMERIC.match(cell) else None
+            jobs.append(
+                {
+                    "name": col,
+                    "base": base,
+                    "status": st["status"] or (cell if not metric else ""),
+                    "reason": st["reason"],
+                    "metric": metric,
+                    "metric_label": METRIC_LABELS.get(base),
+                }
+            )
+        nodes.append({"node": name, "slurm_state": str(row.get("slurm", "")), "jobs": jobs})
+    return {
+        "home": bringup_home(),
+        "columns": cols,
+        "metric_labels": {c: METRIC_LABELS[b] for c in cols if (b := _base_job(c)) in METRIC_LABELS},
+        "nodes": nodes,
+    }
+
+
+def _lookup_status(sc: dict[str, dict[str, str]], col: str) -> dict[str, str]:
+    """Find the status entry for a daily-report column across naming variants."""
+    for key in (col, col.replace("_run", "-run"), _base_job(col)):
+        if key in sc:
+            return sc[key]
+    return {"status": "", "reason": ""}
+
+
+def node_summary(node: str) -> dict[str, object]:
+    """Authoritative per-job bring-up summary for one node.
+
+    ``jobs`` carries, per active benchmark column: ``name``, ``base`` job, ``status``
+    (+ ``reason``), and ``metric`` / ``metric_label`` when the run produced a number.
+    """
+    node = (node or "").strip()
+    daily = run_daily_report()
+    columns, rows = parse_daily_report_csv(daily)
+    row = rows.get(node)
+    if row is None:  # case-insensitive fallback
+        low = node.lower()
+        for k, v in rows.items():
+            if k.lower() == low:
+                node, row = k, v
+                break
+    sc = parse_status_check(run_status_check(node))
+
+    # Column order: daily-report header (authoritative active set); if the node was
+    # absent there, fall back to whatever status-check reported.
+    cols = columns or list(sc.keys())
+    jobs: list[dict[str, object]] = []
+    cells = (row or {}).get("cells", {}) if row else {}
+    for col in cols:
+        base = _base_job(col)
+        cell = str(cells.get(col, "")) if isinstance(cells, dict) else ""
+        st = _lookup_status(sc, col)
+        metric = cell if _NUMERIC.match(cell) else None
+        jobs.append(
+            {
+                "name": col,
+                "base": base,
+                "status": st["status"] or (cell if not metric else ""),
+                "reason": st["reason"],
+                "metric": metric,
+                "metric_label": METRIC_LABELS.get(base),
+            }
+        )
+    return {
+        "node": node,
+        "present": row is not None or bool(sc),
+        "slurm_state": str((row or {}).get("slurm", "")) if row else "",
+        "home": bringup_home(),
+        "jobs": jobs,
+    }
+
+
+def config() -> dict[str, object]:
+    """Lightweight discovery payload for the UI: enabled + whether the tree is present."""
+    home = bringup_home()
+    present = False
+    if is_enabled():
+        try:
+            present = host_exec.is_dir(f"{home}/results")
+        except Exception:  # noqa: BLE001 - discovery must never raise
+            present = False
+    return {"enabled": is_enabled(), "home": home, "present": present}
+
+
+def demo_node_summary(node: str) -> dict[str, object]:
+    """Synthetic per-node summary for ``RACK_STATUS_DEMO=1``."""
+    node = (node or "demo-node").strip()
+    jobs = [
+        {"name": "dcgm", "base": "dcgm", "status": "DONE", "reason": "", "metric": None, "metric_label": None},
+        {"name": "nvbandwidth", "base": "nvbandwidth", "status": "DONE", "reason": "", "metric": "612.4", "metric_label": "min GB/s"},
+        {"name": "allreduce", "base": "allreduce", "status": "DONE", "reason": "", "metric": "687.9", "metric_label": "busbw GB/s"},
+        {"name": "allreduce-forcesharp", "base": "allreduce-forcesharp", "status": "DONE", "reason": "", "metric": "684.1", "metric_label": "busbw GB/s"},
+        {"name": "alltoall", "base": "alltoall", "status": "DONE", "reason": "", "metric": "627.8", "metric_label": "busbw GB/s"},
+        {"name": "allreduce-nonvlink", "base": "allreduce-nonvlink", "status": "FAIL", "reason": "below floor (43): 2.28", "metric": "2.28", "metric_label": "busbw GB/s"},
+        {"name": "alltoall-nonvlink", "base": "alltoall-nonvlink", "status": "RUNNING", "reason": "job is on the node now, no verdict until it finishes", "metric": None, "metric_label": "busbw GB/s"},
+        {"name": "mnubergemm", "base": "mnubergemm", "status": "BURN-IN OFF", "reason": "", "metric": None, "metric_label": None},
+    ]
+    return {"node": node, "present": True, "slurm_state": "idle", "home": bringup_home(), "jobs": jobs}
+
+
+def demo_fleet_summary(nodes: list[str] | None = None) -> dict[str, object]:
+    """Synthetic fleet summary for ``RACK_STATUS_DEMO=1``.
+
+    Spreads statuses and busbw values across the given nodes so the heatmap shows a range
+    rather than one flat colour.
+    """
+    names = [n for n in (nodes or []) if n] or [f"demo-r01-{i:02d}" for i in range(1, 19)]
+    cols = ["dcgmi-r1", "nvbandwidth", "allreduce", "alltoall", "allreduce-nonvlink"]
+    out: list[dict[str, object]] = []
+    for i, name in enumerate(names):
+        jobs: list[dict[str, object]] = []
+        for col in cols:
+            base = _base_job(col)
+            label = METRIC_LABELS.get(base)
+            # Deterministic spread: every 7th node fails, every 11th has not run yet.
+            if i % 11 == 10:
+                status, metric = "NOT_RUN", None
+            elif i % 7 == 6:
+                status, metric = "FAIL", (f"{120 + (i % 5) * 7:.2f}" if label else None)
+            else:
+                status, metric = "DONE", (f"{600 + (i * 13) % 120:.2f}" if label else None)
+            jobs.append(
+                {
+                    "name": col,
+                    "base": base,
+                    "status": status,
+                    "reason": "below floor" if status == "FAIL" else "",
+                    "metric": metric,
+                    "metric_label": label,
+                }
+            )
+        out.append(
+            {
+                "node": name,
+                "slurm_state": "down*" if i % 9 == 8 else "idle",
+                "jobs": jobs,
+            }
+        )
+    return {
+        "home": bringup_home(),
+        "columns": cols,
+        "metric_labels": {c: METRIC_LABELS[b] for c in cols if (b := _base_job(c)) in METRIC_LABELS},
+        "nodes": out,
+    }

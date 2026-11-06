@@ -1,0 +1,1 @@
+var e={compact:`nv-density-compact`,standard:`nv-density-standard`,spacious:`nv-density-spacious`},t=e=>{if(e===`tiny`||e===`small`)return`compact`;if(e===`large`)return`spacious`};export{t as n,e as t};

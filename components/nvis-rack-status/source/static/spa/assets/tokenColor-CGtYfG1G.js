@@ -1,0 +1,1 @@
+function e(e,t){let n=/var\((--[^)]+)\)/.exec(e)?.[1]??e;return typeof window>`u`||!n.startsWith(`--`)?t:getComputedStyle(document.documentElement).getPropertyValue(n).trim()||t}export{e as t};

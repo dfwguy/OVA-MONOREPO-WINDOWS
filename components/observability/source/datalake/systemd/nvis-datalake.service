@@ -1,0 +1,23 @@
+# /etc/systemd/system/nvis-datalake.service
+# Boot-ordered bring-up of the Parquet data-lake lane (reboot survival).
+# Install: cp to /etc/systemd/system/ ; systemctl enable --now nvis-datalake
+[Unit]
+Description=NVIS IREN_MKZ Parquet data lake (lakewriter + fabric poller)
+Requires=docker.service
+After=docker.service network-online.target data-lake.mount
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/observability/iren_mkz/datalake
+ExecStartPre=/usr/bin/install -d -o nvis -g nvis /data/lake /data/spool
+# Services are named EXPLICITLY. nvis-lake-fabric is one of the 14 halted
+# network/switch scrapers and must never be resurrected by a boot-time bring-up;
+# it also carries `profiles: [fabric]` in the compose file as a second guard.
+ExecStart=/usr/bin/docker compose -f compose.datalake.yml --env-file ../.env up -d nvis-lakewriter nvis-lake-vmexport
+ExecStop=/usr/bin/docker compose -f compose.datalake.yml --env-file ../.env stop nvis-lakewriter nvis-lake-vmexport
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

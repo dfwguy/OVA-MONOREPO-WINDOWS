@@ -1,0 +1,618 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Entry point for the GB300 NVLink boards. Carries a single dataset \u2014 every open NVLink-area worklist item, GPU side and switch side \u2014 with two exactly-matching detail tables: one row per fault class (the column sums to the tile) and one row per open item (the row count equals the tile). All other NVLink datasets are owned by the Lanes, Fleet and Health boards and are deliberately not repeated here.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "NVLink Lanes",
+      "tooltip": "GPU-side NVLink lane state per tray",
+      "type": "link",
+      "url": "/d/nvis-nvlink-downlanes/?${__url_time_range}"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "NVSwitch Fleet",
+      "tooltip": "Reachability and firmware inventory",
+      "type": "link",
+      "url": "/d/nvis-nvswitch-fleet/?${__url_time_range}"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "NVSwitch Health",
+      "tooltip": "Fabric-plane health and churn",
+      "type": "link",
+      "url": "/d/nvis-nvswitch-health/?${__url_time_range}"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"font:13px/1.55 Inter,Roboto,sans-serif;color:#c7d0d9\"><div style=\"font-size:15px;font-weight:600;color:#e6edf3;margin-bottom:4px\">NVLink &amp; NVSwitch &mdash; area home</div><div style=\"color:#8b98a5;margin-bottom:8px\">Entry point for the NVLink boards. This page carries one dataset only: every open NVLink-area worklist item right now, GPU side and switch side in one list. Sources are the tray textfile collector (<code>su1_nvlink_*</code>, <code>su1_service_active</code>) and the out-of-band switch-firmware sweep (<code>job=switch-fw</code>). Every other NVLink number lives on exactly one of the boards below and is deliberately not repeated here.</div><div style=\"font-size:12px\"><span style=\"color:#8b98a5\">NVLink area&nbsp;&rsaquo;&nbsp;</span><span style=\"color:#e6edf3;font-weight:600\">Area home</span>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/nvis-nvlink-downlanes/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">NVLink lanes &amp; IMEX &mdash; per tray</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/nvis-nvswitch-fleet/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">NVSwitch fleet &mdash; reachability &amp; firmware</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href=\"/d/nvis-nvswitch-health/?${__url_time_range}\" style=\"color:#6ea8fe;text-decoration:none\">NVSwitch health &mdash; fabric plane &amp; churn</a></div></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 10,
+      "panels": [],
+      "title": "Open worklist for the whole NVLink area",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Every open NVLink-area item right now, in five disjoint classes: a tray publishing no NVLink lane telemetry, a tray enumerating fewer than 72 lanes, a tray with nvidia-imex inactive, an NVSwitch the out-of-band sweep cannot reach, and a reachable NVSwitch reporting unhealthy. The two tables beside and below are built from the identical five expressions \u2014 the class column sums to this number and the item table has exactly this many rows.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "#B77D34",
+                "value": 1
+              },
+              {
+                "color": "dark-red",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 5,
+        "x": 0,
+        "y": 5
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "(count(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", node!=\"\"} == 1 unless on(node) count by(node)(su1_nvlink_up{cluster=~\"$cluster\"})) or vector(0)) + (count(count by(node, rack, su)(su1_nvlink_up{cluster=~\"$cluster\"}) < 72) or vector(0)) + (count(su1_service_active{service=\"nvidia-imex\", cluster=~\"$cluster\"} == 0) or vector(0)) + (count(switch_up{kind=\"nvswitch\", cluster=~\"$cluster\"} == 0) or vector(0)) + (count(switch_health{kind=\"nvswitch\", cluster=~\"$cluster\"} == 0) or vector(0))",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Open worklist items",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "One row per fault class, built from the same five expressions as the tile to the left. The Open items column sums to exactly the number shown there. Filter or sort to find the dominant class, then read the exact entities in the table below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "Nothing open in the NVLink area.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Source"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 260
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Open items"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 140
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-green",
+                      "value": null
+                    },
+                    {
+                      "color": "#B77D34",
+                      "value": 1
+                    },
+                    {
+                      "color": "dark-red",
+                      "value": 50
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 19,
+        "x": 5,
+        "y": 5
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Open items"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(label_replace(count(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", node!=\"\"} == 1 unless on(node) count by(node)(su1_nvlink_up{cluster=~\"$cluster\"})) or vector(0), \"fault\", \"No NVLink lane telemetry\", \"\", \"\"), \"source\", \"Tray textfile collector\", \"\", \"\") or label_replace(label_replace(count(count by(node, rack, su)(su1_nvlink_up{cluster=~\"$cluster\"}) < 72) or vector(0), \"fault\", \"Fewer than 72 NVLink lanes\", \"\", \"\"), \"source\", \"Tray textfile collector\", \"\", \"\") or label_replace(label_replace(count(su1_service_active{service=\"nvidia-imex\", cluster=~\"$cluster\"} == 0) or vector(0), \"fault\", \"nvidia-imex inactive\", \"\", \"\"), \"source\", \"Tray textfile collector\", \"\", \"\") or label_replace(label_replace(count(switch_up{kind=\"nvswitch\", cluster=~\"$cluster\"} == 0) or vector(0), \"fault\", \"NVSwitch unreachable to the sweep\", \"\", \"\"), \"source\", \"Out-of-band switch sweep\", \"\", \"\") or label_replace(label_replace(count(switch_health{kind=\"nvswitch\", cluster=~\"$cluster\"} == 0) or vector(0), \"fault\", \"NVSwitch reporting unhealthy\", \"\", \"\"), \"source\", \"Out-of-band switch sweep\", \"\", \"\")",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Open items by fault class \u2014 this column sums to the tile",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "Value": 2,
+              "fault": 0,
+              "source": 1
+            },
+            "renameByName": {
+              "Value": "Open items",
+              "fault": "Fault class",
+              "source": "Source"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "One row per open item counted in the tile above \u2014 the row count equals it exactly. A tray can appear more than once if it carries more than one class of fault. Switch-side rack names from the out-of-band sweep are normalised to the fleet rack name so both sources share one Rack column.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "Nothing open in the NVLink area.",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Fault"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 340
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tray / NVSwitch"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 340
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Fault"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(label_replace(up{job=~\"node|node-exporter\", cluster=~\"$cluster\", node!=\"\"} == 1 unless on(node) count by(node)(su1_nvlink_up{cluster=~\"$cluster\"}), \"fault\", \"No NVLink lane telemetry\", \"\", \"\"), \"entity\", \"$1\", \"node\", \"(.*)\")",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(label_replace(count by(node, rack, su)(su1_nvlink_up{cluster=~\"$cluster\"}) < 72, \"fault\", \"Fewer than 72 NVLink lanes\", \"\", \"\"), \"entity\", \"$1\", \"node\", \"(.*)\")",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(label_replace(su1_service_active{service=\"nvidia-imex\", cluster=~\"$cluster\"} == 0, \"fault\", \"nvidia-imex inactive\", \"\", \"\"), \"entity\", \"$1\", \"node\", \"(.*)\")",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(switch_up{kind=\"nvswitch\", cluster=~\"$cluster\"} == 0, \"rack\", \"WH1D$1\", \"rack\", \"^d0*([0-9]+)$\"), \"rack\", \"WH1E$1\", \"rack\", \"^e0*([0-9]+)$\"), \"rack\", \"WH1F$1\", \"rack\", \"^f0*([0-9]+)$\"), \"rack\", \"WH1G$1\", \"rack\", \"^g0*([0-9]+)$\"), \"rack\", \"WH1H$1\", \"rack\", \"^h0*([0-9]+)$\"), \"rack\", \"WH1I$1\", \"rack\", \"^i0*([0-9]+)$\"), \"rack\", \"WH1J$1\", \"rack\", \"^j0*([0-9]+)$\"), \"fault\", \"NVSwitch unreachable to the sweep\", \"\", \"\"), \"entity\", \"$1\", \"switch\", \"(.*)\")",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(switch_health{kind=\"nvswitch\", cluster=~\"$cluster\"} == 0, \"rack\", \"WH1D$1\", \"rack\", \"^d0*([0-9]+)$\"), \"rack\", \"WH1E$1\", \"rack\", \"^e0*([0-9]+)$\"), \"rack\", \"WH1F$1\", \"rack\", \"^f0*([0-9]+)$\"), \"rack\", \"WH1G$1\", \"rack\", \"^g0*([0-9]+)$\"), \"rack\", \"WH1H$1\", \"rack\", \"^h0*([0-9]+)$\"), \"rack\", \"WH1I$1\", \"rack\", \"^i0*([0-9]+)$\"), \"rack\", \"WH1J$1\", \"rack\", \"^j0*([0-9]+)$\"), \"fault\", \"NVSwitch reporting unhealthy\", \"\", \"\"), \"entity\", \"$1\", \"switch\", \"(.*)\")",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "E"
+        }
+      ],
+      "title": "Every open item \u2014 the exact tray or NVSwitch",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Hostname": true,
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Time 5": true,
+              "UUID": true,
+              "Value #A": true,
+              "Value #B": true,
+              "Value #C": true,
+              "Value #D": true,
+              "Value #E": true,
+              "__name__": true,
+              "asic": true,
+              "cluster": true,
+              "component": true,
+              "datahall": true,
+              "device": true,
+              "dgx_flavor": true,
+              "gpu": true,
+              "instance": true,
+              "ip": true,
+              "job": true,
+              "kind": true,
+              "link": true,
+              "model": true,
+              "modelName": true,
+              "node": true,
+              "os_version": true,
+              "part_number": true,
+              "pci_bus_id": true,
+              "plane": true,
+              "rack_ordinal": true,
+              "racktype": true,
+              "serial": true,
+              "service": true,
+              "su": true,
+              "su_letter": true,
+              "switch": true,
+              "tray_index": true,
+              "version": true
+            },
+            "indexByName": {
+              "entity": 1,
+              "fault": 0,
+              "rack": 2
+            },
+            "renameByName": {
+              "entity": "Tray / NVSwitch",
+              "fault": "Fault",
+              "rack": "Rack"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "nvlink",
+    "nvswitch",
+    "home",
+    "l2",
+    "iren_mkz",
+    "gb300",
+    "area-nvlink"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "nvis-victoriametrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "clusterQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "NVLink & NVSwitch \u2014 Area Home (L2)",
+  "uid": "nvis-l2-nvlink",
+  "version": 1,
+  "weekStart": ""
+}

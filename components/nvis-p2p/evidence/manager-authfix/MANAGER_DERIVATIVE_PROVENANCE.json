@@ -1,0 +1,60 @@
+{
+  "component": "Dragonfly Manager Linux amd64 derivative",
+  "version": "v2.5.1-iren-authfix.1",
+  "upstream_commit": "5523218a3710b2d5bc8fbdb0b1473d3a4d64916d",
+  "upstream_source_archive_sha256": "1b93aab358bf25cc7d9a6e3c965691173b5ccd9579547d6eebec1a88a69fa820",
+  "upstream_source_url": "https://codeload.github.com/dragonflyoss/dragonfly/tar.gz/5523218a3710b2d5bc8fbdb0b1473d3a4d64916d",
+  "patch_sha256": "87ae15254ace8568f78cbe9d65189a917aac0e8c88109a4a5cff30a26060427a",
+  "patched_source_bundle_sha256": "c78f647ebd7823e59f294cf898e67d0a020ec92d9e12de6df9a03ddd8ab704ce",
+  "binary_sha256": "b8b39c4ba17767c8634aa471d1ffea2cf8987fe8e12590b62c3d511e6b26c8ac",
+  "binary_bytes": 81490104,
+  "binary_format": "Static ELF64 x86-64 CGO_ENABLED=0, stripped",
+  "original_upstream_binary": false,
+  "toolchain": "go1.25.5 linux/amd64",
+  "toolchain_archive_sha256": "9e9b755d63b36acf30c12a9a3fc379243714c1c6d3dd72861da637f336ebb35b",
+  "build_command": "CGO_ENABLED=0 GOMAXPROCS=4 go build -p 4 -mod=readonly -trimpath -ldflags '-s -w -X d7y.io/dragonfly/v2/version.GitVersion=v2.5.1-iren-authfix.1 -X d7y.io/dragonfly/v2/version.GitCommit=5523218a3710b2d5bc8fbdb0b1473d3a4d64916d+iren-authfix1 -X d7y.io/dragonfly/v2/version.BuildTime=2026-11-05T00:00:00Z' -o manager ./cmd/manager",
+  "build_timestamp_policy": "Fixed version BuildTime string 2026-11-05T00:00:00Z for reproducibility; not wallclock assertion",
+  "prepared_at_utc": "2026-11-05T05:05:41.358155+00:00",
+  "console_input": {
+    "archive": "/data/iren-mkz-work/p2p-rack/nvis-p2p/deploy/console/artifacts/NVIS-P2P-Console-2.5.1-nvis.2-static.tar.gz",
+    "sha256": "9b35f6614a24e16dd36435c9dd3e692c242e446f0f32d161652cccbb2a7d31a0",
+    "role": "Embed same prebuilt console assets already supplied by NVIS P2P source kit; not represented as pristine upstream Manager assets"
+  },
+  "behavior_changes": [
+    "SignIn and ResetPassword obtain credential rows through GORM Row/Scan rather than global JSON Query cache",
+    "User JSON credential fields remain excluded",
+    "Explicitly reject missing/empty/zero identity, disabled and soft-deleted credential records",
+    "Password reset updates verified row directly rather than refetching through cache"
+  ],
+  "regression_evidence": {
+    "pristine_upstream": "Expected FAIL: cached User omits json-excluded hash; first warmed signin fails bcrypt hashedSecret-too-short",
+    "patched_service": "PASS against isolated PostgreSQL16.15 with actual go-gorm JSON cache;20warm logins, cache callback counter unchanged, passwordrotation and negativeaccount/password cases",
+    "actual_http_runtime": {
+      "status": "PASS",
+      "checks": [
+        "unauthenticated API rejected",
+        "20 rapid root/dragonfly signins with real Manager global cache PASS",
+        "browser CookieJar authenticated clusters GET without bearer header PASS",
+        "wrong password rejected with warm cache",
+        "nonexistent account rejected",
+        "public profile omits credential hash",
+        "actual API password change accepted after warm-cache signins",
+        "20 rapid new-password signins PASS; old password rejected",
+        "embedded matching console index and 2 static assets served offline",
+        "disabled account rejected through actual HTTP API",
+        "soft-deleted account rejected through actual HTTP API"
+      ],
+      "manager_sha256": "b8b39c4ba17767c8634aa471d1ffea2cf8987fe8e12590b62c3d511e6b26c8ac",
+      "environment": "Local isolated PostgreSQL16.15 + Redis + native static Manager; no IREN access",
+      "secrets_recorded": false
+    }
+  },
+  "limits": [
+    "No IREN hosts or VPN used",
+    "No Windows execution claimed",
+    "No systemd/remote Docker installation acceptance claimed by this component test",
+    "Linux amd64 only; ARM64 Manager binary not built",
+    "Supplied console assets derive from NVIS source kit and optional NVIS pages are not made functional by this authentication fix",
+    "Go module cache/toolchain not bundled; connected builder needed to rebuild source; deployed binary itself is static"
+  ]
+}

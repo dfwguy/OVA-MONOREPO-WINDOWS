@@ -1,0 +1,28 @@
+[Unit]
+Description=NVIS bounded fleet DCGM reliability target discovery
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=SLURM_BIN=/cm/local/apps/slurm/current/bin
+Environment=SLURM_CONF=/cluster/slurm/etc/slurm/slurm.conf
+Environment=NVIS_FLEET_DCGM_NODE_LIMIT=4096
+Environment=NVIS_FLEET_DCGM_RESOLVE_WORKERS=32
+ExecStart=/usr/bin/python3 /opt/observability/iren_mkz/exporters/fleet-dcgm/fleet-dcgm-targets.py
+Nice=15
+IOSchedulingClass=idle
+CPUQuota=50%
+MemoryMax=256M
+TimeoutStartSec=90
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/cluster /cm
+ReadWritePaths=/var/lib/prometheus/node-exporter /var/lib/nvis-observability
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictSUIDSGID=true
+CapabilityBoundingSet=

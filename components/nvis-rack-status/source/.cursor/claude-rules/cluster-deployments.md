@@ -1,0 +1,123 @@
+---
+description: Multi-cluster deployment map (Mayo / Nscale TX / Nscale NC / Firmus / Boston) — worktree dir, branch, catalog file, and connection details to avoid silently targeting the wrong cluster
+alwaysApply: true
+---
+
+# Multi-Cluster Deployments — DO NOT MIX
+
+Five customer deployments share this repo. Before running anything cluster-specific,
+state which cluster you are targeting. The wrong host/catalog silently hits the wrong cluster.
+(More Nscale kits are *reachable* than are deployed here — see the jumphost map below.)
+
+## Quick map
+
+| Cluster | Worktree dir | Branch | Catalog file | Project / Customer |
+|-----|-----|-----|-----|-----|
+| **Mayo Clinic** | `~/Documents/code/nvis-rack-status` | `v3` | `var/store/catalog.json` | Mayo Clinic / MAYO |
+| **Nscale TX** (GB300) | `~/Documents/code/nvis-rack-status` | `v3` | *(deployed on the OVA)* | NscaleTX / NscaleTX-GB300 |
+| **Nscale NC** | `~/Documents/code/nvis-nscale-nc-app` | `nscale-nc-app` | *(on the app server's container)* | Nscale NC |
+| **Firmus** (MEL01) | `~/Documents/code/nvis-mel01` | `mel01-validation` | `var/store/catalog.json` (default) | Firmus BK2 / Firmus |
+| **Boston Markley** (BOS01) | `~/Documents/code/nvis-mel01` | `mel01-validation` | `var/store/catalog-boston.json` | Boston Markley / NVIDIA |
+
+⚠️ **Mayo and Nscale TX share the `nvis-rack-status` worktree and the `v3` branch.**
+They are distinguished by *deployment target*, not by checkout: each Nscale kit runs as a
+container on its own appliance. Product work for either lands on `v3`. **Nscale NC has its own
+branch, `nscale-nc-app`** (worktree `nvis-nscale-nc-app`): every NC change goes there and is pushed,
+because the NC image is built from it.
+
+⚠️ **On Nscale, the IP address is not cluster identity — the mobilekit jumphost is.** Every
+Nscale kit is reached through its own `mobilekit-p-phy-deviceN` Teleport jumphost and every one
+of them numbers its hosts out of the same `192.0.2.0/2x`, so the *same* IP behind a different
+device is a different cluster in a different physical location. `192.0.2.3` alone is
+ambiguous: behind device100 it is one kit, behind device2 another. **Never target a bare Nscale
+IP** — always go through the alias, which pins the jumphost:
+
+| Jumphost | Entry host | Alias | Cluster |
+|-----|-----|-----|-----|
+| `…-device2` | `nvis@192.0.2.3` (OVA), `cmods@192.0.2.2` (BCM head) | `nscale-tx-ova`, `nscale-tx-node` | Nscale TX (GB300) |
+| `…-device100` | `rkoike@192.0.2.3`, key `id_nscale_16k` | `nscale-tx-16k` | Nscale 16k — a **separate kit** from TX despite the `tx` in the alias; not a rack-status deployment (yet) |
+| `…-device3` | `rkoike@192.0.2.4`, key `id_nscale_nc` | `nscale-nc-app` | Nscale NC |
+
+`…-device1` is also in the Teleport inventory and is not mapped here. An unmapped device is an
+unknown cluster, not a spare route to a known one.
+
+⚠️ **Firmus and Boston share the `nvis-mel01` worktree.** They are distinguished ONLY by
+`NVIS_CATALOG_FILE`: Firmus = default `catalog.json`; Boston = `catalog-boston.json` (set by
+`dist/run-local-boston.sh`). Never let Boston overrides leak into Firmus's `catalog.json` or
+`var/cache/job_env_overrides.json`, or vice versa.
+
+## Connection details
+
+**Firmus / MEL01** — `ssh mbcm01` (root@192.0.2.21, `ProxyJump meljump` = nvis@192.0.2.22).
+Single-host: cmsh / slurm / root scripts all run on the head node. Container deployed on
+mbcm01; reach the UI via an SSH tunnel.
+
+**Boston Markley** — hybrid split, key `~/.ssh/nvis_container`:
+- control plane (cmsh / slurm): `cmods@192.0.2.23` (head)
+- script/root plane (pdsh, root-owned `/raid`, sbatch via shared `SLURM_CONF`):
+ `root@192.0.2.24` (slogin = `bos01-a09-13-s1-mgmt-01`)
+- `boston-bcm` alias = 10.29.136.10. Local dev: `dist/run-local-boston.sh` → port **5050**.
+- Naming `bos01-[A-Z]…`, rows a/b. Validation/NeMo/pdsh run on the **script** profile.
+
+**Nscale TX** — three hops, three different auth mechanisms: Teleport cert to
+`mobilekit-p-phy-device2.nscale.teleport.sh`, then **password** to `nvis@192.0.2.3`
+(`ssh nscale-tx-ova`), then key `id_bcm` to `cmods@192.0.2.2` (BCM head). Because hop 2 is
+password-only, an agent can never open a fresh session — the human runs
+`ssh nscale-tx-ova 'echo ok'` once, then the agent reuses the `ControlMaster`. Dashboard =
+container on the OVA at `:5056`, reached via a local **5156** forward (`~/Documents/code/ns-tun.sh`).
+Reached via device2 — see the jumphost map above; the devices are **not** interchangeable.
+`Connection closed by UNKNOWN port 65535` means the jumphost is offline, not a cert problem.
+Full detail: **[docs/clusters/NSCALE_TX_DEPLOYMENT.md](../../docs/clusters/NSCALE_TX_DEPLOYMENT.md)**.
+
+**Nscale NC** — **not the TX kit**. Two hops, key auth throughout: Teleport cert to
+`mobilekit-p-phy-device3.nscale.teleport.sh`, then key `id_nscale_nc` to the app server
+(`ssh nscale-nc-app`). There is **no password hop**, so an agent can open its own sessions. Rack
+Status runs there as a container; the BCM head (`hn1`) is the cluster manager, not a work host.
+
+*Deploying Rack Status to NC* (from the `nscale-nc-app` worktree, `<sha>` = the commit to ship):
+
+```bash
+git archive <sha> | ssh nscale-nc-app "mkdir -p ~/rack-build-<sha> && tar -x -C ~/rack-build-<sha>"
+ssh nscale-nc-app "cd ~/rack-build-<sha> && sudo -n env RACK_IMAGE_TAG=0.3.1-nscale-nc-app.<sha> ./build-docker.sh save"
+ssh nscale-nc-app "sudo -n /home/rkoike/rack-status-nc-deploy/deploy-nc.sh nvis-rack-status:0.3.1-nscale-nc-app.<sha>"
+# launchers only (no restart): bin/scripts -> the scripts tree the cluster runs
+NVIS_CLUSTER_ROOT=/home/cmods bin/deploy-scripts.sh nscale-nc-app   # -> /home/cmods/nvis-rack-status
+```
+
+NC's root is `/home/cmods` (the cluster record's `connection.root`): scripts under
+`/home/cmods/nvis-rack-status`, logs under `/home/cmods/nvis/logs`, the workspace, bring-up and its data
+beside them. Before 2026-10-23 the scripts lived under `/home/rkoike/nvis-rack-status`; nothing reads
+that tree any more. See `cluster-paths.mdc`.
+
+The P2P operations worker (`~/operations-worker.py`, run by cron) and the rollout scripts under
+`/opt/nvis-p2p/current/scripts` are installed separately from the image: diff the deployed file
+against the repo before replacing it, back it up, and carry any site change into the repo rather
+than overwriting it.
+
+*Run cluster commands on the app server, and reach the nodes with `clush`* -- for deploys and for
+anything else that touches nodes (staging files, checks, repairs, catalog refreshes, CC profiles):
+
+```bash
+clush --nostdin -w "$NODES" -t 10 -u 300 -f 200 '<command>'      # or --hostfile <file>
+```
+
+**Prefer `clush` to `ssh`.** One `clush` gives a bounded fan-out (`-f`), a connect and a command
+timeout per node (`-t`, `-u`), and a per-node report of what failed or did not answer; an ssh loop or
+`xargs -P ssh` serialises or hides failures, and a dead node holds its slot until the command's own
+timeout. Plain `ssh` is for a single host. **Do not run fan-outs or routines on the BCM head:** `hn1`
+runs CMDaemon and Slurm control and is kept quiet (Rack Status's periodic BCM query is the only load
+it should carry). Use `cmsh` `pexec` on the head only as the fallback when the app server cannot reach
+the nodes.
+
+**Mayo Clinic** — main repo on `v3`. SSH/deploy specifics are not captured here; confirm with
+the operator before acting on Mayo.
+
+## Rules of engagement
+
+- Announce the target cluster at the start of any cluster task.
+- Boston: privileged tools (validation, NeMo, sysinfo, hw-check, cuda-nccl) use the **script**
+ profile (root@slogin); cmsh/slurm queries use **control** (cmods@head). Firmus does it all on
+ the single head.
+- Commits: Boston/Firmus → `mel01-validation`; Mayo / Nscale TX → `v3`; Nscale NC → `nscale-nc-app`.
+- `:5000` on macOS is the AirPlay Receiver and returns **403 Forbidden** — never tunnel a
+ container to local `:5000`; pick another local port (e.g. `ssh -L 8080:localhost:<remote>`).

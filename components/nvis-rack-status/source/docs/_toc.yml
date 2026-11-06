@@ -1,0 +1,110 @@
+# The site structure, and the only place it is declared.
+#
+# sphinx-external-toc rather than per-page toctrees: with `external_toc_exclude_missing: false`
+# in conf.py, a page that exists but is listed nowhere is a build failure. That is the check that
+# stops a docs site accumulating pages reachable only by search.
+#
+# The captioned groups are the Diataxis modes, and they are not a naming convention -- a page in
+# the wrong one answers a question the reader was not asking. See https://diataxis.fr/ and
+# .cursor/rules/docs-diataxis.mdc.
+#
+# The Tutorials caption appears now that the first tutorial exists. Diataxis is explicit that empty
+# categories are worse than absent ones, so a caption is added only together with its first page.
+
+root: index
+
+subtrees:
+  - caption: Tutorials — learning by doing
+    entries:
+      - file: tutorials/distribute-your-first-image
+        title: Distribute your first image with NVIS-P2P
+
+  - caption: How-to guides — getting something done
+    entries:
+      - file: how-to/configure-a-deployment
+        title: How to configure a deployment
+      - file: how-to/authenticate-to-the-api
+        title: How to authenticate to the API
+      - file: how-to/grant-a-team-access
+        title: How to grant a team access
+      - file: how-to/diagnose-a-refused-request
+        title: How to diagnose a refused request
+      - file: how-to/add-your-own-script
+        title: How to add your own script and register it as a tool
+      - file: how-to/use-the-terminal
+        title: How to use the terminal
+      - file: how-to/stage-observability-agents
+        title: How to stage the observability node-agents to a cluster
+      - file: how-to/connect-a-pythoncm-cluster
+        title: How to connect a PythonCM (BCM) cluster
+      - file: how-to/distribute-a-catalog-image
+        title: How to distribute a catalog image to the fleet
+      - file: how-to/recover-p2p-peers-after-a-reimage
+        title: How to bring P2P peers up on new or reimaged nodes
+      - file: how-to/publish-the-deployment-tracker
+        title: How to publish the deployment tracker
+      - file: how-to/forecast-cluster-completion
+        title: How to forecast when the cluster finishes validation
+      - file: how-to/write-a-rack-handover-report
+        title: How to write a rack handover report
+      - file: how-to/place-a-multirack-job
+        title: How to place a multi-rack job for best collective performance
+      - file: how-to/list-bcm-racks-without-templates
+        title: How to list saved BCM racks without naming templates
+
+  - caption: Reference — the machinery, described
+    entries:
+      - file: reference/configuration/settings
+        title: Configuration settings — every setting, generated
+      - file: reference/catalog/projects-and-clusters
+        title: Projects and clusters
+      - file: reference/catalog/tools
+        title: Tool documents
+      - file: reference/actions-by-scope
+        title: Actions by scope — node, rack, multirack
+      - file: reference/identity/index
+        title: Identity and authorization
+        entries:
+          - file: reference/identity/actions-and-resources
+            title: Actions and resources
+          - file: reference/identity/policy-schema
+            title: Policy schema
+          - file: reference/identity/evaluation
+            title: How a decision is made
+          # The generated vocabulary. It existed all along and was not in this file, so a reader
+          # looking for "which services and actions are there" found the grammar on the page
+          # above and never the list itself.
+          - file: reference/identity/action-vocabulary
+            title: Action vocabulary — every service and action
+      - file: reference/p2p-catalog-distribution
+        title: P2P catalog distribution — components, parameters, scripts
+      - file: reference/collective-settings-by-job-size
+        title: Collective settings by job size
+
+  - caption: Explanation — why it is like this
+    entries:
+      - file: explanation/the-parametric-platform
+        title: The parametric platform
+      - file: explanation/why-authorization-is-default-deny
+        title: Why authorization is default-deny
+      - file: explanation/how-a-script-path-is-chosen
+        title: How a script path is chosen
+      - file: explanation/the-cluster-home-directory
+      - file: explanation/how-cluster-paths-reach-scripts
+        title: The cluster home directory
+      - file: explanation/geometry-and-hostnames
+        title: Geometry and hostnames
+      - file: explanation/which-storage-engine
+        title: Which storage engine, and why
+      - file: explanation/why-no-pythoncm-broker
+        title: Why there is no PythonCM broker
+      - file: explanation/porting-the-pythoncm-fork
+        title: Porting the PythonCM fork
+      - file: explanation/p2p-module-integration
+        title: NVIS-P2P as a per-cluster capability
+      - file: explanation/active-passive-and-blue-green
+        title: Active/passive and blue/green (roadmap)
+      - file: explanation/p2p-catalog-distribution
+        title: How catalog images reach every node
+      - file: explanation/rack-placement-and-collective-performance
+        title: Rack placement and collective performance

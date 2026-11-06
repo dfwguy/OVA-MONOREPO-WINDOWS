@@ -1,0 +1,44 @@
+{
+  "name": "nvis-greenlight-desktop",
+  "productName": "NVIS Greenlight",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Desktop shell for the NVIS Greenlight cluster console: deployment picker, SSH tunnel supervision, and signed auto-updates.",
+  "author": {
+    "name": "Rafael M. Koike & Cursor Agent (\"Ada\")",
+    "email": "rkoike@nvidia.com"
+  },
+  "homepage": "https://gitlab-master.nvidia.com/nvis/nvis-rack-status",
+  "desktopName": "nvis-greenlight.desktop",
+  "license": "LicenseRef-NvidiaProprietary",
+  "main": "out/main/main.js",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.launcher.json && node scripts/copy-launcher.mjs",
+    "start": "npm run build && electron .",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.launcher.json --noEmit",
+    "lint": "eslint .",
+    "smoke": "npm run build && node scripts/smoke.mjs && node scripts/menu-check.mjs && node scripts/window-open-check.mjs",
+    "version:build": "node scripts/build-version.mjs",
+    "pack": "npm run build && electron-builder --dir --config.extraMetadata.version=$(node scripts/build-version.mjs)",
+    "pack:mac": "npm run build && electron-builder --mac --dir --config.extraMetadata.version=$(node scripts/build-version.mjs)",
+    "dist": "npm run build && electron-builder --publish never --config.extraMetadata.version=$(node scripts/build-version.mjs)",
+    "dist:linux": "bash scripts/build-in-docker.sh --linux --x64",
+    "dist:win": "BUILDER_IMAGE=electronuserland/builder:24-wine bash scripts/build-in-docker.sh --win --x64",
+    "dist:mac": "npm run build && CUSTOM_DMGBUILD_PATH=scripts/dmgbuild-patient.sh electron-builder --mac --publish never --config.extraMetadata.version=$(node scripts/build-version.mjs)",
+    "dist:local": "npm run build && electron-builder --mac zip --publish never --config.extraMetadata.version=$(node scripts/build-version.mjs)",
+    "dist:all": "npm run build && electron-builder -mwl --publish never --config.extraMetadata.version=$(node scripts/build-version.mjs)",
+    "dist:publish": "npm run build && electron-builder --publish always"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "electron": "^44.9.3",
+    "electron-builder": "^26.18.0",
+    "typescript": "~6.0.2"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  }
+}

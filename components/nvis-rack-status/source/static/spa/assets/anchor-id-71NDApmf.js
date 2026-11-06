@@ -1,0 +1,1 @@
+import{i as e}from"./rolldown-runtime-COiEfhsA.js";import{B as t}from"./createTheme-BiNRG8NI.js";var n=e(t(),1),r=()=>()=>{},i=()=>!1,a=()=>!0;function o(){return(0,n.useSyncExternalStore)(r,i,a)}var s=e=>e.replace(/:/g,``),c=(e,t)=>`nv-${e}-${s(t)}`,l=(e,t)=>`--nv-${e}-anchor-${s(t)}`,u=(e,t)=>`--nv-${e}-anchor-override-${s(t)}`;export{o as a,s as i,u as n,c as r,l as t};

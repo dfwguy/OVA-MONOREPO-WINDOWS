@@ -1,0 +1,83 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.3.1",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "vite",
+    "gen:help": "node scripts/gen-help-content.mjs",
+    "prebuild": "node scripts/gen-help-content.mjs",
+    "build": "tsc -b && vite build && vite build --config vite.tracker.config.ts && vite build --config vite.forecast.config.ts",
+    "build:tracker": "vite build --config vite.tracker.config.ts",
+    "build:forecast": "vite build --config vite.forecast.config.ts",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "sync-skills": "kui-sync-skills --dir ../.cursor"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^9.0.0",
+    "@nvidia/foundations-react-core": "^1.0.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-unicode11": "^0.9.0",
+    "@xterm/addon-web-links": "^0.12.0",
+    "@xterm/addon-webgl": "^0.19.0",
+    "@xterm/xterm": "^6.0.0",
+    "chart.js": "^4.5.1",
+    "dagre": "^0.8.5",
+    "dompurify": "^3.4.17",
+    "lucide-react": "^1.14.0",
+    "marked": "^16.4.2",
+    "mermaid": "^12.2.0",
+    "monaco-editor": "^0.56.0",
+    "react": "^19.3.1",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^19.3.1",
+    "react-grid-layout": "^2.2.4",
+    "react-router-dom": "^7.18.4",
+    "reactflow": "^11.11.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.2.4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/dagre": "^0.7.52",
+    "@types/node": "^24.12.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.12",
+    "eslint": "^10.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.5.0",
+    "jsdom": "^29.1.1",
+    "tailwindcss": "^4.2.4",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.58.2",
+    "vite": "^8.3.5",
+    "vitest": "^4.1.12"
+  },
+  "allowScripts": {
+    "@nvidia/foundations-react-core@1.0.0": true,
+    "fsevents@2.3.3": true
+  },
+  "overrides": {
+    "dompurify": "^3.4.17",
+    "undici": "^7.30.1",
+    "brace-expansion": "^5.0.12",
+    "browserslist": "^4.29.3",
+    "nanoid": "^3.3.19",
+    "postcss": "^8.5.28",
+    "baseline-browser-mapping": "^2.11.27",
+    "source-map-js": "^1.2.2",
+    "zod": "^4.6.6"
+  }
+}

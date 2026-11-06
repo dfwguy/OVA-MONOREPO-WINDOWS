@@ -1,0 +1,50 @@
+{
+  "site": "example-site",
+  "cluster": "example-slurm",
+  "epoch": "initial",
+  "root": "/var/lib/slurm-evidence/example-slurm/initial",
+  "slurm_bin": "/usr/bin",
+  "service_user": "slurm-evidence",
+  "service_group": "slurm-evidence",
+  "slurm_service": "slurmctld.service",
+  "controller_log": "/var/log/slurm/slurmctld.log",
+  "completion_log": "/var/log/slurm/history/completions.log",
+  "manifest_dirs": [
+    "/var/lib/slurm-evidence/example-slurm/initial/state/job-manifests",
+    "/var/lib/slurm-evidence/example-slurm/initial/state/runner-manifests"
+  ],
+  "local_roots": [
+    "/srv/validation/results"
+  ],
+  "remote_allowed_roots": [
+    "/srv/validation/runs",
+    "/scratch/validation/runs"
+  ],
+  "ssh_user": "slurm-evidence",
+  "ssh_known_hosts": "/etc/slurm-evidence/known_hosts",
+  "ssh_identity_file": "/etc/slurm-evidence/collector_ed25519",
+  "browser_port": 4310,
+  "browser_auth_file": "/etc/slurm-evidence/browser-token",
+  "first_job_id": 1,
+  "max_gap_span": 1000000,
+  "max_jobs_per_live_pass": 16,
+  "remote_capture_timeout_seconds": 15,
+  "remote_manifest_limit": 128,
+  "max_remote_files": 2000,
+  "max_remote_batch_bytes": 33554432,
+  "freshness_budget_seconds": {
+    "metadata": 120,
+    "live": 1800,
+    "publication": 3600,
+    "search": 900
+  },
+  "experiment_templates": [],
+  "accounting_enabled": false,
+  "accounting_lookback_hours": 48,
+  "max_remote_hosts_per_pass": 8,
+  "accounting_poll_seconds": 300,
+  "browser_secure_cookie": false,
+  "local_stream_threshold_bytes": 268435456,
+  "local_stream_timeout_seconds": 120,
+  "remote_capture_enabled": false
+}

@@ -1,0 +1,2771 @@
+{
+  "editable": true,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "\ud83c\udfe0 NVIS Home",
+      "tooltip": "Back to the NVIS Home hub",
+      "type": "link",
+      "url": "/d/nvis-home/?${__url_time_range}"
+    },
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "infiniband"
+      ],
+      "targetBlank": false,
+      "title": "InfiniBand Boards",
+      "type": "dashboards"
+    },
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "nvis"
+      ],
+      "targetBlank": false,
+      "title": "NVIS Dashboards",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9900,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "[**NVIS Home**](/d/nvis-home)",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 21,
+        "x": 3,
+        "y": 0
+      },
+      "id": 9901,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "### InfiniBand \u2014 Live Topology (Fabric Map)\n[**NVIS Home**](/d/nvis-home) \u00b7 [IB Fabric Home](/d/nvis-l2-ib-fabric) \u00b7 [Switches \u2014 Quantum-3 Fleet](/d/nvis-ib-switches) \u00b7 [Rail State & Cabling](/d/nvis-ib-cable-audit)",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 1,
+      "options": {
+        "content": "### What this board shows\n\nThe **identity view** of the InfiniBand fabric: the switch inventory and the point-to-point link map built by the `ib-identity` sweep (`ib_switch_info`, `ib_link_peer`, `ib_node_placement`), the per-switch reachability reported by `ib-switch-live` and `ib-lldp`, and the UFM controller's own port and cable state.\n\n**Producer status.** All of those collectors are stopped at the moment, so these tiles read no value. They are left exactly as they are and will repopulate on their own when the exporters are restarted \u2014 see *IB / UFM collector endpoint reachability* on the [IB Fabric Home](/d/nvis-l2-ib-fabric).\n\n**Live alternatives right now:** switch reachability, health and firmware for the Quantum-3 fleet are on [Switches \u2014 Quantum-3 Fleet](/d/nvis-ib-switches); the host side of every link \u2014 rail state, errors and throughput \u2014 is on [Rail State & Cabling Audit](/d/nvis-ib-cable-audit) and [Port Errors](/d/nvis-ib-drops).",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 70,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "ufm_fabric_healthy as published by the UFM controller: 1 = the subnet manager reports a converged, alarm-free fabric.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "UFM verdict",
+              "links": [
+                {
+                  "targetBlank": true,
+                  "title": "IB Fabric Overview",
+                  "url": "/d/nvis-ib-overview?orgId=1"
+                }
+              ],
+              "mappings": [
+                {
+                  "options": {
+                    "0": {
+                      "color": "orange",
+                      "index": 0,
+                      "text": "DEGRADED"
+                    },
+                    "1": {
+                      "color": "green",
+                      "index": 1,
+                      "text": "HEALTHY"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  },
+                  {
+                    "color": "dark-green",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 0,
+            "y": 9
+          },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "last_over_time(ufm_fabric_healthy{cluster=~\"$cluster\"}[30m])",
+              "instant": true,
+              "legendFormat": "UFM verdict",
+              "refId": "A"
+            }
+          ],
+          "title": "UFM fabric-healthy flag",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Sum of ufm_port_count_by_phys_state{phys_state=\"Link Up\"} across the ports UFM manages.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "fixedColor": "green",
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "Link Up ports",
+              "links": [
+                {
+                  "targetBlank": true,
+                  "title": "IB Fabric \u2014 UFM Enterprise",
+                  "url": "/d/nvis-ib-fabric-v1?orgId=1"
+                }
+              ],
+              "mappings": [],
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  },
+                  {
+                    "color": "dark-red",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 5,
+            "y": 9
+          },
+          "id": 4,
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "\ud83d\udd0e List these devices \u2192 Fabric Detail",
+              "url": "/d/nvis-fabric-detail"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(last_over_time(ufm_port_count_by_phys_state{cluster=~\"$cluster\",phys_state=\"Link Up\"}[30m]))",
+              "instant": true,
+              "legendFormat": "Link Up ports",
+              "refId": "A"
+            }
+          ],
+          "title": "UFM ports in Link Up",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Sum of every ufm_port_count_by_phys_state series whose phys_state is not \"Link Up\".",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "fixedColor": "blue",
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "Not Link Up",
+              "links": [
+                {
+                  "targetBlank": true,
+                  "title": "InfiniBand \u2014 Cabling Audit",
+                  "url": "/d/nvis-ib-cable-audit?orgId=1"
+                }
+              ],
+              "mappings": [],
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 9,
+            "y": 9
+          },
+          "id": 5,
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "\ud83d\udd0e List these devices \u2192 Fabric Detail",
+              "url": "/d/nvis-fabric-detail"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(last_over_time(ufm_port_count_by_phys_state{cluster=~\"$cluster\",phys_state!=\"Link Up\"}[30m]))",
+              "instant": true,
+              "legendFormat": "Not Link Up",
+              "refId": "A"
+            }
+          ],
+          "title": "UFM ports not in Link Up",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "count(ufm_port_up == 0) across the ports in the UFM port table.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "Ports down",
+              "links": [
+                {
+                  "targetBlank": true,
+                  "title": "InfiniBand \u2014 Bad/Degraded Connections",
+                  "url": "/d/nvis-ib-offenders?orgId=1"
+                }
+              ],
+              "mappings": [],
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  },
+                  {
+                    "color": "dark-red",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 15,
+            "y": 9
+          },
+          "id": 6,
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "\ud83d\udd0e List these devices \u2192 Fabric Detail",
+              "url": "/d/nvis-fabric-detail"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count(last_over_time(ufm_port_up{cluster=~\"$cluster\"}[30m]) == 0)",
+              "instant": true,
+              "legendFormat": "Ports down",
+              "refId": "A"
+            }
+          ],
+          "title": "UFM ports cabled but down",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "ib_cable_active_issues_total from the cable-audit sweep: open cabling and topology findings at the last audit.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "Open cable issues",
+              "links": [
+                {
+                  "targetBlank": true,
+                  "title": "InfiniBand \u2014 Drops & Errors",
+                  "url": "/d/nvis-ib-drops?orgId=1"
+                }
+              ],
+              "mappings": [],
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  },
+                  {
+                    "color": "dark-red",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 19,
+            "y": 9
+          },
+          "id": 7,
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "\ud83d\udd0e List these devices \u2192 Fabric Detail",
+              "url": "/d/nvis-fabric-detail"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(last_over_time(ib_cable_active_issues_total{cluster=~\"$cluster\"}[30m]))",
+              "instant": true,
+              "legendFormat": "Open cable issues",
+              "refId": "A"
+            }
+          ],
+          "title": "Open cable / topology issues",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "L2 for 'UFM ports in Link Up' (the Link Up row's Ports value) and 'UFM ports not in Link Up' (the SUM of every other row's Ports value). Same selector, same $cluster variable. Source: ufm exporter (:9103).",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": false
+              },
+              "mappings": [],
+              "noValue": "No UFM data \u2014 waiting on the ufm exporter (:9103), currently stopped. This table populates the moment IB scraping resumes.",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Ports"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 1
+                        },
+                        {
+                          "color": "red",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 14
+          },
+          "id": 9950,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": true
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "Ports"
+              }
+            ]
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "nvis-victoriametrics"
+              },
+              "editorMode": "code",
+              "expr": "last_over_time(ufm_port_count_by_phys_state{cluster=~\"$cluster\"}[30m])",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "UFM port census by physical state \u2014 the exact buckets behind both port counts",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Time 1": true,
+                  "Time 2": true,
+                  "Time 3": true,
+                  "Time 4": true,
+                  "Time 5": true,
+                  "Time 6": true,
+                  "Time 7": true,
+                  "Time 8": true,
+                  "Time 9": true,
+                  "__name__": true,
+                  "__name__ 1": true,
+                  "__name__ 2": true,
+                  "__name__ 3": true,
+                  "__name__ 4": true,
+                  "__name__ 5": true,
+                  "__name__ 6": true,
+                  "__name__ 7": true,
+                  "__name__ 8": true,
+                  "__name__ 9": true,
+                  "cluster": true,
+                  "cluster 1": true,
+                  "cluster 2": true,
+                  "cluster 3": true,
+                  "cluster 4": true,
+                  "cluster 5": true,
+                  "cluster 6": true,
+                  "cluster 7": true,
+                  "cluster 8": true,
+                  "cluster 9": true,
+                  "collector": true,
+                  "collector 1": true,
+                  "collector 2": true,
+                  "collector 3": true,
+                  "collector 4": true,
+                  "collector 5": true,
+                  "collector 6": true,
+                  "collector 7": true,
+                  "collector 8": true,
+                  "collector 9": true,
+                  "container": true,
+                  "container 1": true,
+                  "container 2": true,
+                  "container 3": true,
+                  "container 4": true,
+                  "container 5": true,
+                  "container 6": true,
+                  "container 7": true,
+                  "container 8": true,
+                  "container 9": true,
+                  "endpoint": true,
+                  "endpoint 1": true,
+                  "endpoint 2": true,
+                  "endpoint 3": true,
+                  "endpoint 4": true,
+                  "endpoint 5": true,
+                  "endpoint 6": true,
+                  "endpoint 7": true,
+                  "endpoint 8": true,
+                  "endpoint 9": true,
+                  "exported_instance": true,
+                  "exported_instance 1": true,
+                  "exported_instance 2": true,
+                  "exported_instance 3": true,
+                  "exported_instance 4": true,
+                  "exported_instance 5": true,
+                  "exported_instance 6": true,
+                  "exported_instance 7": true,
+                  "exported_instance 8": true,
+                  "exported_instance 9": true,
+                  "exported_job": true,
+                  "exported_job 1": true,
+                  "exported_job 2": true,
+                  "exported_job 3": true,
+                  "exported_job 4": true,
+                  "exported_job 5": true,
+                  "exported_job 6": true,
+                  "exported_job 7": true,
+                  "exported_job 8": true,
+                  "exported_job 9": true,
+                  "fabric": true,
+                  "fabric 1": true,
+                  "fabric 2": true,
+                  "fabric 3": true,
+                  "fabric 4": true,
+                  "fabric 5": true,
+                  "fabric 6": true,
+                  "fabric 7": true,
+                  "fabric 8": true,
+                  "fabric 9": true,
+                  "instance": true,
+                  "instance 1": true,
+                  "instance 2": true,
+                  "instance 3": true,
+                  "instance 4": true,
+                  "instance 5": true,
+                  "instance 6": true,
+                  "instance 7": true,
+                  "instance 8": true,
+                  "instance 9": true,
+                  "job": true,
+                  "job 1": true,
+                  "job 2": true,
+                  "job 3": true,
+                  "job 4": true,
+                  "job 5": true,
+                  "job 6": true,
+                  "job 7": true,
+                  "job 8": true,
+                  "job 9": true,
+                  "namespace": true,
+                  "namespace 1": true,
+                  "namespace 2": true,
+                  "namespace 3": true,
+                  "namespace 4": true,
+                  "namespace 5": true,
+                  "namespace 6": true,
+                  "namespace 7": true,
+                  "namespace 8": true,
+                  "namespace 9": true,
+                  "plane": true,
+                  "plane 1": true,
+                  "plane 2": true,
+                  "plane 3": true,
+                  "plane 4": true,
+                  "plane 5": true,
+                  "plane 6": true,
+                  "plane 7": true,
+                  "plane 8": true,
+                  "plane 9": true,
+                  "pod": true,
+                  "pod 1": true,
+                  "pod 2": true,
+                  "pod 3": true,
+                  "pod 4": true,
+                  "pod 5": true,
+                  "pod 6": true,
+                  "pod 7": true,
+                  "pod 8": true,
+                  "pod 9": true,
+                  "service": true,
+                  "service 1": true,
+                  "service 2": true,
+                  "service 3": true,
+                  "service 4": true,
+                  "service 5": true,
+                  "service 6": true,
+                  "service 7": true,
+                  "service 8": true,
+                  "service 9": true
+                },
+                "includeByName": {},
+                "indexByName": {
+                  "Value": 1,
+                  "phys_state": 0
+                },
+                "renameByName": {
+                  "Value": "Ports",
+                  "phys_state": "Physical state"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "L2 for the stat 'UFM ports cabled but down'. Row count equals count(last_over_time(ufm_port_up{cluster=~\"$cluster\"}[30m]) == 0) exactly \u2014 same selector, same filter, same $cluster variable. Source: ufm exporter (:9103).",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": false
+              },
+              "mappings": [],
+              "noValue": "No UFM data \u2014 waiting on the ufm exporter (:9103), currently stopped. This table populates the moment IB scraping resumes.",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Port up"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0": {
+                            "color": "red",
+                            "index": 0,
+                            "text": "DOWN"
+                          },
+                          "1": {
+                            "color": "green",
+                            "index": 1,
+                            "text": "UP"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "red",
+                          "value": null
+                        },
+                        {
+                          "color": "green",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 130
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 14
+          },
+          "id": 9951,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": false,
+                "displayName": "Switch"
+              }
+            ]
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "nvis-victoriametrics"
+              },
+              "editorMode": "code",
+              "expr": "last_over_time(ufm_port_up{cluster=~\"$cluster\"}[30m]) == 0",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "UFM ports cabled but down \u2014 the exact ports",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Time 1": true,
+                  "Time 2": true,
+                  "Time 3": true,
+                  "Time 4": true,
+                  "Time 5": true,
+                  "Time 6": true,
+                  "Time 7": true,
+                  "Time 8": true,
+                  "Time 9": true,
+                  "__name__": true,
+                  "__name__ 1": true,
+                  "__name__ 2": true,
+                  "__name__ 3": true,
+                  "__name__ 4": true,
+                  "__name__ 5": true,
+                  "__name__ 6": true,
+                  "__name__ 7": true,
+                  "__name__ 8": true,
+                  "__name__ 9": true,
+                  "cluster": true,
+                  "cluster 1": true,
+                  "cluster 2": true,
+                  "cluster 3": true,
+                  "cluster 4": true,
+                  "cluster 5": true,
+                  "cluster 6": true,
+                  "cluster 7": true,
+                  "cluster 8": true,
+                  "cluster 9": true,
+                  "collector": true,
+                  "collector 1": true,
+                  "collector 2": true,
+                  "collector 3": true,
+                  "collector 4": true,
+                  "collector 5": true,
+                  "collector 6": true,
+                  "collector 7": true,
+                  "collector 8": true,
+                  "collector 9": true,
+                  "container": true,
+                  "container 1": true,
+                  "container 2": true,
+                  "container 3": true,
+                  "container 4": true,
+                  "container 5": true,
+                  "container 6": true,
+                  "container 7": true,
+                  "container 8": true,
+                  "container 9": true,
+                  "endpoint": true,
+                  "endpoint 1": true,
+                  "endpoint 2": true,
+                  "endpoint 3": true,
+                  "endpoint 4": true,
+                  "endpoint 5": true,
+                  "endpoint 6": true,
+                  "endpoint 7": true,
+                  "endpoint 8": true,
+                  "endpoint 9": true,
+                  "exported_instance": true,
+                  "exported_instance 1": true,
+                  "exported_instance 2": true,
+                  "exported_instance 3": true,
+                  "exported_instance 4": true,
+                  "exported_instance 5": true,
+                  "exported_instance 6": true,
+                  "exported_instance 7": true,
+                  "exported_instance 8": true,
+                  "exported_instance 9": true,
+                  "exported_job": true,
+                  "exported_job 1": true,
+                  "exported_job 2": true,
+                  "exported_job 3": true,
+                  "exported_job 4": true,
+                  "exported_job 5": true,
+                  "exported_job 6": true,
+                  "exported_job 7": true,
+                  "exported_job 8": true,
+                  "exported_job 9": true,
+                  "fabric": true,
+                  "fabric 1": true,
+                  "fabric 2": true,
+                  "fabric 3": true,
+                  "fabric 4": true,
+                  "fabric 5": true,
+                  "fabric 6": true,
+                  "fabric 7": true,
+                  "fabric 8": true,
+                  "fabric 9": true,
+                  "instance": true,
+                  "instance 1": true,
+                  "instance 2": true,
+                  "instance 3": true,
+                  "instance 4": true,
+                  "instance 5": true,
+                  "instance 6": true,
+                  "instance 7": true,
+                  "instance 8": true,
+                  "instance 9": true,
+                  "job": true,
+                  "job 1": true,
+                  "job 2": true,
+                  "job 3": true,
+                  "job 4": true,
+                  "job 5": true,
+                  "job 6": true,
+                  "job 7": true,
+                  "job 8": true,
+                  "job 9": true,
+                  "namespace": true,
+                  "namespace 1": true,
+                  "namespace 2": true,
+                  "namespace 3": true,
+                  "namespace 4": true,
+                  "namespace 5": true,
+                  "namespace 6": true,
+                  "namespace 7": true,
+                  "namespace 8": true,
+                  "namespace 9": true,
+                  "plane": true,
+                  "plane 1": true,
+                  "plane 2": true,
+                  "plane 3": true,
+                  "plane 4": true,
+                  "plane 5": true,
+                  "plane 6": true,
+                  "plane 7": true,
+                  "plane 8": true,
+                  "plane 9": true,
+                  "pod": true,
+                  "pod 1": true,
+                  "pod 2": true,
+                  "pod 3": true,
+                  "pod 4": true,
+                  "pod 5": true,
+                  "pod 6": true,
+                  "pod 7": true,
+                  "pod 8": true,
+                  "pod 9": true,
+                  "service": true,
+                  "service 1": true,
+                  "service 2": true,
+                  "service 3": true,
+                  "service 4": true,
+                  "service 5": true,
+                  "service 6": true,
+                  "service 7": true,
+                  "service 8": true,
+                  "service 9": true
+                },
+                "includeByName": {},
+                "indexByName": {
+                  "Value": 5,
+                  "port": 1,
+                  "speed": 3,
+                  "switch": 0,
+                  "tier": 2,
+                  "width": 4
+                },
+                "renameByName": {
+                  "Value": "Port up",
+                  "port": "Port",
+                  "speed": "Speed",
+                  "switch": "Switch",
+                  "tier": "Tier",
+                  "width": "Width"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "L2 for the stat 'Open cable / topology issues'. The exporter sets ib_cable_active_issues_total = the number of ib_cable_issue rows, so the row count here equals that stat exactly. Source: ib-cable-issue exporter (:9116).",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": false
+              },
+              "mappings": [],
+              "noValue": "No cable-audit data \u2014 waiting on the ib-cable-issue exporter (:9116), currently stopped. This table populates the moment IB scraping resumes.",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 22
+          },
+          "id": 9952,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": false,
+                "displayName": "Issue"
+              }
+            ]
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "nvis-victoriametrics"
+              },
+              "editorMode": "code",
+              "expr": "last_over_time(ib_cable_issue{cluster=~\"$cluster\"}[30m])",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "Open cable / topology issues \u2014 the exact miswired ports",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Time 1": true,
+                  "Time 2": true,
+                  "Time 3": true,
+                  "Time 4": true,
+                  "Time 5": true,
+                  "Time 6": true,
+                  "Time 7": true,
+                  "Time 8": true,
+                  "Time 9": true,
+                  "Value": true,
+                  "Value 1": true,
+                  "Value 2": true,
+                  "Value 3": true,
+                  "Value 4": true,
+                  "Value 5": true,
+                  "Value 6": true,
+                  "Value 7": true,
+                  "Value 8": true,
+                  "Value 9": true,
+                  "__name__": true,
+                  "__name__ 1": true,
+                  "__name__ 2": true,
+                  "__name__ 3": true,
+                  "__name__ 4": true,
+                  "__name__ 5": true,
+                  "__name__ 6": true,
+                  "__name__ 7": true,
+                  "__name__ 8": true,
+                  "__name__ 9": true,
+                  "cluster": true,
+                  "cluster 1": true,
+                  "cluster 2": true,
+                  "cluster 3": true,
+                  "cluster 4": true,
+                  "cluster 5": true,
+                  "cluster 6": true,
+                  "cluster 7": true,
+                  "cluster 8": true,
+                  "cluster 9": true,
+                  "collector": true,
+                  "collector 1": true,
+                  "collector 2": true,
+                  "collector 3": true,
+                  "collector 4": true,
+                  "collector 5": true,
+                  "collector 6": true,
+                  "collector 7": true,
+                  "collector 8": true,
+                  "collector 9": true,
+                  "container": true,
+                  "container 1": true,
+                  "container 2": true,
+                  "container 3": true,
+                  "container 4": true,
+                  "container 5": true,
+                  "container 6": true,
+                  "container 7": true,
+                  "container 8": true,
+                  "container 9": true,
+                  "endpoint": true,
+                  "endpoint 1": true,
+                  "endpoint 2": true,
+                  "endpoint 3": true,
+                  "endpoint 4": true,
+                  "endpoint 5": true,
+                  "endpoint 6": true,
+                  "endpoint 7": true,
+                  "endpoint 8": true,
+                  "endpoint 9": true,
+                  "exported_instance": true,
+                  "exported_instance 1": true,
+                  "exported_instance 2": true,
+                  "exported_instance 3": true,
+                  "exported_instance 4": true,
+                  "exported_instance 5": true,
+                  "exported_instance 6": true,
+                  "exported_instance 7": true,
+                  "exported_instance 8": true,
+                  "exported_instance 9": true,
+                  "exported_job": true,
+                  "exported_job 1": true,
+                  "exported_job 2": true,
+                  "exported_job 3": true,
+                  "exported_job 4": true,
+                  "exported_job 5": true,
+                  "exported_job 6": true,
+                  "exported_job 7": true,
+                  "exported_job 8": true,
+                  "exported_job 9": true,
+                  "fabric": true,
+                  "fabric 1": true,
+                  "fabric 2": true,
+                  "fabric 3": true,
+                  "fabric 4": true,
+                  "fabric 5": true,
+                  "fabric 6": true,
+                  "fabric 7": true,
+                  "fabric 8": true,
+                  "fabric 9": true,
+                  "instance": true,
+                  "instance 1": true,
+                  "instance 2": true,
+                  "instance 3": true,
+                  "instance 4": true,
+                  "instance 5": true,
+                  "instance 6": true,
+                  "instance 7": true,
+                  "instance 8": true,
+                  "instance 9": true,
+                  "job": true,
+                  "job 1": true,
+                  "job 2": true,
+                  "job 3": true,
+                  "job 4": true,
+                  "job 5": true,
+                  "job 6": true,
+                  "job 7": true,
+                  "job 8": true,
+                  "job 9": true,
+                  "namespace": true,
+                  "namespace 1": true,
+                  "namespace 2": true,
+                  "namespace 3": true,
+                  "namespace 4": true,
+                  "namespace 5": true,
+                  "namespace 6": true,
+                  "namespace 7": true,
+                  "namespace 8": true,
+                  "namespace 9": true,
+                  "plane": true,
+                  "plane 1": true,
+                  "plane 2": true,
+                  "plane 3": true,
+                  "plane 4": true,
+                  "plane 5": true,
+                  "plane 6": true,
+                  "plane 7": true,
+                  "plane 8": true,
+                  "plane 9": true,
+                  "pod": true,
+                  "pod 1": true,
+                  "pod 2": true,
+                  "pod 3": true,
+                  "pod 4": true,
+                  "pod 5": true,
+                  "pod 6": true,
+                  "pod 7": true,
+                  "pod 8": true,
+                  "pod 9": true,
+                  "service": true,
+                  "service 1": true,
+                  "service 2": true,
+                  "service 3": true,
+                  "service 4": true,
+                  "service 5": true,
+                  "service 6": true,
+                  "service 7": true,
+                  "service 8": true,
+                  "service 9": true
+                },
+                "includeByName": {},
+                "indexByName": {
+                  "Value": 8,
+                  "discovered_neighbor": 7,
+                  "expected_neighbor": 6,
+                  "issue": 0,
+                  "node": 1,
+                  "rack": 2,
+                  "source_port": 5,
+                  "su": 4,
+                  "unit": 3
+                },
+                "renameByName": {
+                  "Value": "Open",
+                  "discovered_neighbor": "Discovered neighbour",
+                  "expected_neighbor": "Expected neighbour",
+                  "issue": "Issue",
+                  "node": "Node",
+                  "rack": "Rack",
+                  "source_port": "Source port",
+                  "su": "SU",
+                  "unit": "Unit"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "L2 for the stat 'UFM fabric-healthy flag'. That stat is a single boolean for the whole fabric, so it has no row count to match; these are the per-switch severity and alarm rows UFM derives it from. Severity 4=Critical 3=Error 2=Warning 1=Info 0=OK. Source: ufm exporter (:9103).",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": false
+              },
+              "mappings": [],
+              "noValue": "No UFM data \u2014 waiting on the ufm exporter (:9103), currently stopped. This table populates the moment IB scraping resumes.",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Severity"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 2
+                        },
+                        {
+                          "color": "red",
+                          "value": 3
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Active alarms"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 1
+                        },
+                        {
+                          "color": "red",
+                          "value": 5
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 30
+          },
+          "id": 9953,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "Severity"
+              }
+            ]
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "nvis-victoriametrics"
+              },
+              "editorMode": "code",
+              "expr": "last_over_time(ufm_switch_severity{cluster=~\"$cluster\"}[30m])",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "nvis-victoriametrics"
+              },
+              "editorMode": "code",
+              "expr": "last_over_time(ufm_switch_alarm_count{cluster=~\"$cluster\"}[30m])",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "B"
+            }
+          ],
+          "title": "UFM switches by severity and alarm count \u2014 what drives the fabric-healthy flag",
+          "transformations": [
+            {
+              "id": "joinByField",
+              "options": {
+                "byField": "switch",
+                "mode": "outer"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Time 1": true,
+                  "Time 2": true,
+                  "Time 3": true,
+                  "Time 4": true,
+                  "Time 5": true,
+                  "Time 6": true,
+                  "Time 7": true,
+                  "Time 8": true,
+                  "Time 9": true,
+                  "__name__": true,
+                  "__name__ 1": true,
+                  "__name__ 2": true,
+                  "__name__ 3": true,
+                  "__name__ 4": true,
+                  "__name__ 5": true,
+                  "__name__ 6": true,
+                  "__name__ 7": true,
+                  "__name__ 8": true,
+                  "__name__ 9": true,
+                  "cluster": true,
+                  "cluster 1": true,
+                  "cluster 2": true,
+                  "cluster 3": true,
+                  "cluster 4": true,
+                  "cluster 5": true,
+                  "cluster 6": true,
+                  "cluster 7": true,
+                  "cluster 8": true,
+                  "cluster 9": true,
+                  "collector": true,
+                  "collector 1": true,
+                  "collector 2": true,
+                  "collector 3": true,
+                  "collector 4": true,
+                  "collector 5": true,
+                  "collector 6": true,
+                  "collector 7": true,
+                  "collector 8": true,
+                  "collector 9": true,
+                  "container": true,
+                  "container 1": true,
+                  "container 2": true,
+                  "container 3": true,
+                  "container 4": true,
+                  "container 5": true,
+                  "container 6": true,
+                  "container 7": true,
+                  "container 8": true,
+                  "container 9": true,
+                  "endpoint": true,
+                  "endpoint 1": true,
+                  "endpoint 2": true,
+                  "endpoint 3": true,
+                  "endpoint 4": true,
+                  "endpoint 5": true,
+                  "endpoint 6": true,
+                  "endpoint 7": true,
+                  "endpoint 8": true,
+                  "endpoint 9": true,
+                  "exported_instance": true,
+                  "exported_instance 1": true,
+                  "exported_instance 2": true,
+                  "exported_instance 3": true,
+                  "exported_instance 4": true,
+                  "exported_instance 5": true,
+                  "exported_instance 6": true,
+                  "exported_instance 7": true,
+                  "exported_instance 8": true,
+                  "exported_instance 9": true,
+                  "exported_job": true,
+                  "exported_job 1": true,
+                  "exported_job 2": true,
+                  "exported_job 3": true,
+                  "exported_job 4": true,
+                  "exported_job 5": true,
+                  "exported_job 6": true,
+                  "exported_job 7": true,
+                  "exported_job 8": true,
+                  "exported_job 9": true,
+                  "fabric": true,
+                  "fabric 1": true,
+                  "fabric 2": true,
+                  "fabric 3": true,
+                  "fabric 4": true,
+                  "fabric 5": true,
+                  "fabric 6": true,
+                  "fabric 7": true,
+                  "fabric 8": true,
+                  "fabric 9": true,
+                  "instance": true,
+                  "instance 1": true,
+                  "instance 2": true,
+                  "instance 3": true,
+                  "instance 4": true,
+                  "instance 5": true,
+                  "instance 6": true,
+                  "instance 7": true,
+                  "instance 8": true,
+                  "instance 9": true,
+                  "job": true,
+                  "job 1": true,
+                  "job 2": true,
+                  "job 3": true,
+                  "job 4": true,
+                  "job 5": true,
+                  "job 6": true,
+                  "job 7": true,
+                  "job 8": true,
+                  "job 9": true,
+                  "namespace": true,
+                  "namespace 1": true,
+                  "namespace 2": true,
+                  "namespace 3": true,
+                  "namespace 4": true,
+                  "namespace 5": true,
+                  "namespace 6": true,
+                  "namespace 7": true,
+                  "namespace 8": true,
+                  "namespace 9": true,
+                  "plane": true,
+                  "plane 1": true,
+                  "plane 2": true,
+                  "plane 3": true,
+                  "plane 4": true,
+                  "plane 5": true,
+                  "plane 6": true,
+                  "plane 7": true,
+                  "plane 8": true,
+                  "plane 9": true,
+                  "pod": true,
+                  "pod 1": true,
+                  "pod 2": true,
+                  "pod 3": true,
+                  "pod 4": true,
+                  "pod 5": true,
+                  "pod 6": true,
+                  "pod 7": true,
+                  "pod 8": true,
+                  "pod 9": true,
+                  "service": true,
+                  "service 1": true,
+                  "service 2": true,
+                  "service 3": true,
+                  "service 4": true,
+                  "service 5": true,
+                  "service 6": true,
+                  "service 7": true,
+                  "service 8": true,
+                  "service 9": true
+                },
+                "includeByName": {},
+                "indexByName": {
+                  "Value #A": 4,
+                  "Value #B": 5,
+                  "guid": 3,
+                  "role": 1,
+                  "switch": 0,
+                  "type": 2
+                },
+                "renameByName": {
+                  "Value #A": "Severity",
+                  "Value #B": "Active alarms",
+                  "guid": "GUID",
+                  "role": "Role",
+                  "switch": "Switch",
+                  "type": "Type"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        }
+      ],
+      "title": "UFM controller \u2014 fabric, ports and cabling",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 80,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "count(ib_switch_scrape_success == 1) \u2014 switches the ib-switch-live collector polled successfully on its last pass.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "Scraping OK",
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  },
+                  {
+                    "color": "dark-green",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 0,
+            "y": 15
+          },
+          "id": 81,
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "\ud83d\udd0e List these devices \u2192 Fabric Detail",
+              "url": "/d/nvis-fabric-detail"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count(last_over_time(ib_switch_scrape_success{cluster=~\"$cluster\"}[30m]) == 1)",
+              "legendFormat": "Scraping OK",
+              "refId": "A"
+            }
+          ],
+          "title": "IB switches answering the identity sweep",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "count(ib_switch_info) \u2014 every switch the ib-identity sweep enumerated.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "Switches",
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  },
+                  {
+                    "color": "dark-red",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 8,
+            "y": 15
+          },
+          "id": 82,
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "\ud83d\udd0e List these devices \u2192 Fabric Detail",
+              "url": "/d/nvis-fabric-detail"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count(last_over_time(ib_switch_info{cluster=~\"$cluster\"}[30m]))",
+              "legendFormat": "Switches",
+              "refId": "A"
+            }
+          ],
+          "title": "IB switches in the identity inventory",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "count(ibl_switch_ssh_reachable == 1) from the ib-lldp collector.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0,
+              "displayName": "SSH reachable",
+              "noValue": "\u2014",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  },
+                  {
+                    "color": "dark-green",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 16,
+            "y": 15
+          },
+          "id": 85,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count(last_over_time(ibl_switch_ssh_reachable{cluster=~\"$cluster\"}[30m]) == 1)",
+              "legendFormat": "SSH reachable",
+              "refId": "A"
+            }
+          ],
+          "title": "IB switches answering management SSH",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "L2 for 'IB switches answering the identity sweep' (count of rows where Scrape OK = UP) and 'IB switches answering management SSH' (count of rows where SSH reachable = UP). Outer join on the switch label, same $cluster variable. Sources: ib-switch-audit (:9117), ib-lldp (:9114).",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": false
+              },
+              "mappings": [],
+              "noValue": "No switch audit data \u2014 waiting on the ib-switch-audit exporter (:9117), currently stopped. This table populates the moment IB scraping resumes.",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Scrape OK"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0": {
+                            "color": "red",
+                            "index": 0,
+                            "text": "DOWN"
+                          },
+                          "1": {
+                            "color": "green",
+                            "index": 1,
+                            "text": "UP"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "red",
+                          "value": null
+                        },
+                        {
+                          "color": "green",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 130
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "SSH reachable"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0": {
+                            "color": "red",
+                            "index": 0,
+                            "text": "DOWN"
+                          },
+                          "1": {
+                            "color": "green",
+                            "index": 1,
+                            "text": "UP"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "red",
+                          "value": null
+                        },
+                        {
+                          "color": "green",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 130
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "id": 9954,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": false,
+                "displayName": "Scrape OK"
+              }
+            ]
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "nvis-victoriametrics"
+              },
+              "editorMode": "code",
+              "expr": "last_over_time(ib_switch_scrape_success{cluster=~\"$cluster\"}[30m])",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "nvis-victoriametrics"
+              },
+              "editorMode": "code",
+              "expr": "last_over_time(ibl_switch_ssh_reachable{cluster=~\"$cluster\"}[30m])",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "B"
+            }
+          ],
+          "title": "Every IB switch behind the scrape and SSH counts",
+          "transformations": [
+            {
+              "id": "joinByField",
+              "options": {
+                "byField": "switch",
+                "mode": "outer"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Time 1": true,
+                  "Time 2": true,
+                  "Time 3": true,
+                  "Time 4": true,
+                  "Time 5": true,
+                  "Time 6": true,
+                  "Time 7": true,
+                  "Time 8": true,
+                  "Time 9": true,
+                  "__name__": true,
+                  "__name__ 1": true,
+                  "__name__ 2": true,
+                  "__name__ 3": true,
+                  "__name__ 4": true,
+                  "__name__ 5": true,
+                  "__name__ 6": true,
+                  "__name__ 7": true,
+                  "__name__ 8": true,
+                  "__name__ 9": true,
+                  "cluster": true,
+                  "cluster 1": true,
+                  "cluster 2": true,
+                  "cluster 3": true,
+                  "cluster 4": true,
+                  "cluster 5": true,
+                  "cluster 6": true,
+                  "cluster 7": true,
+                  "cluster 8": true,
+                  "cluster 9": true,
+                  "collector": true,
+                  "collector 1": true,
+                  "collector 2": true,
+                  "collector 3": true,
+                  "collector 4": true,
+                  "collector 5": true,
+                  "collector 6": true,
+                  "collector 7": true,
+                  "collector 8": true,
+                  "collector 9": true,
+                  "container": true,
+                  "container 1": true,
+                  "container 2": true,
+                  "container 3": true,
+                  "container 4": true,
+                  "container 5": true,
+                  "container 6": true,
+                  "container 7": true,
+                  "container 8": true,
+                  "container 9": true,
+                  "endpoint": true,
+                  "endpoint 1": true,
+                  "endpoint 2": true,
+                  "endpoint 3": true,
+                  "endpoint 4": true,
+                  "endpoint 5": true,
+                  "endpoint 6": true,
+                  "endpoint 7": true,
+                  "endpoint 8": true,
+                  "endpoint 9": true,
+                  "exported_instance": true,
+                  "exported_instance 1": true,
+                  "exported_instance 2": true,
+                  "exported_instance 3": true,
+                  "exported_instance 4": true,
+                  "exported_instance 5": true,
+                  "exported_instance 6": true,
+                  "exported_instance 7": true,
+                  "exported_instance 8": true,
+                  "exported_instance 9": true,
+                  "exported_job": true,
+                  "exported_job 1": true,
+                  "exported_job 2": true,
+                  "exported_job 3": true,
+                  "exported_job 4": true,
+                  "exported_job 5": true,
+                  "exported_job 6": true,
+                  "exported_job 7": true,
+                  "exported_job 8": true,
+                  "exported_job 9": true,
+                  "fabric": true,
+                  "fabric 1": true,
+                  "fabric 2": true,
+                  "fabric 3": true,
+                  "fabric 4": true,
+                  "fabric 5": true,
+                  "fabric 6": true,
+                  "fabric 7": true,
+                  "fabric 8": true,
+                  "fabric 9": true,
+                  "instance": true,
+                  "instance 1": true,
+                  "instance 2": true,
+                  "instance 3": true,
+                  "instance 4": true,
+                  "instance 5": true,
+                  "instance 6": true,
+                  "instance 7": true,
+                  "instance 8": true,
+                  "instance 9": true,
+                  "job": true,
+                  "job 1": true,
+                  "job 2": true,
+                  "job 3": true,
+                  "job 4": true,
+                  "job 5": true,
+                  "job 6": true,
+                  "job 7": true,
+                  "job 8": true,
+                  "job 9": true,
+                  "namespace": true,
+                  "namespace 1": true,
+                  "namespace 2": true,
+                  "namespace 3": true,
+                  "namespace 4": true,
+                  "namespace 5": true,
+                  "namespace 6": true,
+                  "namespace 7": true,
+                  "namespace 8": true,
+                  "namespace 9": true,
+                  "plane": true,
+                  "plane 1": true,
+                  "plane 2": true,
+                  "plane 3": true,
+                  "plane 4": true,
+                  "plane 5": true,
+                  "plane 6": true,
+                  "plane 7": true,
+                  "plane 8": true,
+                  "plane 9": true,
+                  "pod": true,
+                  "pod 1": true,
+                  "pod 2": true,
+                  "pod 3": true,
+                  "pod 4": true,
+                  "pod 5": true,
+                  "pod 6": true,
+                  "pod 7": true,
+                  "pod 8": true,
+                  "pod 9": true,
+                  "service": true,
+                  "service 1": true,
+                  "service 2": true,
+                  "service 3": true,
+                  "service 4": true,
+                  "service 5": true,
+                  "service 6": true,
+                  "service 7": true,
+                  "service 8": true,
+                  "service 9": true
+                },
+                "includeByName": {},
+                "indexByName": {
+                  "Value #A": 2,
+                  "Value #B": 3,
+                  "ip": 1,
+                  "switch": 0
+                },
+                "renameByName": {
+                  "Value #A": "Scrape OK",
+                  "Value #B": "SSH reachable",
+                  "ip": "Mgmt IP",
+                  "switch": "Switch"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "description": "L2 for the stat 'IB switches in the identity inventory'. Row count equals count(last_over_time(ib_switch_info{cluster=~\"$cluster\"}[30m])). Source: ib-identity exporter (:9118).",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": false
+              },
+              "mappings": [],
+              "noValue": "No IB identity data \u2014 waiting on the ib-identity exporter (:9118), currently stopped. This table populates the moment IB scraping resumes.",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 12,
+            "y": 19
+          },
+          "id": 9955,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": false,
+                "displayName": "Switch"
+              }
+            ]
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "nvis-victoriametrics"
+              },
+              "editorMode": "code",
+              "expr": "last_over_time(ib_switch_info{cluster=~\"$cluster\"}[30m])",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "IB switches in the identity inventory \u2014 the exact switches",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Time 1": true,
+                  "Time 2": true,
+                  "Time 3": true,
+                  "Time 4": true,
+                  "Time 5": true,
+                  "Time 6": true,
+                  "Time 7": true,
+                  "Time 8": true,
+                  "Time 9": true,
+                  "Value": true,
+                  "Value 1": true,
+                  "Value 2": true,
+                  "Value 3": true,
+                  "Value 4": true,
+                  "Value 5": true,
+                  "Value 6": true,
+                  "Value 7": true,
+                  "Value 8": true,
+                  "Value 9": true,
+                  "__name__": true,
+                  "__name__ 1": true,
+                  "__name__ 2": true,
+                  "__name__ 3": true,
+                  "__name__ 4": true,
+                  "__name__ 5": true,
+                  "__name__ 6": true,
+                  "__name__ 7": true,
+                  "__name__ 8": true,
+                  "__name__ 9": true,
+                  "cluster": true,
+                  "cluster 1": true,
+                  "cluster 2": true,
+                  "cluster 3": true,
+                  "cluster 4": true,
+                  "cluster 5": true,
+                  "cluster 6": true,
+                  "cluster 7": true,
+                  "cluster 8": true,
+                  "cluster 9": true,
+                  "collector": true,
+                  "collector 1": true,
+                  "collector 2": true,
+                  "collector 3": true,
+                  "collector 4": true,
+                  "collector 5": true,
+                  "collector 6": true,
+                  "collector 7": true,
+                  "collector 8": true,
+                  "collector 9": true,
+                  "container": true,
+                  "container 1": true,
+                  "container 2": true,
+                  "container 3": true,
+                  "container 4": true,
+                  "container 5": true,
+                  "container 6": true,
+                  "container 7": true,
+                  "container 8": true,
+                  "container 9": true,
+                  "endpoint": true,
+                  "endpoint 1": true,
+                  "endpoint 2": true,
+                  "endpoint 3": true,
+                  "endpoint 4": true,
+                  "endpoint 5": true,
+                  "endpoint 6": true,
+                  "endpoint 7": true,
+                  "endpoint 8": true,
+                  "endpoint 9": true,
+                  "exported_instance": true,
+                  "exported_instance 1": true,
+                  "exported_instance 2": true,
+                  "exported_instance 3": true,
+                  "exported_instance 4": true,
+                  "exported_instance 5": true,
+                  "exported_instance 6": true,
+                  "exported_instance 7": true,
+                  "exported_instance 8": true,
+                  "exported_instance 9": true,
+                  "exported_job": true,
+                  "exported_job 1": true,
+                  "exported_job 2": true,
+                  "exported_job 3": true,
+                  "exported_job 4": true,
+                  "exported_job 5": true,
+                  "exported_job 6": true,
+                  "exported_job 7": true,
+                  "exported_job 8": true,
+                  "exported_job 9": true,
+                  "fabric": true,
+                  "fabric 1": true,
+                  "fabric 2": true,
+                  "fabric 3": true,
+                  "fabric 4": true,
+                  "fabric 5": true,
+                  "fabric 6": true,
+                  "fabric 7": true,
+                  "fabric 8": true,
+                  "fabric 9": true,
+                  "instance": true,
+                  "instance 1": true,
+                  "instance 2": true,
+                  "instance 3": true,
+                  "instance 4": true,
+                  "instance 5": true,
+                  "instance 6": true,
+                  "instance 7": true,
+                  "instance 8": true,
+                  "instance 9": true,
+                  "job": true,
+                  "job 1": true,
+                  "job 2": true,
+                  "job 3": true,
+                  "job 4": true,
+                  "job 5": true,
+                  "job 6": true,
+                  "job 7": true,
+                  "job 8": true,
+                  "job 9": true,
+                  "namespace": true,
+                  "namespace 1": true,
+                  "namespace 2": true,
+                  "namespace 3": true,
+                  "namespace 4": true,
+                  "namespace 5": true,
+                  "namespace 6": true,
+                  "namespace 7": true,
+                  "namespace 8": true,
+                  "namespace 9": true,
+                  "plane": true,
+                  "plane 1": true,
+                  "plane 2": true,
+                  "plane 3": true,
+                  "plane 4": true,
+                  "plane 5": true,
+                  "plane 6": true,
+                  "plane 7": true,
+                  "plane 8": true,
+                  "plane 9": true,
+                  "pod": true,
+                  "pod 1": true,
+                  "pod 2": true,
+                  "pod 3": true,
+                  "pod 4": true,
+                  "pod 5": true,
+                  "pod 6": true,
+                  "pod 7": true,
+                  "pod 8": true,
+                  "pod 9": true,
+                  "service": true,
+                  "service 1": true,
+                  "service 2": true,
+                  "service 3": true,
+                  "service 4": true,
+                  "service 5": true,
+                  "service 6": true,
+                  "service 7": true,
+                  "service 8": true,
+                  "service 9": true
+                },
+                "includeByName": {},
+                "indexByName": {
+                  "Value": 11,
+                  "fw_version": 6,
+                  "guid": 9,
+                  "hostname": 0,
+                  "ip": 4,
+                  "model": 5,
+                  "rack": 3,
+                  "role": 1,
+                  "state": 8,
+                  "su": 2,
+                  "sw_version": 7,
+                  "system_name": 10
+                },
+                "renameByName": {
+                  "Value": "In inventory",
+                  "fw_version": "Firmware",
+                  "guid": "GUID",
+                  "hostname": "Switch",
+                  "ip": "Mgmt IP",
+                  "model": "Model",
+                  "rack": "Rack",
+                  "role": "Role",
+                  "state": "State",
+                  "su": "SU",
+                  "sw_version": "Software",
+                  "system_name": "System name"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        }
+      ],
+      "title": "Identity sweep & management-plane reachability",
+      "type": "row"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "ib",
+    "topology",
+    "iren_mkz",
+    "ib-fabric",
+    "infiniband"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki",
+        "multi": false,
+        "name": "loki",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$datasource"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "ClusterQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "description": "IREN_MKZ data halls (SU1=WH1D .. SU7=WH1J, CH1C=network row).",
+        "hide": 0,
+        "includeAll": true,
+        "label": "DataHall",
+        "multi": true,
+        "name": "datahall",
+        "options": [],
+        "query": "WH1D,WH1E,WH1F,WH1G,WH1H,WH1I,WH1J,CH1C",
+        "type": "custom"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "description": "Scalable Unit. Extend to SU14 at 16K build. ib_switch_info(su) join populates live.",
+        "hide": 0,
+        "includeAll": true,
+        "label": "SU",
+        "multi": true,
+        "name": "su",
+        "options": [],
+        "query": "SU1,SU2,SU3,SU4,SU5,SU6,SU7",
+        "type": "custom"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$datasource"
+        },
+        "definition": "label_values(switch_up{kind=\"ib_switch\",cluster=~\"$cluster\"}, rack)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Rack",
+        "multi": true,
+        "name": "rack",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(switch_up{kind=\"ib_switch\",cluster=~\"$cluster\"}, rack)",
+          "refId": "RackQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$datasource"
+        },
+        "definition": "label_values(up{job=~\"node|node-exporter\",cluster=~\"$cluster\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(up{job=~\"node|node-exporter\",cluster=~\"$cluster\"}, node)",
+          "refId": "NodeQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "title": "InfiniBand \u2014 Live Topology (Fabric Map)",
+  "uid": "nvis-ib-topology-live",
+  "version": 1
+}
