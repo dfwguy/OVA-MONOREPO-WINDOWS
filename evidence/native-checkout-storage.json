@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "checked_utc": "2026-11-06T17:31:07.625888+00:00",
+  "scope": "Local Linux preparation, actual local Git LFS clone, pinned-input verification and GitLab CI configuration lint; no Windows runtime, live customer, GPU or service acceptance.",
+  "tested_commit": "1061fcd9f3fcb1a4bef606ac5a567567ef63aa80",
+  "tested_files_sha256": {
+    ".lfsconfig": "f480a1ed142dd5991c3e41985a39600251bf18c576d7d85f57216c4708909de4",
+    ".gitlab-ci.yml": "330755a96e099d21755cf28d1c1279d44892d175197d98ad918521baf129c2af",
+    "tools/lfs_payloads.py": "3ed6bba5250353f73a8ac76ca28b96633efd179631179ddbc60b01d8c8134997",
+    "tools/build_windows_release.py": "bc8b3eadcd92543838339110cf5ddda2d10043536be7246da74cf41170b9a54b",
+    "tests/test_control_helpers.py": "ce1d10401c1fd913411722f2c02753b6ac39fea2599d385012a3002a6d0ded0f",
+    "tests/test_lfs_payloads.py": "d66fa05e3340504e3a859456144984d6506fba723cc74e7691ffd03eb91a43a6"
+  },
+  "default_downloads": {
+    "patterns": [
+      "windows/**",
+      "control/windows/**"
+    ],
+    "materialized_paths": 96,
+    "checkout_payload_bytes": 538565365,
+    "unique_cache_bytes": 537934096,
+    "fresh_clone_allocated_bytes": {
+      ".git": 568066048,
+      "windows": 528793600,
+      "control": 13045760,
+      "components": 94175232,
+      "artifacts": 20480,
+      "total": 1209257984
+    },
+    "baseline_checkout_approx_gib": 8.1,
+    "fresh_clone_gib": 1.1262092590332031,
+    "approx_storage_reduction_percent": 86.0961819872444
+  },
+  "checks": {
+    "root_tests": {
+      "passed": 26,
+      "failed": 0
+    },
+    "real_local_lfs_fixture": "PASS: clone filters and scoped control/full-release hydration; excluded top-level artifact remains a pointer",
+    "actual_repository_fresh_clone": "PASS: measured 1209257984 allocated bytes including its independent Git and LFS caches",
+    "fresh_clone_rack_p2p_verify_only": "PASS: unchanged pinned source, adapters, guard and Windows wheelhouse",
+    "fresh_clone_control_helpers": {
+      "passed": 6,
+      "failed": 0,
+      "automatically_materialized_toolkits": 6,
+      "allocated_bytes_after_control_tests": 2455908352
+    },
+    "fresh_clone_release_plan": {
+      "status": "PASS",
+      "additional_pointer_paths_materialized": 158,
+      "included_files": 4691,
+      "payload_bytes": 2424499101,
+      "top_level_artifacts_included": false
+    },
+    "python_syntax": "All five changed Python files parse with Python 3.10 grammar",
+    "gitlab_ci_lint": {
+      "valid": true,
+      "errors": [],
+      "warnings": [],
+      "pipeline_executed": false
+    },
+    "pdf": "See docs/PDF_VALIDATION.json; previous rendering receipt retained there"
+  },
+  "earlier_attempts": [
+    {
+      "check": "Local LFS clone fixture",
+      "result": "FAIL: fixture cleared global Git configuration but installed LFS filters only in its origin repository.",
+      "correction": "Install filters in a temporary isolated global Git configuration, matching normal git lfs install; real clone and hydration retest passed."
+    },
+    {
+      "check": "Guide rerender visual inspection",
+      "result": "Nested SVG logo incorrectly inherited full-width diagram styling.",
+      "correction": "Limit sizing CSS to the outer SVG; regenerated cover and architecture inspected and page text/bounds checked."
+    }
+  ],
+  "published_release_inspection": {
+    "source": "GitLab package/release API metadata; existing binary not downloaded again",
+    "project_id": 666789,
+    "generic_package_id": 1457278,
+    "name": "ova-monorepo-windows",
+    "version": "2026.11.06-native-r1",
+    "offline_zip_bytes": 1835157363,
+    "offline_zip_sha256": "e4808024474c0fd7db6fb89a2125f4fdccbb872d170796e5bf41fc57a6e52a1e",
+    "release_modified": false
+  },
+  "limitations": [
+    "Existing clones keep previously materialized files and LFS cache.",
+    "Full historical control acceptance increases local storage to about 2.29 GiB; full release assembly intentionally fetches all included historical payloads.",
+    "No payload migrated or deleted from LFS; no force push or server cleanup performed.",
+    "Direct historical immutable control verifiers require a complete tree; the existing root acceptance entry point provides automatic hydration.",
+    "Registry relocation alone does not eliminate server bytes; deduplication/retention and unreferenced-LFS cleanup require a separate reviewed migration."
+  ]
+}
