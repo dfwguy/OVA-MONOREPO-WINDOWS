@@ -30,3 +30,9 @@ The [bounded recursive scan](evidence/recursive-secret-scan.json) records covera
 The offline release builder creates an embedded `RELEASE_MANIFEST.json` with every shipped file's SHA-256 and size, rejects unsafe paths and external links, and excludes Git metadata, runtime secrets, caches and duplicate top-level archives. Its verifier checks the actual archive payload against that manifest. Source, offline dependencies, guide, PDF, NVIDIA assets and acceptance evidence are included.
 
 The [23-page operator PDF](docs/OVA-MONOREPO-WINDOWS-User-Guide.pdf), [PDF checks](docs/PDF_VALIDATION.json) and [branding provenance](docs/branding/ASSET_PROVENANCE.json) accompany the source. The animated diagram explicitly shows the Linux P2P core and commissioning boundaries.
+
+## Native checkout storage policy
+
+The versioned `.lfsconfig` limits default Git LFS downloads to `windows/**` and `control/windows/**`. Native Windows builds retain their existing commands and pinned payload bytes. Historical control acceptance automatically materializes `control/**`; the offline release builder automatically materializes `control/**`, `components/**` and `windows/**` before its existing manifest checks. It continues to exclude the duplicate top-level control archive and both historical Linux observability packs. Full offline releases need no Git/LFS/network at deployment.
+
+This changes retrieval and packaging preparation, not accepted application inputs, immutable component manifests or runtime behavior. Earlier Windows receipts retain their original scope; they do not establish Windows acceptance of this retrieval change. Existing clones keep downloaded payloads and caches. The published `2026.11.06-native-r1` Generic Package Registry release is preserved, including its SHA-256 and provenance; it predates this checkout policy.

@@ -1,4 +1,8 @@
-"""Run with native Windows Python; no site, network or GPU access is performed."""
+"""Control checks; hydrate preserved inputs through Git LFS when necessary.
+
+Tests use mocked site transports and submit no GPU work. Complete offline releases
+need no network; a native-only Git checkout fetches the historical control payloads.
+"""
 import contextlib
 import io
 import warnings
@@ -26,6 +30,15 @@ def load(name):
     return module
 
 class ControlHelpers(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        repository = Path(__file__).resolve().parents[1]
+        if ROOT == repository / 'control':
+            spec = importlib.util.spec_from_file_location('lfs_payloads', repository / 'tools/lfs_payloads.py')
+            payloads = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(payloads)
+            payloads.ensure_payloads(repository, ('control',))
+
     def setUp(self):
         self.temp = Path(tempfile.mkdtemp(prefix='ova-test-'))
         self.addCleanup(lambda: shutil.rmtree(self.temp, ignore_errors=True))

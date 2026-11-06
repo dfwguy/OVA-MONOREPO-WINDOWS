@@ -41,7 +41,7 @@ These results establish the stated software scopes. Live VPN/customer integratio
 
 ## Get started
 
-Use a short path and a **full Git LFS checkout**. LFS pointer text is not an offline runtime payload.
+Use a short path and Git LFS. Normal clone/pull automatically downloads the native Windows dependencies and bundled control interpreter. Large historical Linux payloads and duplicate top-level archives remain LFS pointers until needed; they are not native Windows deployment prerequisites.
 
 ```powershell
 git lfs install
@@ -52,6 +52,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests\Test-WindowsContro
 ```
 
 Application profiles use **native CPython 3.12 x64**, matching the audited VM. Optional offline installers and their provenance are in [windows/runtime](windows/runtime/INSTALLATION.md). The separate Python 3.14 embeddable ZIP in `control/windows` is for control verification, rather than application venvs.
+
+The existing control-test command automatically fetches the historical toolkits it verifies. The offline release builder automatically fetches all included payloads; complete release ZIPs remain ready for disconnected deployment. Downloads use normal Git/LFS credentials. Existing clones retain their previously downloaded files and cache.
 
 Follow the [native operator guide](docs/OVA-MONOREPO-WINDOWS-User-Guide.md) to select a profile, verify its files, create fresh private runtime/evidence directories and run isolated acceptance. Configure actual VPN endpoints, trusted SSH identities, storage, TLS and source scope outside Git before commissioning. Auto Action scheduling is shipped disabled. No collector is implicitly authorized to discover an entire fleet.
 

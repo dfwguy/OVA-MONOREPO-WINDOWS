@@ -14,7 +14,7 @@ code{font-family:'DejaVu Sans Mono',monospace;font-size:.87em}p code,li code,td 
 ul,ol{padding-left:19pt;margin:8pt 0 12pt}li{margin:0 0 6pt}blockquote{border-left:3pt solid #76b900;padding:10pt 12pt;background:#f0f6e8;margin:13pt 0}
 .cover{padding-top:20mm;break-after:page}.brand{font-size:10pt;letter-spacing:2.1pt;font-weight:bold;color:#4d7415;border-top:6pt solid #76b900;padding-top:14pt}
 .cover h1{font-size:42pt;line-height:1.06;margin:28pt 0 18pt;max-width:145mm}.cover .subtitle{font-size:20pt;line-height:1.3;color:#52616a;max-width:150mm}.cover .meta{font-size:10pt;color:#65717a;border-top:1px solid #ccd6c4;padding-top:15pt;margin-top:24pt}
-.cover .scope{background:#edf4e5;padding:14pt 16pt;border-left:4pt solid #76b900;margin:24pt 0;font-size:10pt}.contents{break-after:page}.contents ul{list-style:none;padding:0}.contents li{padding:7pt 0;border-bottom:1px solid #dce2d7}.contents a{font-size:11pt;color:#243b16}.lead{font-size:12pt;color:#52616a}.note{font-size:9pt;color:#647179}.diagram{margin:20pt 0;break-inside:avoid}.diagram svg{display:block;width:100%;height:auto}svg text{font-family:Arial,Helvetica,sans-serif}
+.cover .scope{background:#edf4e5;padding:14pt 16pt;border-left:4pt solid #76b900;margin:24pt 0;font-size:10pt}.contents{break-after:page}.contents ul{list-style:none;padding:0}.contents li{padding:7pt 0;border-bottom:1px solid #dce2d7}.contents a{font-size:11pt;color:#243b16}.lead{font-size:12pt;color:#52616a}.note{font-size:9pt;color:#647179}.diagram{margin:20pt 0;break-inside:avoid}.diagram > svg{display:block;width:100%;height:auto}svg text{font-family:Arial,Helvetica,sans-serif}
 </style></head><body><section class="cover"><div class="brand" style="background:#0b110e;padding:16pt"><svg
   enable-background="new 0 0 974.7 179.7"
   version="1.1"
@@ -144,15 +144,14 @@ ul,ol{padding-left:19pt;margin:8pt 0 12pt}li{margin:0 0 6pt}blockquote{border-le
 <p>The status table is updated from reviewed receipts before final publication. Consult the exact receipt paths and commit identities in the repository rather than treating a status label as proof. Earlier failures are retained so fixes and retests remain auditable. The <a href="https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS/-/jobs/531758252">passing Windows CI job</a> establishes only its recorded scope.</p>
 </section><section class="chapter" id="chapter-3"><h2 id="3-obtain-the-complete-publication-and-verify-it">3. Obtain the complete publication and verify it</h2>
 
-<p>Use a full checkout with Git LFS objects materialized. The native profiles and their Windows dependency closures are under <code>windows/</code>; they are not all contained in the historical six-tool control ZIP. A source-only Git checkout containing LFS pointer files is insufficient.</p>
+<p>Normal Git LFS clone/pull materializes the native Windows dependency closure under <code>windows/</code> and the bundled control interpreter. Historical Linux payloads and duplicate top-level archives stay as small LFS pointers by default. Native profile commands need no additional download step. The existing control acceptance and full offline release builder fetch their extra historical inputs automatically using normal Git/LFS credentials. A complete release ZIP already contains its included payloads and works without Git or network access.</p>
 
 <pre><code>git clone https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS.git C:\OVA\repository
 Set-Location C:\OVA\repository
 git lfs pull
-git lfs fsck
 </code></pre>
 
-<p>Use the organization's normal GitLab credential mechanism. Do not place tokens in clone URLs, scripts, screenshots or logs. If Git/LFS is unavailable on the VM, use an approved complete transfer from a connected staging host and verify the same file manifests.</p>
+<p>Use the organization's normal GitLab credential mechanism. Do not place tokens in clone URLs, scripts, screenshots or logs. If Git/LFS is unavailable on the VM, download the complete offline ZIP linked from the GitLab release on a connected staging host, transfer it through an approved path and verify its checksum and embedded manifest. GitLab-generated source archives are not that offline ZIP.</p>
 
 <table>
 <thead>
@@ -176,7 +175,7 @@ git lfs fsck
 </tr>
 <tr>
   <td><code>artifacts/</code></td>
-  <td>Sanitized control ZIP and separately versioned payload packs</td>
+  <td>Historical control and Linux dependency packs; LFS pointers by default, excluded from the native offline ZIP</td>
 </tr>
 <tr>
   <td><code>evidence/</code></td>
@@ -193,7 +192,7 @@ git lfs fsck
 
 <h3 id="sanitized-historical-control-artifact">Sanitized historical control artifact</h3>
 
-<p>For historical helper/toolkit staging, use <code>artifacts/OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip</code>. Read its exact length and SHA-256 from the matching <code>evidence/sanitized-artifact-provenance.json</code>. The original r2 ZIP contained generated runtime credential material and is not the installation/distribution source. Removal paths and derivative hashes are recorded in evidence; original source hashes are historical provenance only.</p>
+<p>Native profile deployment does not need the duplicate top-level control ZIP. Only for historical helper/toolkit staging, materialize <code>artifacts/OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip</code> with <code>git lfs pull --include="artifacts/OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip" --exclude=""</code>. Read its exact length and SHA-256 from the matching <code>evidence/sanitized-artifact-provenance.json</code>. The original r2 ZIP contained generated runtime credential material and is not the installation/distribution source. Removal paths and derivative hashes are recorded in evidence; original source hashes are historical provenance only.</p>
 
 <pre><code>$Publication = 'C:\OVA\repository'
 $Provenance = Get-Content -Raw (Join-Path $Publication 'evidence\sanitized-artifact-provenance.json') | ConvertFrom-Json

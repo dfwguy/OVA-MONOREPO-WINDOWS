@@ -40,23 +40,22 @@ The status table is updated from reviewed receipts before final publication. Con
 
 ## 3. Obtain the complete publication and verify it
 
-Use a full checkout with Git LFS objects materialized. The native profiles and their Windows dependency closures are under `windows/`; they are not all contained in the historical six-tool control ZIP. A source-only Git checkout containing LFS pointer files is insufficient.
+Normal Git LFS clone/pull materializes the native Windows dependency closure under `windows/` and the bundled control interpreter. Historical Linux payloads and duplicate top-level archives stay as small LFS pointers by default. Native profile commands need no additional download step. The existing control acceptance and full offline release builder fetch their extra historical inputs automatically using normal Git/LFS credentials. A complete release ZIP already contains its included payloads and works without Git or network access.
 
 ```powershell
 git clone https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS.git C:\OVA\repository
 Set-Location C:\OVA\repository
 git lfs pull
-git lfs fsck
 ```
 
-Use the organization's normal GitLab credential mechanism. Do not place tokens in clone URLs, scripts, screenshots or logs. If Git/LFS is unavailable on the VM, use an approved complete transfer from a connected staging host and verify the same file manifests.
+Use the organization's normal GitLab credential mechanism. Do not place tokens in clone URLs, scripts, screenshots or logs. If Git/LFS is unavailable on the VM, download the complete offline ZIP linked from the GitLab release on a connected staging host, transfer it through an approved path and verify its checksum and embedded manifest. GitLab-generated source archives are not that offline ZIP.
 
 | Directory | Purpose |
 | --- | --- |
 | `windows/` | Primary native profiles and Windows dependencies |
 | `components/` | Pinned original sources and the comparison PythonCM snapshot |
 | `control/` | Sanitized historical coordination delivery; keep its verified tree unchanged |
-| `artifacts/` | Sanitized control ZIP and separately versioned payload packs |
+| `artifacts/` | Historical control and Linux dependency packs; LFS pointers by default, excluded from the native offline ZIP |
 | `evidence/` | Reviewed validation, intake and sanitization receipts |
 | `docs/` | This guide, compatibility audit and NVIDIA-branded diagram assets |
 
@@ -64,7 +63,7 @@ Each native profile verifies its own exact input and dependency hashes before bu
 
 ### Sanitized historical control artifact
 
-For historical helper/toolkit staging, use `artifacts/OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip`. Read its exact length and SHA-256 from the matching `evidence/sanitized-artifact-provenance.json`. The original r2 ZIP contained generated runtime credential material and is not the installation/distribution source. Removal paths and derivative hashes are recorded in evidence; original source hashes are historical provenance only.
+Native profile deployment does not need the duplicate top-level control ZIP. Only for historical helper/toolkit staging, materialize `artifacts/OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip` with `git lfs pull --include="artifacts/OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip" --exclude=""`. Read its exact length and SHA-256 from the matching `evidence/sanitized-artifact-provenance.json`. The original r2 ZIP contained generated runtime credential material and is not the installation/distribution source. Removal paths and derivative hashes are recorded in evidence; original source hashes are historical provenance only.
 
 ```powershell
 $Publication = 'C:\OVA\repository'

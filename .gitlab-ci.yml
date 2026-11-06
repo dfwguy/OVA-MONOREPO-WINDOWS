@@ -9,9 +9,12 @@ windows-control-acceptance:
   image: mcr.microsoft.com/windows/servercore:ltsc2019
   timeout: 45m
   variables:
-    GIT_CONFIG_COUNT: '1'
+    # The helper container owns LFS checkout; the Server Core job need not have Git.
+    GIT_CONFIG_COUNT: '2'
     GIT_CONFIG_KEY_0: core.longpaths
     GIT_CONFIG_VALUE_0: 'true'
+    GIT_CONFIG_KEY_1: lfs.fetchinclude
+    GIT_CONFIG_VALUE_1: 'windows/**,control/**'
   script:
     - powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File tests/Test-WindowsControls.ps1 -RepositoryRoot "$env:CI_PROJECT_DIR"
   artifacts:

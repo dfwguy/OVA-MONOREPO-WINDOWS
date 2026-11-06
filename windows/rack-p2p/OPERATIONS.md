@@ -6,7 +6,7 @@ The immutable `adapters/` export contains 92 files including its self-exempt man
 
 ## Verify and assemble a fresh version
 
-Use a complete source checkout with LFS objects materialized. The builder needs `components/nvis-rack-status/FILE_MANIFEST.json`, its `source/` files, and `components/nvis-p2p/FILE_MANIFEST.json` plus `console-static/`. It validates these pinned manifests and source hashes, the immutable adapter manifest, every adapter byte count/hash, the explicit guard patch and the Windows wheelhouse. It does not trust a filename or commit label in place of the actual bytes.
+Use a normal Git LFS checkout or the complete offline release ZIP. The repository's default LFS policy already materializes the Windows wheelhouse; historical Linux payloads are unnecessary for this native builder. The builder needs `components/nvis-rack-status/FILE_MANIFEST.json`, its `source/` files, and `components/nvis-p2p/FILE_MANIFEST.json` plus `console-static/`. It validates these pinned manifests and source hashes, the immutable adapter manifest, every adapter byte count/hash, the explicit guard patch and the Windows wheelhouse. It does not trust a filename or commit label in place of the actual bytes.
 
 ```powershell
 Set-Location C:\OVA\windows\rack-p2p

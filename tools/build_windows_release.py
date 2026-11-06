@@ -15,6 +15,10 @@ import tempfile
 import zipfile
 import zlib
 
+# Also works when this module is loaded by the regression harness by file path.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lfs_payloads import ensure_payloads
+
 MANIFEST_NAME = 'RELEASE_MANIFEST.json'
 MAX_MEMBER_BYTES = 2_000_000_000
 FIXED_DATE = (2026, 11, 6, 0, 0, 0)
@@ -96,6 +100,7 @@ def inspect_source(root, strict_layout=True):
         for name in ['README.md', 'control/FILE_MANIFEST.json', 'components', 'windows', 'docs', 'evidence']:
             if not (root / name).exists():
                 raise ValueError('Wrong or incomplete repository root; missing ' + name)
+        ensure_payloads(root, ('control', 'components', 'windows'))
     constraints = read_constraints(root)
     records, prefixes, skipped = [], {}, []
     for current, directories, files in os.walk(root, followlinks=False):
