@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-06T04:06:18.976529+00:00",
+  "status": "passed",
+  "commit_sha": "9c6b15938e2430dad78c3e194e92d05873b2581a",
+  "pipeline_id": 79725803,
+  "job_id": 531758252,
+  "job_url": "https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS/-/jobs/531758252",
+  "runner": "glr-plab-shared-win2019-x86-medium",
+  "native_environment": {
+    "powershell": "5.1.17763.9376",
+    "platform": "Microsoft Windows NT 10.0.17763.0",
+    "architecture": "AMD64",
+    "python": "CPython3.14.10 x64 bundled interpreter"
+  },
+  "passed_checks": 7,
+  "control_python_tests": 6,
+  "native_orchestration_tests": 9,
+  "actual_scope": [
+    "PowerShell parsing",
+    "Native embedded Python startup",
+    "44-file SHA256 manifest",
+    "Six real tool ZIP extractions",
+    "Unsafe ZIP member policy",
+    "Native one-node orchestration and Exemplar preparation boundary tests",
+    "Mocked download/upload/tunnel construction guards"
+  ],
+  "excluded": [
+    "Customer VPN/live SSH/SFTP",
+    "GPU workload execution",
+    "Six backend runtime commissioning",
+    "Native collection runtime acceptance"
+  ],
+  "earlier_findings_resolved": [
+    {
+      "job_id": 531714227,
+      "finding": "PS5 parameter-default PSScriptRoot not initialized",
+      "fix": "Compute default after parameter binding and pass explicit CI root"
+    },
+    {
+      "job_id": 531727670,
+      "finding": "git absent from bare ServerCore runtime after selective LFS attempt",
+      "fix": "Restore helper automatic full LFS checkout"
+    },
+    {
+      "job_id": 531733210,
+      "finding": "Windows ZipInfo filename normalization bypassed raw-name policy check",
+      "fix": "Validate orig_filename before normalized filename; fixtures preserve raw names"
+    }
+  ]
+}

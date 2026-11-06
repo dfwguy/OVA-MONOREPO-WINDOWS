@@ -14,521 +14,488 @@ code{font-family:'DejaVu Sans Mono',monospace;font-size:.87em}p code,li code,td 
 ul,ol{padding-left:19pt;margin:8pt 0 12pt}li{margin:0 0 6pt}blockquote{border-left:3pt solid #76b900;padding:10pt 12pt;background:#f0f6e8;margin:13pt 0}
 .cover{padding-top:20mm;break-after:page}.brand{font-size:10pt;letter-spacing:2.1pt;font-weight:bold;color:#4d7415;border-top:6pt solid #76b900;padding-top:14pt}
 .cover h1{font-size:42pt;line-height:1.06;margin:28pt 0 18pt;max-width:145mm}.cover .subtitle{font-size:20pt;line-height:1.3;color:#52616a;max-width:150mm}.cover .meta{font-size:10pt;color:#65717a;border-top:1px solid #ccd6c4;padding-top:15pt;margin-top:24pt}
-.cover .scope{background:#edf4e5;padding:14pt 16pt;border-left:4pt solid #76b900;margin:24pt 0;font-size:10pt}.contents{break-after:page}.contents ul{list-style:none;padding:0}.contents li{padding:7pt 0;border-bottom:1px solid #dce2d7}.contents a{font-size:11pt;color:#243b16}.lead{font-size:12pt;color:#52616a}.note{font-size:9pt;color:#647179}.diagram{margin:20pt 0;break-inside:avoid}svg text{font-family:Arial,Helvetica,sans-serif}
-</style></head><body><section class="cover"><div class="brand">NVIDIA · OVA OPERATIONS</div><h1>OVA Monorepo<br>Windows</h1><p class="subtitle">Deployment and operator guide</p><div class="scope">Six coordinated tools · Windows preparation · VPN access<br>Service placement · Offline delivery · Acceptance and recovery</div><div class="diagram"><svg viewBox="0 0 650 216" role="img" aria-label="Requested native Windows architecture: six central management tools on the Windows VM, VPN access to BCM and app-server, and only scoped collectors or workloads on customer nodes. Native backend acceptance remains pending."><defs><marker id="target-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#527b1b"/></marker></defs><rect x="0" y="0" width="295" height="215" rx="7" fill="#eaf2df" stroke="#76b900"/><text x="16" y="29" font-size="17" font-weight="bold">Windows VM · native only</text><text x="16" y="58" font-size="12">Exemplar control · P2P · PythonCM</text><text x="16" y="82" font-size="12">Auto Trigger · Observability · Collection</text><text x="16" y="114" font-size="11">Requested central service placement</text><text x="16" y="140" font-size="11" fill="#7a4c16">Native backend evidence still required</text><text x="16" y="168" font-size="11">No WSL / Hyper-V / Linux runtime</text><text x="16" y="194" font-size="11">Existing deployment: inspect before change</text><path d="M303 78 L407 78" stroke="#527b1b" stroke-width="2" marker-end="url(#target-arrow)"/><text x="335" y="60" font-size="13" font-weight="bold">VPN</text><rect x="419" y="0" width="230" height="115" rx="7" fill="#f0f3f4" stroke="#8c9a9f"/><text x="435" y="28" font-size="16" font-weight="bold">Customer management</text><text x="435" y="58" font-size="12">BCM head node + app-server</text><text x="435" y="86" font-size="11">Separate verified endpoint paths</text><path d="M534 122 L534 147" stroke="#527b1b" stroke-width="2" marker-end="url(#target-arrow)"/><rect x="419" y="159" width="230" height="56" rx="7" fill="#eaf2df" stroke="#76b900"/><text x="435" y="182" font-size="13" font-weight="bold">Scoped cluster nodes</text><text x="435" y="202" font-size="11">Thin collectors / peers / GPU jobs</text></svg></div><div class="meta">Original release: 20261105-windows-native-02<br>Guide date: 6 November 2026<br>Read the deployment boundary and validation report before installation.</div></section><section class="contents"><h2>Contents</h2><p class="lead">From verified source to a measured, recoverable deployment.</p><ul><li><a href="#chapter-1">1. What is included</a></li><li><a href="#chapter-2">2. Intended topology and placement decision</a></li><li><a href="#chapter-3">3. Responsibilities and site inputs</a></li><li><a href="#chapter-4">4. Release integrity and payload selection</a></li><li><a href="#chapter-5">5. Prepare the Windows VM</a></li><li><a href="#chapter-6">6. Configure VPN and prove both network paths</a></li><li><a href="#chapter-7">7. Offline staging and transfer</a></li><li><a href="#chapter-8">8. Commission the six components</a></li><li><a href="#chapter-9">9. Acceptance evidence and release gates</a></li><li><a href="#chapter-10">10. Daily operations</a></li><li><a href="#chapter-11">11. Troubleshooting</a></li><li><a href="#chapter-12">12. Updates, rollback and handover</a></li><li><a href="#chapter-13">13. Source and reading order</a></li><li><a href="#chapter-14">14. Coordinate with the existing Windows agent</a></li></ul></section><section class="chapter"><h2 id="deployment-and-operator-guide">Deployment and operator guide</h2>
+.cover .scope{background:#edf4e5;padding:14pt 16pt;border-left:4pt solid #76b900;margin:24pt 0;font-size:10pt}.contents{break-after:page}.contents ul{list-style:none;padding:0}.contents li{padding:7pt 0;border-bottom:1px solid #dce2d7}.contents a{font-size:11pt;color:#243b16}.lead{font-size:12pt;color:#52616a}.note{font-size:9pt;color:#647179}.diagram{margin:20pt 0;break-inside:avoid}.diagram svg{display:block;width:100%;height:auto}svg text{font-family:Arial,Helvetica,sans-serif}
+</style></head><body><section class="cover"><div class="brand" style="background:#0b110e;padding:16pt"><svg
+  enable-background="new 0 0 974.7 179.7"
+  version="1.1"
+  viewBox="0 0 974.7 179.7"
+  xml:space="preserve"
+  xmlns="http://www.w3.org/2000/svg"
+  width="230"
+  height="43"
+>
+  <path fill="#FFFFFF" d="m962.1 144.1v-2.7h1.7c0.9 0 2.2 0.1 2.2 1.2s-0.7 1.5-1.8 1.5h-2.1m0 1.9h1.2l2.7 4.7h2.9l-3-4.9c1.5 0.1 2.7-1 2.8-2.5v-0.4c0-2.6-1.8-3.4-4.8-3.4h-4.3v11.2h2.5v-4.7m12.6-0.9c0-6.6-5.1-10.4-10.8-10.4s-10.8 3.8-10.8 10.4 5.1 10.4 10.8 10.4 10.8-3.8 10.8-10.4m-3.2 0c0.2 4.2-3.1 7.8-7.3 8h-0.3c-4.4 0.2-8.1-3.3-8.3-7.7s3.3-8.1 7.7-8.3 8.1 3.3 8.3 7.7c-0.1 0.1-0.1 0.2-0.1 0.3z"></path>
+  <path fill="#FFFFFF" d="m578.2 34v118h33.3v-118h-33.3zm-262-0.2v118.1h33.6v-91.7l26.2 0.1c8.6 0 14.6 2.1 18.7 6.5 5.3 5.6 7.4 14.7 7.4 31.2v53.9h32.6v-65.2c0-46.6-29.7-52.9-58.7-52.9h-59.8zm315.7 0.2v118h54c28.8 0 38.2-4.8 48.3-15.5 7.2-7.5 11.8-24.1 11.8-42.2 0-16.6-3.9-31.4-10.8-40.6-12.2-16.5-30-19.7-56.6-19.7h-46.7zm33 25.6h14.3c20.8 0 34.2 9.3 34.2 33.5s-13.4 33.6-34.2 33.6h-14.3v-67.1zm-134.7-25.6l-27.8 93.5-26.6-93.5h-36l38 118h48l38.4-118h-34zm231.4 118h33.3v-118h-33.3v118zm93.4-118l-46.5 117.9h32.8l7.4-20.9h55l7 20.8h35.7l-46.9-117.8h-44.5zm21.6 21.5l20.2 55.2h-41l20.8-55.2z"></path>
+  <path
+    fill="#FFFFFF"
+    d="m101.3 53.6v-16.2c1.6-0.1 3.2-0.2 4.8-0.2 44.4-1.4 73.5 38.2 73.5 38.2s-31.4 43.6-65.1 43.6c-4.5 0-8.9-0.7-13.1-2.1v-49.2c17.3 2.1 20.8 9.7 31.1 27l23.1-19.4s-16.9-22.1-45.3-22.1c-3-0.1-6 0.1-9 0.4m0-53.6v24.2l4.8-0.3c61.7-2.1 102 50.6 102 50.6s-46.2 56.2-94.3 56.2c-4.2 0-8.3-0.4-12.4-1.1v15c3.4 0.4 6.9 0.7 10.3 0.7 44.8 0 77.2-22.9 108.6-49.9 5.2 4.2 26.5 14.3 30.9 18.7-29.8 25-99.3 45.1-138.7 45.1-3.8 0-7.4-0.2-11-0.6v21.1h170.2v-179.7h-170.4zm0 116.9v12.8c-41.4-7.4-52.9-50.5-52.9-50.5s19.9-22 52.9-25.6v14h-0.1c-17.3-2.1-30.9 14.1-30.9 14.1s7.7 27.3 31 35.2m-73.5-39.5s24.5-36.2 73.6-40v-13.2c-54.4 4.4-101.4 50.4-101.4 50.4s26.6 77 101.3 84v-14c-54.8-6.8-73.5-67.2-73.5-67.2z"
+  ></path>
+</svg>
+</div><h1>OVA Monorepo<br>Windows</h1><p class="subtitle">Native Windows deployment and operator guide</p><div class="scope">Six coordinated tools · Windows preparation · VPN access<br>Service placement · Offline delivery · Acceptance and recovery</div><div class="diagram"><svg viewBox="0 0 650 216" role="img" aria-label="Requested native Windows architecture: six central management tools on the Windows VM, VPN access to BCM and app-server, and only scoped collectors or workloads on customer nodes. Native backend acceptance remains pending."><defs><marker id="target-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#527b1b"/></marker></defs><rect x="0" y="0" width="295" height="215" rx="7" fill="#eaf2df" stroke="#76b900"/><text x="16" y="29" font-size="17" font-weight="bold">Windows VM · native only</text><text x="16" y="58" font-size="12">Exemplar control · P2P · PythonCM</text><text x="16" y="82" font-size="12">Auto Trigger · Observability · Collection</text><text x="16" y="114" font-size="11">Native management profiles</text><text x="16" y="140" font-size="11" fill="#7a4c16">P2P management core remains Linux</text><text x="16" y="168" font-size="11">No WSL / Hyper-V / Linux runtime</text><text x="16" y="194" font-size="11">Site commissioning remains separate</text><path d="M303 78 L407 78" stroke="#527b1b" stroke-width="2" marker-end="url(#target-arrow)"/><text x="335" y="60" font-size="13" font-weight="bold">VPN</text><rect x="419" y="0" width="230" height="115" rx="7" fill="#f0f3f4" stroke="#8c9a9f"/><text x="435" y="28" font-size="16" font-weight="bold">Customer management</text><text x="435" y="58" font-size="12">BCM head node + app-server</text><text x="435" y="86" font-size="11">Separate verified endpoint paths</text><path d="M534 122 L534 147" stroke="#527b1b" stroke-width="2" marker-end="url(#target-arrow)"/><rect x="419" y="159" width="230" height="56" rx="7" fill="#eaf2df" stroke="#76b900"/><text x="435" y="182" font-size="13" font-weight="bold">Scoped cluster nodes</text><text x="435" y="202" font-size="11">Thin collectors / peers / GPU jobs</text></svg></div><div class="meta">Source baseline: 20261105-windows-native-02 + native profiles<br>Guide date: 6 November 2026<br>Read the deployment boundary and validation report before installation.</div></section><section class="contents"><h2>Contents</h2><p class="lead">From verified source to a measured, recoverable deployment.</p><ul><li><a href="#chapter-1">1. Six tools and their execution boundaries</a></li><li><a href="#chapter-2">2. What the evidence establishes</a></li><li><a href="#chapter-3">3. Obtain the complete publication and verify it</a></li><li><a href="#chapter-4">4. Prepare Windows and its private workspace</a></li><li><a href="#chapter-5">5. Establish VPN connectivity to both customer endpoints</a></li><li><a href="#chapter-6">6. Assemble and qualify Rack Status and the P2P console</a></li><li><a href="#chapter-7">7. Start the native Observability core</a></li><li><a href="#chapter-8">8. Prepare the native Collection Framework</a></li><li><a href="#chapter-9">9. Configure one-node Auto Action control</a></li><li><a href="#chapter-10">10. Prepare Exemplar recipes and payloads</a></li><li><a href="#chapter-11">11. Connect the existing Windows agent and retain evidence</a></li><li><a href="#chapter-12">12. Operations, rollback and handover</a></li><li><a href="#chapter-13">13. Troubleshooting by boundary</a></li><li><a href="#chapter-14">14. Historical delivery and reference material</a></li></ul></section><section class="chapter"><h2 id="native-windows-deployment-and-operator-guide">Native Windows deployment and operator guide</h2>
 
-<p>Release basis: <code>20261105-windows-native-02</code> · Guide date: 6 November 2026</p>
+<p>Guide date: 6 November 2026 · Source baseline: <code>20261105-windows-native-02</code> plus reviewed native Windows profiles</p>
 
-<p>This guide explains the six-tool delivery, Windows preparation, VPN connectivity, backend placement, commissioning, everyday operation and recovery. It is intended for the operator of an ITSS-provided Windows VM or another approved Windows VM on the NVIDIA internal network.</p>
+<p>The management workspace runs natively on an ITSS-provided or approved NVIDIA-internal Windows VM. No WSL, Hyper-V, Linux guest or Linux container runtime is required by the native profiles. GPU tests, Slurm/Enroot/Pyxis and supported thin collectors remain on the customer cluster. The VPN must establish the approved paths from Windows to both the BCM head node and the app-server.</p>
 
-<p><strong>Read the placement statement before installation.</strong> The requested target is a central Windows VM hosting most or all application services, with only thin clients and collectors on the customer cluster. The retrieved revision02 release implements Windows staging, SSH orchestration and browser access; its application backends run on designated remote Linux management hosts. It expressly assumes no WSL, Hyper-V or Linux Docker engine on Windows. Central Windows runtime hosting is not established by that release. This publication adds a separate PythonCM source snapshot; that addition alone does not establish Windows runtime compatibility. Those are engineering and platform decisions that must be resolved and validated before claiming the requested architecture is delivered.</p>
+<p>This publication combines the six original toolkits with reviewed Windows adaptations, offline Windows dependencies and explicit acceptance scripts. It is not a claim that six production services are commissioned. <strong>P2P currently has a Windows console/proxy; its Dragonfly management core remains on Linux. PythonCM inventory and PythonCM workload execution have different acceptance boundaries.</strong> Keep both exceptions visible when assessing the central-host requirement.</p>
 
-<p>A repository checkout, package checksum or successful Linux source test does not establish a Windows runtime pass. Consult the repository's validation report for the actual tests run in this publication and the <a href="https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS/-/blob/main/docs/NATIVE_WINDOWS_COMPATIBILITY.md">native Windows compatibility audit</a> for concrete source blockers. That audit is a source analysis; it does not establish the installed state of the already deployed Windows VM.</p>
-</section><section class="chapter" id="chapter-1"><h2 id="1-what-is-included">1. What is included</h2>
+<p>Use the final receipt index and the <a href="https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS/-/blob/main/docs/NATIVE_WINDOWS_COMPATIBILITY.md">native compatibility audit</a> with this guide. Original Linux source findings do not describe the adapted runtime without reconciliation. Isolated Windows acceptance does not prove customer connectivity, complete capture, service-account permissions, production scale or reboot survival.</p>
+</section><section class="chapter" id="chapter-1"><h2 id="1-six-tools-and-their-execution-boundaries">1. Six tools and their execution boundaries</h2>
 
 <table>
 <thead>
 <tr>
   <th>Component</th>
-  <th>Function</th>
-  <th>Current release runtime boundary</th>
+  <th>Native Windows role</th>
+  <th>Cluster-side role or remaining boundary</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Exemplar Recipe</td>
-  <td>Prepare pinned NVIDIA recipes, staged images/models and bounded GPU validation jobs</td>
-  <td>Windows can manage files and invoke SSH; Linux controller and selected GPU nodes execute Slurm/Enroot/Pyxis workflows</td>
+  <td>Rack Status with PythonCM capability</td>
+  <td>Adapted Rack backend, matching SPA, Cheroot HTTPS, real Windows locking and ConPTY</td>
+  <td>Trusted SSH to reviewed BCM helpers; inventory is distinct from workflow execution; PythonCM workflow submission fails closed pending qualification</td>
 </tr>
 <tr>
-  <td>P2P</td>
-  <td>Distribute staged assets through Dragonfly Manager, scheduler, seed and scoped peers</td>
-  <td>Linux management runtime and node peers; Windows browser uses an SSH tunnel</td>
-</tr>
-<tr>
-  <td>Rack Status</td>
-  <td>Inventory, health UI and approved remote cluster actions</td>
-  <td>Requested PythonCM source is added separately; original release retains <code>nvis/nvis-rack-status</code> with Linux backend, web UI and optional desktop shell</td>
-</tr>
-<tr>
-  <td>Auto Action Trigger</td>
-  <td>Monitor and collect results; optionally launch single-node tests and recovery actions</td>
-  <td>Linux/Slurm scripts; all action/recovery switches remain disabled for commissioning</td>
+  <td>P2P / Dragonfly</td>
+  <td>Native static console and Manager API proxy</td>
+  <td>Manager, scheduler, PostgreSQL, Redis, seeds/peers and origin remain Linux components; central Windows core placement is not delivered</td>
 </tr>
 <tr>
   <td>Observability</td>
-  <td>Metrics, logs, dashboards and source discovery</td>
-  <td>Linux core services; thin exporters/Alloy near data sources; Windows browser access</td>
+  <td>Grafana, Prometheus, Loki and Alloy as native Windows x64 processes</td>
+  <td>Thin GPU/node/exporter collectors; approved telemetry route across VPN or an authenticated tunnel</td>
 </tr>
 <tr>
   <td>OVA Collection Framework</td>
-  <td>Collect durable scheduler evidence and declared artifacts</td>
-  <td>Linux collection service/hooks near approved sources; persistent state and output storage</td>
+  <td>Derived native collector/processor, SQLite WAL, immutable evidence, Parquet generations, DuckDB and authenticated Waitress browser</td>
+  <td>Explicit native mirror roots or approved read-only scheduler/source access; optional thin capture hooks</td>
+</tr>
+<tr>
+  <td>Auto Action Trigger</td>
+  <td>One-node scheduling, exclusive invocation guard, disabled task definition and durable receipts</td>
+  <td>Reviewed original launcher and thin node-side scripts; actual GPU tests remain remote</td>
+</tr>
+<tr>
+  <td>Exemplar Recipe</td>
+  <td>Pinned preparation, configuration validation, local payload manifests and integrity checks</td>
+  <td>Official supported recipe, staged image/model, Linux Slurm/Enroot/Pyxis and GPU execution</td>
 </tr>
 </tbody>
 </table>
 
-<p>The six components retain independent runtimes, configuration, lifecycle and acceptance requirements. The bundle coordinates their delivery; it does not turn them into one Windows executable.</p>
+<p>The requirement is PythonCM capability, rather than a particular Rack repository name. Preserve the existing Windows adaptation of <code>nvis/nvis-rack-status</code> and its exported source identity. The older <code>components/rack-status-pythoncm</code> snapshot is a comparison/reference source; do not replace the newer adapted implementation merely because the older repository name contains PythonCM.</p>
+<div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc"><title id="title">NVIDIA OVA six-tool architecture</title><desc id="desc">Native Windows profiles · cluster-side GPU execution · explicit P2P core exception. Isolated profiles passed. P2P core stays Linux; customer VPN/GPU/service commissioning remains separate.</desc><defs><linearGradient id="back" x2="1" y2="1"><stop stop-color="#0a100e"/><stop offset="1" stop-color="#131d17"/></linearGradient><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" fill="#76b900"/></marker></defs><rect width="1600" height="1000" rx="24" fill="url(#back)"/><svg x="46" y="33" width="185" height="34.107" viewBox="0 0 974.7 179.7">
+  <path fill="#FFFFFF" d="m962.1 144.1v-2.7h1.7c0.9 0 2.2 0.1 2.2 1.2s-0.7 1.5-1.8 1.5h-2.1m0 1.9h1.2l2.7 4.7h2.9l-3-4.9c1.5 0.1 2.7-1 2.8-2.5v-0.4c0-2.6-1.8-3.4-4.8-3.4h-4.3v11.2h2.5v-4.7m12.6-0.9c0-6.6-5.1-10.4-10.8-10.4s-10.8 3.8-10.8 10.4 5.1 10.4 10.8 10.4 10.8-3.8 10.8-10.4m-3.2 0c0.2 4.2-3.1 7.8-7.3 8h-0.3c-4.4 0.2-8.1-3.3-8.3-7.7s3.3-8.1 7.7-8.3 8.1 3.3 8.3 7.7c-0.1 0.1-0.1 0.2-0.1 0.3z"></path>
+  <path fill="#FFFFFF" d="m578.2 34v118h33.3v-118h-33.3zm-262-0.2v118.1h33.6v-91.7l26.2 0.1c8.6 0 14.6 2.1 18.7 6.5 5.3 5.6 7.4 14.7 7.4 31.2v53.9h32.6v-65.2c0-46.6-29.7-52.9-58.7-52.9h-59.8zm315.7 0.2v118h54c28.8 0 38.2-4.8 48.3-15.5 7.2-7.5 11.8-24.1 11.8-42.2 0-16.6-3.9-31.4-10.8-40.6-12.2-16.5-30-19.7-56.6-19.7h-46.7zm33 25.6h14.3c20.8 0 34.2 9.3 34.2 33.5s-13.4 33.6-34.2 33.6h-14.3v-67.1zm-134.7-25.6l-27.8 93.5-26.6-93.5h-36l38 118h48l38.4-118h-34zm231.4 118h33.3v-118h-33.3v118zm93.4-118l-46.5 117.9h32.8l7.4-20.9h55l7 20.8h35.7l-46.9-117.8h-44.5zm21.6 21.5l20.2 55.2h-41l20.8-55.2z"></path>
+  <path
+    fill="#FFFFFF"
+    d="m101.3 53.6v-16.2c1.6-0.1 3.2-0.2 4.8-0.2 44.4-1.4 73.5 38.2 73.5 38.2s-31.4 43.6-65.1 43.6c-4.5 0-8.9-0.7-13.1-2.1v-49.2c17.3 2.1 20.8 9.7 31.1 27l23.1-19.4s-16.9-22.1-45.3-22.1c-3-0.1-6 0.1-9 0.4m0-53.6v24.2l4.8-0.3c61.7-2.1 102 50.6 102 50.6s-46.2 56.2-94.3 56.2c-4.2 0-8.3-0.4-12.4-1.1v15c3.4 0.4 6.9 0.7 10.3 0.7 44.8 0 77.2-22.9 108.6-49.9 5.2 4.2 26.5 14.3 30.9 18.7-29.8 25-99.3 45.1-138.7 45.1-3.8 0-7.4-0.2-11-0.6v21.1h170.2v-179.7h-170.4zm0 116.9v12.8c-41.4-7.4-52.9-50.5-52.9-50.5s19.9-22 52.9-25.6v14h-0.1c-17.3-2.1-30.9 14.1-30.9 14.1s7.7 27.3 31 35.2m-73.5-39.5s24.5-36.2 73.6-40v-13.2c-54.4 4.4-101.4 50.4-101.4 50.4s26.6 77 101.3 84v-14c-54.8-6.8-73.5-67.2-73.5-67.2z"
+  ></path>
+</svg><text x="1550" y="62" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="600" fill="#a4bd95" text-anchor="end" letter-spacing="2">OVA  /  WINDOWS</text><text x="46" y="140" font-family="Arial,Helvetica,sans-serif" font-size="39" font-weight="700" fill="#fff" >One Windows workspace. Six coordinated tools.</text><text x="47" y="181" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="400" fill="#a9bdad" >Native Windows profiles · cluster-side GPU execution · explicit P2P core exception</text><rect x="44" y="227" width="908" height="594" rx="20" fill="#142018" stroke="#476638"/><rect x="44" y="227" width="908" height="65" rx="20" fill="#20341b"/><text x="69" y="268" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" fill="#eef7e8" >NVIDIA / ITSS WINDOWS VM</text><text x="929" y="267" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="600" fill="#b9d49b" text-anchor="end" letter-spacing="1">NO LINUX VIRTUALIZATION</text><rect x="68" y="316" width="414" height="137" rx="12" fill="#101a14" stroke="#314e32"/><rect x="68" y="333" width="3" height="31" fill="#a7d76e"/><text x="88" y="352" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" fill="#f4f7f2" >Rack Status / PythonCM</text><text x="88" y="383" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#b3c3b5" >Cheroot + inventory; jobs guarded</text><circle cx="93" cy="420" r="4" fill="#a7d76e"/><text x="107" y="425" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="500" fill="#a7d76e" >21 Rack/proxy checks passed</text><rect x="506" y="316" width="414" height="137" rx="12" fill="#101a14" stroke="#314e32"/><rect x="506" y="333" width="3" height="31" fill="#a9c1d5"/><text x="526" y="352" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" fill="#f4f7f2" >P2P / Dragonfly</text><text x="526" y="383" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#b3c3b5" >Native Windows console + proxy</text><circle cx="531" cy="420" r="4" fill="#a9c1d5"/><text x="545" y="425" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="500" fill="#a9c1d5" >Management core remains Linux</text><rect x="68" y="474" width="414" height="137" rx="12" fill="#101a14" stroke="#314e32"/><rect x="68" y="491" width="3" height="31" fill="#a7d76e"/><text x="88" y="510" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" fill="#f4f7f2" >Observability</text><text x="88" y="541" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#b3c3b5" >Grafana · Prometheus · Loki · Alloy</text><circle cx="93" cy="578" r="4" fill="#a7d76e"/><text x="107" y="583" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="500" fill="#a7d76e" >7 native core checks passed</text><rect x="506" y="474" width="414" height="137" rx="12" fill="#101a14" stroke="#314e32"/><rect x="506" y="491" width="3" height="31" fill="#a7d76e"/><text x="526" y="510" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" fill="#f4f7f2" >OVA Collection</text><text x="526" y="541" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#b3c3b5" >Native locks · SQLite · Parquet</text><circle cx="531" cy="578" r="4" fill="#a7d76e"/><text x="545" y="583" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="500" fill="#a7d76e" >6 native isolated tests passed</text><rect x="68" y="632" width="414" height="137" rx="12" fill="#101a14" stroke="#314e32"/><rect x="68" y="649" width="3" height="31" fill="#a7d76e"/><text x="88" y="668" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" fill="#f4f7f2" >Auto Action Trigger</text><text x="88" y="699" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#b3c3b5" >Native one-node scheduling + guard</text><circle cx="93" cy="736" r="4" fill="#a7d76e"/><text x="107" y="741" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="500" fill="#a7d76e" >Windows boundary tests passed</text><rect x="506" y="632" width="414" height="137" rx="12" fill="#101a14" stroke="#314e32"/><rect x="506" y="649" width="3" height="31" fill="#a7d76e"/><text x="526" y="668" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" fill="#f4f7f2" >Exemplar Recipe</text><text x="526" y="699" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#b3c3b5" >Native preparation + payload checks</text><circle cx="531" cy="736" r="4" fill="#a7d76e"/><text x="545" y="741" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="500" fill="#a7d76e" >Windows boundary tests passed</text><path id="vpn-flow" d="M965 476H1112" fill="none" stroke="#76b900" stroke-width="3" marker-end="url(#arrow)"/><text x="1039" y="438" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700" fill="#d4e8c5" text-anchor="middle">VPN</text><text x="1039" y="515" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="400" fill="#9eb594" text-anchor="middle">Trusted control</text><rect x="1131" y="287" width="424" height="292" rx="18" fill="#121c19" stroke="#526663"/><text x="1156" y="329" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#f1f6ef" >CUSTOMER MANAGEMENT</text><text x="1156" y="374" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="600" fill="#d9e6d6" >BCM head node</text><text x="1156" y="414" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="600" fill="#d9e6d6" >App-server</text><text x="1156" y="457" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#a7bcb3" >Distinct identity + endpoint checks</text><text x="1156" y="499" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="600" fill="#e2bb64" >P2P management core: Linux</text><text x="1156" y="536" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="400" fill="#b2c4b8" >Current placement exception to resolve</text><path id="cluster-flow" d="M1343 592V645" fill="none" stroke="#76b900" stroke-width="3" marker-end="url(#arrow)"/><rect x="1131" y="665" width="424" height="157" rx="18" fill="#14221a" stroke="#476638"/><text x="1156" y="706" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#f1f6ef" >SCOPED CLUSTER NODES</text><text x="1156" y="746" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="400" fill="#b7cbb7" >Thin collectors / exporters / peers</text><text x="1156" y="782" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="400" fill="#b7cbb7" >GPU workloads stay on cluster</text><circle id="vpn-packet" cx="975" cy="476" r="6" fill="#d2ff9e"/><circle id="cluster-packet" cx="1343" cy="602" r="5" fill="#d2ff9e"/><path d="M46 867H1554" stroke="#334935"/><text x="47" y="909" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700" fill="#c5d7bf" letter-spacing="1.4">NATIVE PROCESS  ≠  LIVE CLUSTER ACCEPTANCE</text><text x="47" y="950" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#8ea78f" >Isolated profiles passed. P2P core stays Linux; customer VPN/GPU/service commissioning remains separate.</text></svg>
+</div></section><section class="chapter" id="chapter-2"><h2 id="2-what-the-evidence-establishes">2. What the evidence establishes</h2>
 
-<h3 id="rack-status-source-identity">Rack Status source identity</h3>
-
-<p>The current delivery deliberately includes <code>nvis/nvis-rack-status</code>, rather than <code>nvis-ova/rack-status-pythoncm</code>. This monorepo adds <code>nvis-ova/rack-status-pythoncm</code> at commit <code>8d1896e55cf24c23ef80d9ccef8a0d9a8a7962f7</code> in <code>components/rack-status-pythoncm</code>. Validate its API, UI, BCM access and Windows compatibility before selecting it for deployment. The original Rack source is retained as a historical release component, not a silent replacement for PythonCM. A desktop shell does not prove native backend compatibility. Keep both source identities explicit in the software inventory.</p>
-</section><section class="chapter" id="chapter-2"><h2 id="2-intended-topology-and-placement-decision">2. Intended topology and placement decision</h2>
-
-<p>The requested topology places the management applications on the Windows VM. The cluster retains its existing BCM head node and app-server, and receives only scoped collectors, P2P peers and workload execution artifacts. GPU work and cluster-local data transfer stay within the customer network.</p>
-
-<p>The current delivery topology is different:</p>
-
-<div class="diagram"><svg viewBox="0 0 650 238" role="img" aria-label="Windows staging and control crosses the VPN to approved Linux management backends, with collectors and jobs on scoped cluster nodes."><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#527b1b"/></marker></defs><rect x="0" y="0" width="210" height="180" rx="7" fill="#eaf2df" stroke="#76b900"/><text x="16" y="28" font-size="16" font-weight="bold">Windows VM</text><text x="16" y="55" font-size="12">Native PowerShell / SSH</text><text x="16" y="78" font-size="12">Files and payload staging</text><text x="16" y="101" font-size="12">Browser / local UI tunnels</text><text x="16" y="132" font-size="11" fill="#5c6b70">Current release: control host</text><path d="M217 78 L327 78" stroke="#527b1b" stroke-width="2" marker-end="url(#arrow)"/><text x="247" y="61" font-size="13" font-weight="bold">VPN</text><text x="218" y="103" font-size="10">BCM + app-server path</text><rect x="338" y="0" width="311" height="134" rx="7" fill="#f0f3f4" stroke="#8c9a9f"/><text x="354" y="28" font-size="16" font-weight="bold">Approved Linux management</text><text x="354" y="54" font-size="12">Application services / durable state</text><text x="354" y="78" font-size="12">BCM / Slurm / source access</text><text x="354" y="105" font-size="11" fill="#5c6b70">Current supported backend placement</text><path d="M496 141 L496 163" stroke="#527b1b" stroke-width="2" marker-end="url(#arrow)"/><rect x="338" y="174" width="311" height="63" rx="7" fill="#eaf2df" stroke="#76b900"/><text x="354" y="199" font-size="14" font-weight="bold">Scoped customer-cluster nodes</text><text x="354" y="222" font-size="12">Exporters · collectors · P2P peers · GPU jobs</text></svg></div><pre><code>NVIDIA internal network             VPN                 Customer network
-Windows VM / native PowerShell  ---------&gt;  approved SSH entry / management host
-  release and payload staging               Linux application services + state
-  checksum verification                      BCM head node / app-server access
-  SSH/SFTP control                            |
-  browser and optional shell                 +-- scoped exporters / collectors
-  localhost SSH forwards                     +-- P2P peers / scheduled GPU jobs
-</code></pre>
-
-<p>The user requires native Windows only: no WSL, Hyper-V, Linux VM or Linux container engine. Central services must therefore use genuinely Windows-compatible implementations or be ported and tested. An earlier deployment agent reportedly installed the package on the actual Windows VM; its installed state and launch commands must be inspected before changing architecture or duplicating services. A successful SSH launcher does not prove the backend is native. Record each executable, host, service owner, state directory and endpoint.</p>
-
-<p>The original Linux management deployment remains documented here as the historical release behavior, not as an approved substitute for the requested native Windows architecture. Do not deploy new remote heavy services to satisfy the native-only requirement. Inspect the existing Windows installation and record remaining native compatibility gaps explicitly. Cluster-side collectors and workload execution remain within the approved thin-agent scope.</p>
-</section><section class="chapter" id="chapter-3"><h2 id="3-responsibilities-and-site-inputs">3. Responsibilities and site inputs</h2>
+<!-- NATIVE_STATUS_BEGIN -->
 
 <table>
 <thead>
 <tr>
-  <th>Owner</th>
-  <th>Required information or action</th>
+  <th>Area</th>
+  <th>Current recorded evidence</th>
+  <th>Acceptance boundary</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>ITSS / Windows VM owner</td>
-  <td>VM access, Windows version/architecture, approved software, disk quota, account permissions and supported virtualization policy</td>
+  <td>Windows control CI</td>
+  <td>Seven checks passed on Windows Server 2019 / PowerShell 5.1 / native CPython 3.14.10, pipeline <code>79725803</code>, job <code>531758252</code>, commit <code>9c6b15938e2430dad78c3e194e92d05873b2581a</code></td>
+  <td>Control parsing, hashes, extraction, six helper tests and nine orchestration tests; excludes customer VPN/GPU/backend commissioning</td>
 </tr>
 <tr>
-  <td>VPN / network owner</td>
-  <td>Fortinet client and private instruction file, gateway/profile, authentication/MFA, routes, DNS, proxy policy and access to both BCM and app-server</td>
+  <td>Actual Windows orchestration</td>
+  <td>Nine boundary tests passed on the inspected Windows Server 2025 VM with CPython 3.12.10</td>
+  <td>Native one-node control and Exemplar preparation tests; not a live GPU canary</td>
 </tr>
 <tr>
-  <td>Cluster owner</td>
-  <td>Approved SSH identity and fingerprints, management host placement, BCM/app-server names, Linux platform, collector scope and scheduler access</td>
+  <td>Native Rack / P2P console</td>
+  <td>Revision02 official harness passed all 21 native isolated checks with exit 0: fresh offline venvs, dependencies, TLS/WebSocket, ConPTY, real locks, workflow guard and mock Manager proxy; the stability suite ran 46.230 seconds including the full 45-second wait</td>
+  <td>Configured full UI/auth, customer BCM/Manager and production services remain uncommissioned; no native P2P core claim; metadata-only build ordering comparison is recorded separately</td>
 </tr>
 <tr>
-  <td>Tool operator</td>
-  <td>Release verification, compatible payload selection, reviewed configuration, installation receipts and bounded canary checks</td>
+  <td>Native Observability</td>
+  <td>Revision03 passed all seven real native checks on Windows Server 2025 / CPython 3.12.10: readiness, Grafana auth/dashboard/datasources, Alloy metric/log flow and restart persistence</td>
+  <td>Isolated core acceptance; no customer contact/service installation; Loki required forced-stop fallback, so graceful Loki shutdown remains unqualified</td>
 </tr>
 <tr>
-  <td>Service owner</td>
-  <td>Persistent storage, backup/restore, authentication, retention, restart policy and update window</td>
+  <td>Native Collection</td>
+  <td>Revision03 passed all six real native tests on Windows Server 2025 / CPython 3.12.10 x64, with no failures/errors/skips; published inputs match the accepted package</td>
+  <td>Real locking and bounded pointer publication verified; no owned processes left; no customer/Slurm/VPN, service registration or power-loss/reboot qualification</td>
+</tr>
+<tr>
+  <td>Runtime prerequisites</td>
+  <td>Actual VM verification passed: Python installer PSF Authenticode valid; both WinSW variants unsigned with expected measured hashes</td>
+  <td>Verification only; installers/wrappers were not executed or installed; WinSW publisher signing/checksum proof is not claimed</td>
 </tr>
 </tbody>
 </table>
 
-<p>Collect private values in an access-controlled site plan outside Git. Include Windows OS/build and CPU architecture; approved software; free staging and runtime disk; SSH aliases/user/ports; trusted host-key fingerprints; BCM and app-server roles; backend placement; Linux OS/CPU/Python ABI; existing container runtime; source paths; listener ports; credentials by file reference; retention; and the permitted node/partition/GPU/time scope.</p>
+<!-- NATIVE_STATUS_END -->
 
-<p>Do not guess VPN gateway, address space, credentials, DNS suffixes or route rules. Use the supplied private VPN instructions. NGC/Hugging Face access is needed only for selected protected workload assets; it is not required for the basic public Dragonfly console.</p>
-</section><section class="chapter" id="chapter-4"><h2 id="4-release-integrity-and-payload-selection">4. Release integrity and payload selection</h2>
+<p>The status table is updated from reviewed receipts before final publication. Consult the exact receipt paths and commit identities in the repository rather than treating a status label as proof. Earlier failures are retained so fixes and retests remain auditable. The <a href="https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS/-/jobs/531758252">passing Windows CI job</a> establishes only its recorded scope.</p>
+</section><section class="chapter" id="chapter-3"><h2 id="3-obtain-the-complete-publication-and-verify-it">3. Obtain the complete publication and verify it</h2>
 
-<p>Use the cleaned publication artifact <code>artifacts/OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip</code>. Read its exact bytes and SHA-256 from <code>evidence/sanitized-artifact-provenance.json</code> in the same checkout; removed runtime credential files are recorded by path in <code>evidence/sanitization-removals.json</code>. The sanitized artifact is the primary extraction/staging source. Do not use the original r2 ZIP for installation or distribution.</p>
+<p>Use a full checkout with Git LFS objects materialized. The native profiles and their Windows dependency closures are under <code>windows/</code>; they are not all contained in the historical six-tool control ZIP. A source-only Git checkout containing LFS pointer files is insufficient.</p>
 
-<p>The historical source release index identifies these original inputs for audit only:</p>
+<pre><code>git clone https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS.git C:\OVA\repository
+Set-Location C:\OVA\repository
+git lfs pull
+git lfs fsck
+</code></pre>
+
+<p>Use the organization's normal GitLab credential mechanism. Do not place tokens in clone URLs, scripts, screenshots or logs. If Git/LFS is unavailable on the VM, use an approved complete transfer from a connected staging host and verify the same file manifests.</p>
 
 <table>
 <thead>
 <tr>
-  <th>Artifact</th>
-  <th>Bytes</th>
-  <th>SHA-256</th>
+  <th>Directory</th>
+  <th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><code>IREN_MKZ-windows-control-20261105-r2.zip</code></td>
-  <td>636,211,960</td>
-  <td><code>28765b63d5331dc1413a43152c433af288897059960d7f636385bb78247607e7</code></td>
+  <td><code>windows/</code></td>
+  <td>Primary native profiles and Windows dependencies</td>
 </tr>
 <tr>
-  <td>Observability <code>linux-amd64</code> dependency ZIP</td>
-  <td>680,949,898</td>
-  <td><code>914991007abbbef5a66f00a01864c8c8715ed4ef5bfc110c964bc66e46fe4519</code></td>
+  <td><code>components/</code></td>
+  <td>Pinned original sources and the comparison PythonCM snapshot</td>
 </tr>
 <tr>
-  <td>Observability <code>linux-arm64</code> dependency ZIP</td>
-  <td>634,417,483</td>
-  <td><code>1386ed791e5879d5071f0d1c97a912255c91b36052e47ec1481bc2c07a5904e3</code></td>
+  <td><code>control/</code></td>
+  <td>Sanitized historical coordination delivery; keep its verified tree unchanged</td>
+</tr>
+<tr>
+  <td><code>artifacts/</code></td>
+  <td>Sanitized control ZIP and separately versioned payload packs</td>
+</tr>
+<tr>
+  <td><code>evidence/</code></td>
+  <td>Reviewed validation, intake and sanitization receipts</td>
+</tr>
+<tr>
+  <td><code>docs/</code></td>
+  <td>This guide, compatibility audit and NVIDIA-branded diagram assets</td>
 </tr>
 </tbody>
 </table>
 
-<p>These are original source-artifact hashes, not hashes of a revised Git checkout or a newly generated repository archive. A credential scan identified generated private credential material in the original packaged Rack source; publication removes it and records a sanitized derivative. Use the publication manifest for newly packaged artifacts. Never redistribute the unreviewed original as if it were the cleaned release. A retained vendor PostgreSQL image contains the standard Debian example <code>ssl-cert-snakeoil.key</code>; it is a vendor default, not an issued site identity. Configure fresh site-generated TLS keys/certificates for any deployed TLS service and never use that example key as the site certificate identity.</p>
+<p>Each native profile verifies its own exact input and dependency hashes before building or starting. Use those verifiers, not a filename as a substitute for byte identity. Preserve upstream license notices and provenance with any redistributed binary closure.</p>
 
-<p>The historical original control ZIP was retrieved from <code>IREN_MKZ/bundles/20261105-windows-native-02/</code>; do not select it as the installation source. Obtain the sanitized artifact from this repository publication. Observability dependency objects deliberately retain their revision01 paths under <code>IREN_MKZ/bundles/20261105-windows-native-01/tools/observability/</code>; revision02 reuses the same verified bytes. These Linux dependency packs describe the historical release path and cannot execute natively on Windows. Where reproducing that path for analysis, select the dependency architecture of the Linux backend, regardless of the Windows host architecture. A Windows x64 VM may control a Linux arm64 backend.</p>
+<h3 id="sanitized-historical-control-artifact">Sanitized historical control artifact</h3>
 
-<p>The control ZIP does not contain the large Observability platform packs. A Git repository containing the control sources alone is not a complete offline installation medium. Reconcile the exact dependency inventory for every selected function, including OS/runtime prerequisites and optional workload assets.</p>
-</section><section class="chapter" id="chapter-5"><h2 id="5-prepare-the-windows-vm">5. Prepare the Windows VM</h2>
+<p>For historical helper/toolkit staging, use <code>artifacts/OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip</code>. Read its exact length and SHA-256 from the matching <code>evidence/sanitized-artifact-provenance.json</code>. The original r2 ZIP contained generated runtime credential material and is not the installation/distribution source. Removal paths and derivative hashes are recorded in evidence; original source hashes are historical provenance only.</p>
 
-<p>Use short, separate directories. The following layout is an operator convention, not an installer requirement:</p>
-
-<pre><code>C:\OVA\downloads\          immutable incoming archives
-C:\OVA\control-sanitized\         verified control bundle, kept unchanged
-C:\OVA\payloads\           external images, wheels and binary packs
-C:\OVA\work\               unpacked working toolkits
-C:\OVA\private\            private site plan and credential references
-C:\OVA\evidence\           logs, receipts and acceptance results
+<pre><code>$Publication = 'C:\OVA\repository'
+$Provenance = Get-Content -Raw (Join-Path $Publication 'evidence\sanitized-artifact-provenance.json') | ConvertFrom-Json
+$Archive = Join-Path $Publication $Provenance.sanitized_control.path
+if ((Get-FileHash -Algorithm SHA256 $Archive).Hash -ne $Provenance.sanitized_control.sha256) { throw 'Archive hash mismatch' }
+if ((Get-Item -LiteralPath $Archive).Length -ne $Provenance.sanitized_control.bytes) { throw 'Archive size mismatch' }
 </code></pre>
 
-<p>Record Windows version/build, PowerShell version, free storage, OpenSSH tools, Python and browser availability. The bundled <code>Test-WindowsControlHost.ps1</code> checks the control host; inspect its report and resolve missing tools. It does not install Linux backends.</p>
+<p>Do not extract payloads into the verified <code>control/</code> tree. A retained vendor PostgreSQL image contains Debian's example <code>ssl-cert-snakeoil.key</code>; that vendor default is not a site TLS identity. Use freshly issued site-owned keys/certificates for deployed TLS.</p>
+</section><section class="chapter" id="chapter-4"><h2 id="4-prepare-windows-and-its-private-workspace">4. Prepare Windows and its private workspace</h2>
 
-<p>Obtain the sanitized control ZIP from the published repository artifact path and compare its hash with <code>evidence/sanitized-artifact-provenance.json</code>. Use the authenticated NVFTP interface only for separately approved external dependency packs and preserve their recorded hashes. Use individual credentials from the approved credential store. Verify the sanitized control ZIP before extraction:</p>
+<p>Use the actual Windows account that will operate the tools. Record OS/build, architecture, PowerShell, trusted OpenSSH aliases and available disk. Keep code, runtime state and private evidence separate:</p>
 
-<pre><code>$Publication = "C:\OVA\repository" # actual checkout location
-$Provenance = Get-Content -Raw (Join-Path $Publication "evidence\sanitized-artifact-provenance.json") | ConvertFrom-Json
-$Archive = "C:\OVA\downloads\OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip"
-$ActualHash = (Get-FileHash -Algorithm SHA256 $Archive).Hash
-if ($ActualHash -ne $Provenance.sanitized_control.sha256) { throw "Sanitized archive hash mismatch" }
-if ((Get-Item -LiteralPath $Archive).Length -ne $Provenance.sanitized_control.bytes) { throw "Sanitized archive size mismatch" }
-Expand-Archive -LiteralPath C:\OVA\downloads\OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip -DestinationPath C:\OVA\control-sanitized
-Set-Location C:\OVA\control-sanitized
-py -3 scripts\verify_bundle.py .
-.\scripts\Test-WindowsControlHost.ps1
+<pre><code>C:\OVA\repository\              verified source and dependency closure
+C:\OVA-Versions\                newly assembled application versions
+C:\OVA-Runtime\                 persistent per-component venv/state/config
+C:\OVA-Acceptance\              fresh isolated test instances and receipts
+C:\OVA\private\                 site plan and secret file references
 </code></pre>
 
-<p>The example checks the exact SHA-256 and length against the publication provenance record; the original historical hash is different. Stop on mismatch. Extract into a fresh directory. The strict <code>FILE_MANIFEST.json</code> describes the control tree; place working toolkits and external payloads outside it so ordinary work does not invalidate verification.</p>
+<p>Never overwrite existing deployed services or state to validate a candidate. New runtime and acceptance paths must be fresh and outside Git. Restrict private directories to their approved identities. In each PowerShell session, set the actual full application interpreter path (replace the placeholder; do not use the embedded 3.14 control interpreter):</p>
 
-<p>If native Python is missing, <code>windows/README.md</code> describes an optional official CPython embeddable x64 interpreter for standard-library verification helpers. Extract it outside the verified tree and call its full executable path. That interpreter does not provide pip, Linux packages or application services.</p>
-</section><section class="chapter" id="chapter-6"><h2 id="6-configure-vpn-and-prove-both-network-paths">6. Configure VPN and prove both network paths</h2>
+<pre><code>$Python = '&lt;FULL_APPROVED_PYTHON312_EXE&gt;'
+&amp; $Python -c 'import sys, struct; assert sys.version_info[:2] == (3, 12); assert struct.calcsize("P") == 8; print(sys.version, sys.executable)'
+</code></pre>
 
-<ol>
-<li>Read the private Fortinet instruction file supplied by the network owner. Install or select the approved client/profile and follow the documented authentication/MFA flow.</li>
-<li>Record the pre-VPN network state. Connect the VPN and inspect the assigned adapter, approved routes and DNS resolution. Do not widen routes or disable certificate validation to force access.</li>
-<li>Resolve both the BCM head node and the app-server. Test each endpoint and the exact service port from the site plan.</li>
-<li>Establish SSH using the approved user/key and independently verified host-key fingerprint. Test app-server and head-node access separately; success to one does not prove the other.</li>
-<li>Check whether VPN policy prevents access to NVIDIA services. Prestage all required packages before connecting when necessary.</li>
-<li>Confirm how services in the proposed Windows-side runtime would reach the same endpoints if central hosting is selected. Host-level reachability does not prove a nested runtime has the required route or DNS.</li>
-</ol>
+<p>Run the native inventory helper for read-only observed host state:</p>
 
-<p>Read-only diagnostic examples use placeholders that must be replaced with site values:</p>
+<pre><code>Set-Location C:\OVA\repository
+.\scripts\Get-NativeWindowsDeploymentEvidence.ps1 `
+  -OutputDirectory C:\OVA-Acceptance\inventory-unique `
+  -BcmHeadNode &lt;APPROVED_BCM_HOST&gt; -AppServer &lt;APPROVED_APP_SERVER&gt;
+</code></pre>
+
+<p>The helper intentionally omits credential-bearing process/service command lines. Its endpoint probes use the supplied SSH port; prove other application ports separately. Inventory is not functional acceptance.</p>
+
+<h3 id="use-the-correct-python-runtime">Use the correct Python runtime</h3>
+
+<p>Application wheelhouses target <strong>CPython 3.12 x64</strong>, matching the inspected VM's 3.12.10 environment. The control bundle's embedded CPython 3.14 is for standard-library verification, not the application dependency environment. Use explicit executable paths and component-specific virtual environments.</p>
+
+<p>If a suitable approved Python already exists, reuse it. Otherwise, <code>windows/runtime/INSTALLATION.md</code> documents an optional full offline per-user Python 3.12.10 installation. First run its read-only hash and Authenticode verifier:</p>
+
+<pre><code>.\windows\runtime\Verify-RuntimeDependencies.ps1 `
+  -ReportPath C:\OVA-Acceptance\runtime-signatures-unique.json
+</code></pre>
+
+<p>The verifier executes neither installer nor WinSW. It requires the Python installer signature to be valid with the expected Python Software Foundation organization identity. Resolve trust/revocation failures through ITSS; a measured hash alone does not authenticate a publisher. WinSW's actual signature status is recorded separately, rather than assumed valid. Exact source URLs, licenses and measured hashes are in the runtime dependency manifest.</p>
+
+<p>The optional WinSW <code>.NET461</code> variant matches the inspected VM wrapper hash and requires a compatible installed .NET Framework. The standalone x64 alternative is a different binary and needs its own lifecycle qualification. This guide does not register services during source verification or isolated acceptance.</p>
+</section><section class="chapter" id="chapter-5"><h2 id="5-establish-vpn-connectivity-to-both-customer-endpoints">5. Establish VPN connectivity to both customer endpoints</h2>
+
+<p>Follow the private Fortinet instructions supplied by the network owner. Use the required client/profile, gateway, certificates and authentication/MFA. Do not invent gateway, routes, DNS or split-tunnel settings. Prestage dependencies if VPN policy blocks NVIDIA GitLab/NVFTP afterward.</p>
+
+<p>Test from the same Windows session/account that runs the applications. Prove BCM and app-server separately:</p>
 
 <pre><code>Get-NetIPConfiguration
 Get-NetRoute -AddressFamily IPv4
 Resolve-DnsName &lt;BCM_HEAD_NODE&gt;
 Resolve-DnsName &lt;APP_SERVER&gt;
-Test-NetConnection &lt;BCM_HEAD_NODE&gt; -Port &lt;APPROVED_SSH_PORT&gt;
-Test-NetConnection &lt;APP_SERVER&gt; -Port &lt;APPROVED_SERVICE_PORT&gt;
-ssh &lt;APPROVED_SSH_ALIAS&gt; hostname
+Test-NetConnection &lt;BCM_HEAD_NODE&gt; -Port &lt;APPROVED_BCM_SSH_PORT&gt;
+Test-NetConnection &lt;APP_SERVER&gt; -Port &lt;APPROVED_APP_SERVER_PORT&gt;
+ssh.exe -o StrictHostKeyChecking=yes &lt;APPROVED_BCM_ALIAS&gt; hostname
+ssh.exe -o StrictHostKeyChecking=yes &lt;APPROVED_APP_SERVER_ALIAS&gt; hostname
 </code></pre>
 
-<p>Keep private addresses, route output and identities in the private evidence directory. Run the supplied remote Linux preflight using the parameters shown by its help/source; record OS, architecture, available storage and runtimes. Inspect existing listeners and service names before assigning ports.</p>
+<p>Replace placeholders using the private site plan. Obtain SSH fingerprints independently; use approved keys/ACLs and <code>ProxyJump</code> when required. A TCP success does not prove identity, scheduler rights, collector access or throughput. Keep addresses, route output and credentials outside Git.</p>
 
-<h3 id="ui-access-by-local-ssh-forward">UI access by local SSH forward</h3>
+<p>Windows-initiated pull/SSH/tunnel paths do not automatically provide a customer-to-Windows callback route. Native Observability binds its receivers to loopback: collectors need an approved authenticated tunnel/gateway or an independently reviewed ingress design. Prove the exact telemetry direction before enrollment; do not turn the VM into a general router or expose unauthenticated receivers broadly.</p>
+</section><section class="chapter" id="chapter-6"><h2 id="6-assemble-and-qualify-rack-status-and-the-p2p-console">6. Assemble and qualify Rack Status and the P2P console</h2>
 
-<p>Windows can initiate a local loopback tunnel through the VPN to a remote loopback web service. This avoids requiring a callback from the customer cluster into Windows for browser access:</p>
+<p>The source export from the actual Windows VM is preserved under <code>windows/rack-p2p/adapters/</code>. It contains native Rack modifications, PythonCM support/reference helpers and Windows console/proxy code; Linux-only compatibility files are identified separately. The builder verifies the exact packaged base, immutable export, native guard patch, matching static UI and wheelhouse before producing a fresh version. Customer inventory, installed secrets, logs and cache are excluded.</p>
 
-<pre><code>ssh -N -L 127.0.0.1:&lt;LOCAL_UI_PORT&gt;:127.0.0.1:&lt;REMOTE_UI_PORT&gt; &lt;APPROVED_SSH_ALIAS&gt;
+<p>Read <code>windows/rack-p2p/OPERATIONS.md</code> and set the actual approved Python path:</p>
+
+<pre><code>Set-Location C:\OVA\repository\windows\rack-p2p
+$python = Join-Path $env:LOCALAPPDATA 'OVA\Python312\python.exe'
+&amp; $python .\build_runtime.py --verify-only
+&amp; $python .\build_runtime.py --destination C:\OVA-Versions\rack-p2p-v1
+&amp; $python .\acceptance.py --runtime-root C:\OVA-Acceptance\native-rack-p2p-unique
 </code></pre>
 
-<p>Keep the SSH session open while using the UI. Select distinct local ports and verify the TLS identity. Changing only a local port cannot resolve two backend services bound to the same remote port. Browser access and telemetry delivery are separate network flows: an SSH UI forward does not configure exporter push routes.</p>
-</section><section class="chapter" id="chapter-7"><h2 id="7-offline-staging-and-transfer">7. Offline staging and transfer</h2>
+<p>The revision02 official isolated acceptance passed all 21 checks with exit 0 on native Windows. It created fresh environments, installed only staged hashed wheels with no package index, checked dependencies and exercised native kernel locks, TLS/WebSocket handling, ConPTY, the PythonCM workflow guard and a loopback mock Manager proxy boundary. The TLS/WebSocket suite lasted 46.230 seconds, including the complete 45-second stability wait. Canonical build-receipt ordering is a separate metadata comparison; this result does not claim a cross-platform receipt-hash match. It does not register services, copy installed VM state, create a real BCM execution session or contact the customer cluster.</p>
 
-<p>Choose the backend OS/CPU/ABI before selecting wheels or binaries. Windows Python wheels do not install into Linux, and Linux wheels do not make a Windows service native. Record archive hashes and platform compatibility for each dependency.</p>
+<p>The native backend serves through Cheroot; the shared source dependency list's Gunicorn entry is not a Windows serving claim. Real kernel locks and ConPTY preserve concurrency/process behavior rather than bypassing unsupported POSIX calls. For configured startup, inspect the assembled Rack <code>windows/Start-RackStatus.ps1</code> and the export's private site configuration contract. Full application authentication, SSH terminal behavior and service-account identity require their own configured acceptance.</p>
 
-<p>Use the supplied transfer helper to create a new versioned remote staging directory and verify the transferred ZIP:</p>
+<h3 id="pythoncm-inventory-is-not-pythoncm-workflow-submission">PythonCM inventory is not PythonCM workflow submission</h3>
 
-<pre><code># Use $Provenance loaded from the matching publication in section 5.
-.\scripts\Send-Release.ps1 -SshAlias &lt;APPROVED_SSH_ALIAS&gt; `
-  -BundleZip C:\OVA\downloads\OVA-MONOREPO-WINDOWS-control-sanitized-20261106.zip `
-  -ExpectedSha256 $Provenance.sanitized_control.sha256 `
-  -ReleaseId &lt;UNIQUE_RELEASE_ID&gt;
+<p>The Windows process uses trusted SSH and matching SDK helpers on the BCM head, rather than importing a version-locked SDK locally. Exported evidence distinguishes successful read-only inventory from failed ProgramRunner execution-session-cookie validation. The reviewed workflow also omitted explicit environment, launch-mode and execution-user forwarding.</p>
+
+<p>The assembled derivative therefore rejects PythonCM workflow submission before <code>submit</code> with no override switch. This preserves inventory while failing closed on the unqualified execution path. Low-level helper presence does not authorize its use. ProgramRunner fanout does not provide Slurm GPU/GRES/exclusive allocation semantics; Slurm comments are not a PythonCM workload contract. Review the exact patch/provenance and regression evidence before changing this boundary.</p>
+
+<h3 id="p2p-placement-exception">P2P placement exception</h3>
+
+<p>The Windows console serves the matching static UI and forwards Manager HTTP API requests through an existing trusted SSH tunnel. It does not run Manager, scheduler, PostgreSQL, Redis, seeds or origin natively. Those components retain Linux placement on the designated app-server/cluster infrastructure. A successful mock proxy or console page does not establish real Manager login, seed-to-peer bytes or a native Windows core.</p>
+
+<p>For the historical basic Dragonfly deployment, use the dedicated minimal-profile handoff and keep its patched Manager provenance. Do not invoke Rack's older full-stack P2P provisioning action to overwrite it. NGC, MinIO, models and GPU allocations are not prerequisites for the public basic console. Optional advanced object storage has independent dependencies. Keep the explicit Linux-core exception in the handover until the architecture requirement is resolved.</p>
+</section><section class="chapter" id="chapter-7"><h2 id="7-start-the-native-observability-core">7. Start the native Observability core</h2>
+
+<p><code>windows/observability/</code> stages official Windows x64 Grafana OSS 11.1.4, Prometheus 2.54.1, Loki 3.5.12 and Alloy 1.5.1 archives. They are compatibility pins from the source delivery, not claims about current vendor releases. The profile verifies archives and executable identities before launch; startup performs no downloads.</p>
+
+<pre><code>Set-Location C:\OVA\repository\windows\observability
+&amp; $Python .\native_core.py verify
+.\Test-NativeObservability.ps1 `
+  -RuntimeRoot C:\OVA-Acceptance\observability-unique `
+  -ReportPath C:\OVA-Acceptance\observability-unique-result.json `
+  -PortBase 19000 -PythonExe $Python
 </code></pre>
 
-<p>This copies and verifies; it does not extract or install. Preserve LF endings and executable modes for Linux scripts. On the designated Linux staging host, extract the control tree, verify it and unpack selected tool ZIPs to separate working directories using the supplied <code>unpack_toolkit.py</code> helper. Keep external Observability payloads in a sibling payload directory and verify both the outer archive and its internal inventory.</p>
+<p>Acceptance starts fresh native processes, checks readiness/authenticated Grafana, posts a real metric through Alloy into Prometheus, posts a log through Alloy into Loki, queries both, checks the core dashboard/datasources, restarts the same runtime and rechecks retained data. Revision03's actual Windows receipt establishes all seven checks passed, with no owned process/listener left behind. It uses synthetic local telemetry and no customer discovery. Loki required bounded forced-stop fallback in both cycles: restart persistence passed, but graceful Loki shutdown is unqualified.</p>
 
-<p>A URL in a lock file is not an offline payload. Reconcile every selected dependency before entering an environment with no internet access. Container images do not supply a host driver, a container engine, site certificates or OS packages automatically.</p>
-</section><section class="chapter" id="chapter-8"><h2 id="8-commission-the-six-components">8. Commission the six components</h2>
+<p>After isolated acceptance and approved private configuration, start a separate persistent runtime:</p>
 
-<p>This section records the historical release commissioning procedure for reference. It is not authorization to move backends to Linux or enable virtualization. Under the confirmed native-only requirement, first inventory the deployed Windows services with section 14; execute only the steps compatible with the measured native implementation and approved site scope. Record incompatible Linux installation steps as gaps.</p>
+<pre><code>.\Start-NativeObservability.ps1 -RuntimeRoot C:\OVA-Runtime\observability -PortBase 18000 -PythonExe $Python
+# Open http://127.0.0.1:18001 on the Windows VM.
+.\Stop-NativeObservability.ps1 -RuntimeRoot C:\OVA-Runtime\observability -PythonExe $Python
+</code></pre>
 
-<p>The order below reduces confusion during initial acceptance. It is an operational sequence; it is not a claim that every tool depends on every preceding tool.</p>
-
-<h3 id="81-establish-management-foundation">8.1 Establish management foundation</h3>
-
-<p>Confirm approved service placement, trusted SSH, persistent storage, time synchronization and compatible runtimes. Create separate working/state/log locations. Confirm ownership and backup destinations. Record existing jobs/services before changes. Keep cluster inventory and credentials out of the repository.</p>
-
-<h3 id="82-observability">8.2 Observability</h3>
-
-<p>Read the included Observability handoff and dependency manifest. Load the exact platform-matched images/binaries/plugin/wheels using its documented offline route. Start with explicit empty discovery and verify authenticated dashboard access. Add one approved exporter/source, then check timestamps, labels, metric/log arrival, error logs and the intended node identity.</p>
-
-<p>The current stack uses Linux services such as Prometheus, Loki, Grafana and Alloy. Do not run its Bash setup script in native PowerShell as if it were a Windows installer. A central Windows-hosted deployment needs its own validated runtime plan. Exporters remain near the data they observe. If pushing to a Windows-side endpoint, prove the approved return route and receiver access; a VPN initiated by Windows does not inherently grant cluster-initiated inbound connectivity.</p>
-
-<h3 id="83-rack-status">8.3 Rack Status</h3>
-
-<p>Read the exact delivered source identity and configuration reference. Configure the approved BCM/SSH/API endpoints and prebuilt SPA using its own handoff. Verify authentication, read-only inventory, node naming and freshness first. Keep disruptive actions and automated workflows disabled until scoped commissioning succeeds.</p>
-
-<p>Revision02's Rack Status has an optional Windows desktop shell. The shell is a client and does not establish native compatibility of the Flask backend, Unix locking or Linux management commands. If PythonCM is selected instead, record the replacement source/version and repeat backend, authentication and cluster integration acceptance for that implementation.</p>
-
-<h3 id="84-ova-collection-framework">8.4 OVA Collection Framework</h3>
-
-<p>Configure a minimal explicit source set before applying the deployment plan. Applying the provided plan performs collection passes and enables timers/services; the release does not provide a paused installer. Preserve its durable state and output data when updating.</p>
-
-<p>Register exact approved config/validation paths and the intended cluster/epoch identity. Establish durable scheduler completion/accounting and source retention before the first scoped job. Confirm file permissions, exact-byte capture, one restart/replay path and independent reconciliation against scheduler inventory. The collector cannot recover deleted source bytes. Arrays, heterogeneous/federated jobs and oversized/unstable remote files require the adapters and limits described in its source documentation.</p>
-
-<h3 id="85-basic-p2p">8.5 Basic P2P</h3>
-
-<p>Use the dedicated minimal Dragonfly profile. The documented chain is PostgreSQL 16 and Redis, then Manager, scheduler, seed and a scoped peer, with the web console/API behind nginx HTTPS. Read the included P2P <code>agent_handoff.md</code> and use its ordered render, preflight, image-load and console-check helpers.</p>
-
-<p>The release's default console is remote loopback HTTPS port <code>4301</code>; Manager REST port <code>12004</code> is a separate backend endpoint. Forward the console to Windows and verify/trust the certificate using the kit procedure. The supplied initial login is <code>root</code> / <code>dragonfly</code>; change it at first login. This bootstrap web account is distinct from SSH, database and optional object-store identities.</p>
-
-<p>Use a generated synthetic file and a controlled internal origin to verify bytes at a seed and one peer. Record hashes, transfer evidence and actual topology. The preparation canary retained a one-byte origin metadata probe; keep the approved internal origin available. Small-file behavior may differ. Basic core acceptance needs no NGC token, MinIO, model or GPU allocation.</p>
-
-<p>Do not invoke Rack's older <code>nvis-p2p-provision</code> action to install this minimal profile. Its advanced layout and artifact lock are different, and the release carries an explicitly patched Manager derivative. Do not overwrite that derivative with an older locked binary. Qualify Rack-to-P2P endpoint integration separately after both services pass independent acceptance.</p>
-
-<p>The optional dfstore/MinIO/full-object-storage path has additional dependencies and its own handoff. Historical NVIDIA workload catalog/receipt hash disagreements remain gates for the affected payloads; synthetic-file success does not resolve them.</p>
-
-<h3 id="86-auto-action-trigger-and-single-node-tests">8.6 Auto Action Trigger and single-node tests</h3>
-
-<p>Install and configure from its own handoff. The supplied commissioning profile leaves all 13 action/recovery switches disabled. Verify paths, read-only monitoring and result collection before enabling any loop.</p>
-
-<p>For each single-node test define an explicit node, scheduler partition/account, GPU allocation, maximum duration, exact command, output location and cleanup behavior. Inspect the proposed action before execution. Keep drain clearing, daemon restarts and GPU jobs off until that scope is supplied. Record job IDs and distinguish workload failure from collection or transport failure.</p>
-
-<h3 id="87-exemplar-recipe">8.7 Exemplar Recipe</h3>
-
-<p>Select a supported recipe for the actual GPU architecture, precision, scheduler and scale. Pin the official upstream commit and stage the matching container/model assets. Use the included preparation kit and its validation commands; the kit JSON is not a replacement for the upstream CLI's release-specific configuration.</p>
-
-<p>Exemplar's current runtime route uses Linux, Slurm, Enroot/Pyxis and platform-specific GPU/RDMA software. Windows manages preparation/control through approved remote execution. Validate controller access, container launch, per-node assets, fabric and scheduler health before submitting a canary. Use only the requested node/partition/GPU/time limits, retain all outputs and use hardware-specific acceptance criteria. A scheduler exit code alone does not establish performance qualification.</p>
-</section><section class="chapter" id="chapter-9"><h2 id="9-acceptance-evidence-and-release-gates">9. Acceptance evidence and release gates</h2>
+<p>The wrapper securely prompts for the initial <code>ova-admin</code> Grafana password; automated launch may use the documented private environment variable. The secret is not written to source/profile. Existing Grafana credentials are not reset on restart.</p>
 
 <table>
 <thead>
 <tr>
-  <th>Gate</th>
-  <th>Evidence required</th>
-  <th>What it establishes</th>
+  <th>Default loopback port</th>
+  <th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Source integrity</td>
-  <td>Measured source archive hash, exact component revisions, file manifest verification</td>
-  <td>The intended bytes were staged</td>
+  <td><code>18001</code></td>
+  <td>Grafana browser/authenticated API</td>
 </tr>
 <tr>
-  <td>Windows control</td>
-  <td>Actual Windows OS/build, PowerShell/Python/OpenSSH results and helper execution logs</td>
-  <td>Control operations work on that VM</td>
+  <td><code>18002</code></td>
+  <td>Prometheus API and remote-write receiver</td>
 </tr>
 <tr>
-  <td>Central Windows hosting</td>
-  <td>Actual service startup/restart, runtime architecture, persistence and all endpoint flows from Windows-side runtime</td>
-  <td>Requested central placement works for each tested component</td>
+  <td><code>18003</code> / <code>18004</code></td>
+  <td>Loki HTTP / internal gRPC</td>
 </tr>
 <tr>
-  <td>VPN paths</td>
-  <td>Separate DNS/port/trusted SSH results to BCM and app-server; telemetry route results where needed</td>
-  <td>The required network paths work</td>
+  <td><code>18005</code></td>
+  <td>Alloy readiness/metrics</td>
 </tr>
 <tr>
-  <td>Backend offline install</td>
-  <td>Matching platform, no unintended network fetch, package/import/service results</td>
-  <td>Selected runtime dependencies install offline</td>
+  <td><code>18006</code></td>
+  <td>Alloy log receiver <code>/loki/api/v1/push</code></td>
 </tr>
 <tr>
-  <td>Component canary</td>
-  <td>Authenticated UI or bounded workload plus exact outputs/bytes and expected error handling</td>
-  <td>That component's scoped flow works</td>
-</tr>
-<tr>
-  <td>Recovery</td>
-  <td>Service restart, VPN interruption and retained-source replay/backup restore evidence</td>
-  <td>Tested recovery behavior works</td>
-</tr>
-<tr>
-  <td>Site acceptance</td>
-  <td>Named service owners, actual node coverage, unresolved gaps and agreed acceptance criteria</td>
-  <td>The stated operational scope is accepted</td>
+  <td><code>18007</code></td>
+  <td>Alloy metric receiver <code>/api/v1/metrics/write</code></td>
 </tr>
 </tbody>
 </table>
 
-<p>Use precise status labels: <code>STAGED</code>, <code>OFFLINE_INSTALL_VERIFIED</code>, <code>SERVICE_READY</code>, <code>CANARY_PASSED</code> and <code>SITE_ACCEPTED</code>. Each requires its own evidence. Never translate preparation tests into unrun Windows, VPN or customer-cluster passes.</p>
+<p>All bind <code>127.0.0.1</code>; no Windows firewall or VPN listener is opened. Prometheus/Loki/Alloy receivers rely on that loopback boundary and require reviewed authenticated ingress for remote collectors. Discovery starts empty. Add one approved exporter/source and verify timestamps, node/cluster labels and error logs before expansion.</p>
 
-<p>Current source documentation reports preparation tests and Linux offline checks; it explicitly says no Windows VM or customer target was contacted during preparation. This guide does not certify that all six native Windows backends have passed. A Windows CI runner test establishes only the controls and code paths recorded in its report; the actual VM installation needs its own measured evidence. Use the publication's validation record for any additional evidence gathered after retrieval.</p>
-</section><section class="chapter" id="chapter-10"><h2 id="10-daily-operations">10. Daily operations</h2>
+<p>This is a bounded four-service profile with one native-core dashboard. It does not restore/qualify all 106 historical dashboards, Infinity plugin, lake writer/browser or every backend-specific query. Prometheus replaces the original Linux VictoriaMetrics process; preserved datasource UIDs are compatibility aliases, not MetricsQL or VictoriaMetrics API implementations. Local Prometheus retention is two days and Loki retention seven days; production capacity/retention need separate sizing.</p>
 
-<p>Before starting a session, verify the intended VPN profile and target SSH aliases. Check service health, disk usage, retention and collector freshness. Open UI tunnels to the approved endpoints and inspect the selected cluster identity before any action. Keep jobs, distribution campaigns and remediation bounded to the reviewed scope.</p>
+<p>Foreground startup is not unattended supervision. <code>native_core.py serve</code> is the blocking action for a reviewed service wrapper; <code>start</code> returns and is unsuitable as the service executable. Verify process stop/cleanup, account ACLs, restart and reboot behavior before commissioning WinSW/SCM. Bounded process-stop fallback does not prove graceful database shutdown.</p>
+</section><section class="chapter" id="chapter-8"><h2 id="8-prepare-the-native-collection-framework">8. Prepare the native Collection Framework</h2>
 
-<p>After a session, record jobs and operations left running, close local tunnels and disconnect VPN when appropriate. Disconnecting VPN does not stop remote services, collectors or jobs. If services are hosted on the Windows VM, VM shutdown and runtime restart policies determine their availability; test them explicitly before operational handover.</p>
+<p><code>windows/collection/</code> derives the pinned application into a fresh external runtime with an explicit input-hash receipt. It provides real Windows <code>LockFileEx</code> exclusion, SQLite WAL, compressed evidence, Parquet generations, DuckDB and authenticated Waitress browsing. The ten-wheel closure targets CPython 3.12 x64 and installs offline with hashes.</p>
 
-<p>Retain private runtime configuration separately from immutable application source. Back up collection state, dashboard configuration, time-series/log data according to retention requirements, P2P metadata needed for recovery and operator receipts. Backups must be restorable; record a tested restore into an isolated destination.</p>
-</section><section class="chapter" id="chapter-11"><h2 id="11-troubleshooting">11. Troubleshooting</h2>
+<p>Create private settings from the collection schema: explicit Windows data/source paths, unique cluster/epoch identity, browser loopback port and an external token file of at least 32 characters. Keep credentials outside collected roots. Use <code>native_scheduler_enabled: false</code> and disabled remote capture for isolated mirror-mode validation. Read and explicitly acknowledge the native durability boundary before setting <code>native_windows_durability_acknowledged: true</code>.</p>
+
+<pre><code>Set-Location C:\OVA\repository
+.\windows\collection\Prepare-NativeCollection.ps1 `
+  -PythonExe $Python `
+  -VenvDirectory C:\OVA-Runtime\collection-venv-v1 `
+  -RuntimeDirectory C:\OVA-Versions\collection-v1 `
+  -ConfigPath C:\OVA\private\collection.json
+C:\OVA-Runtime\collection-venv-v1\Scripts\python.exe -B `
+  .\windows\collection\tests\test_native_collection.py `
+  --evidence C:\OVA-Acceptance\collection-native-unique.json
+</code></pre>
+
+<p>Preparation verifies wheels, creates a new venv, checks dependencies and derives code. It performs no service registration or customer scan. Revision03 actual Windows acceptance passed all six tests with no skips: synthetic sources and real process locks, concurrent publication/readers, restart journal reuse, redaction, Parquet, authenticated HTTP query/search, byte-verified export and native supervision. A held legacy reader released publication after 0.125 seconds; permanent sharing denial preserved the old bytes. The recorded 0.0-second post-death reacquisition is fixture clock resolution after the child wait, not a total kill-to-release guarantee. Preserve failing receipts as well as successful retests. POSIX preparation checks are explicitly not native Windows acceptance.</p>
+
+<p>Windows may defer lock cleanup after abrupt process death. Acceptance permits reacquisition within five seconds, while exclusion remains immediate when the owner is alive. The implementation retains real kernel locks; there is no no-op production fallback. Immutable generation readers pin a verified regular <code>current.json</code> pointer, avoiding symbolic-link privileges.</p>
+
+<p>File bytes are flushed before <code>MoveFileExW(REPLACE_EXISTING | WRITE_THROUGH)</code> publication. POSIX directory fsync is unavailable; Windows storage power-loss and actual reboot survival remain unqualified. Native supervision replaces Linux timers, but it does not reproduce systemd CPU/memory cgroups; apply a reviewed Windows resource policy if required.</p>
+
+<p>For actual capture, configure approved native mirror roots and/or the narrow trusted-SSH scheduler path. Establish durable accounting/completion sources and source retention before the first scoped job. Test exact-byte coverage against an independent scheduler inventory. Synthetic success does not establish live Slurm capture, array/federation adapters or recovery of bytes deleted before capture. Preserve existing state/checkpoints on upgrade.</p>
+
+<p><code>service_wrapper.py</code> can render an external descriptor around the vetted WinSW binary. Rendering does not register a service. Account ACLs, service lifecycle and reboot commissioning remain separate steps.</p>
+</section><section class="chapter" id="chapter-9"><h2 id="9-configure-one-node-auto-action-control">9. Configure one-node Auto Action control</h2>
+
+<p>The native adapter hosts scheduling, exclusive invocation and receipts on Windows. It invokes the original reviewed <code>actions/launch_job.sh</code> through the head's existing <code>fanout.sh</code> abstraction and a selected <code>clush</code>/<code>pdsh</code> provider. Windows does not fan out directly to GPU nodes or install the upstream watchdog.</p>
+
+<p>Copy <code>windows/auto-action/site.example.json</code> to a private file. Set one exact node and test, reviewed remote root, launcher SHA-256, timeout, fanout provider and external state directory. Keep <code>mode: preview</code> and <code>execute_authorized: false</code> initially.</p>
+
+<pre><code>Set-Location C:\OVA\repository
+&amp; $Python windows\auto-action\controller.py plan --config C:\OVA\private\auto-action.json
+&amp; $Python windows\auto-action\controller.py cycle --config C:\OVA\private\auto-action.json
+&amp; $Python windows\auto-action\controller.py render-task `
+  --config C:\OVA\private\auto-action.json `
+  --python $Python `
+  --output C:\OVA\private\auto-action-task.xml
+</code></pre>
+
+<p>Preview uses the original launcher's explain/test-selection path without submission. The generated task is disabled and unregistered. Review account/configuration before explicitly registering and enabling it during commissioned operations.</p>
+
+<p>Execution requires the private authorization flag and invokes the real test path, which can drain the selected node on failure. Define GPU/node/runtime/privilege/cleanup scope first. The adapter does not enable fleet recovery or clear existing drains. SSH error, timeout or missing completion marker is recorded as uncertain; later cycles refuse to replay unresolved attempts because remote work may already exist. Inspect scheduler/results before resolving an attempt; do not delete state to hide uncertainty. A successful transport exit does not prove the GPU test passed.</p>
+</section><section class="chapter" id="chapter-10"><h2 id="10-prepare-exemplar-recipes-and-payloads">10. Prepare Exemplar recipes and payloads</h2>
+
+<p>Native preparation validates the original schema and supported scale arithmetic, pins upstream identity and verifies actual local payload bytes. It separately validates remote Linux destination paths, rather than interpreting them as Windows filesystem paths.</p>
+
+<pre><code>Set-Location C:\OVA\repository
+&amp; $Python windows\exemplar\build_helper.py C:\OVA-Versions\exemplar-preparation-v1
+&amp; $Python C:\OVA-Versions\exemplar-preparation-v1\prepare.py validate-config C:\OVA\private\exemplar-site.json
+&amp; $Python C:\OVA-Versions\exemplar-preparation-v1\prepare.py manifest C:\OVA\payload C:\OVA\private\payload-manifest.json
+&amp; $Python C:\OVA-Versions\exemplar-preparation-v1\prepare.py verify C:\OVA\payload C:\OVA\private\payload-manifest.json
+</code></pre>
+
+<p>Select the exact supported GPU architecture, precision, recipe and scale; pin matching source/container/model assets. NGC/Hugging Face credentials are needed only for the selected protected assets and remain private file references. Windows helper success does not establish a workload's upstream support or installation closure.</p>
+
+<p>Use the original component handoff for SSH-controlled Linux installation and Slurm/Enroot/Pyxis execution. Verify recipient hashes, executable modes and any symbolic links on Linux before launch. Scope the first GPU canary by node, partition/account, GPU count, duration and output destination. Keep GPU compute and bulk peer traffic inside the cluster. A scheduler exit code does not by itself establish performance qualification.</p>
+</section><section class="chapter" id="chapter-11"><h2 id="11-connect-the-existing-windows-agent-and-retain-evidence">11. Connect the existing Windows agent and retain evidence</h2>
+
+<p>Direct coordination uses the configured Codex app-server endpoint and existing thread. Do not create GitLab issues or repository files as an agent-message transport. Code publication to GitLab is a separate activity. Use the endpoint, authentication mechanism and thread identity supplied through the approved session; do not guess or expose an app server publicly.</p>
+
+<p>The inspected CLI 0.166.0 supports:</p>
+
+<pre><code>codex queue --remote &lt;APP_SERVER_ENDPOINT&gt; `
+  --remote-auth-token-env &lt;TOKEN_ENVIRONMENT_VARIABLE_NAME&gt; `
+  --thread &lt;EXISTING_THREAD_UUID_OR_EXACT_NAME&gt; `
+  --message "Please run the agreed read-only OVA native Windows audit."
+</code></pre>
+
+<p><code>--resume</code> separately attempts thread execution. Preserve the existing agent's ownership and installed state. Request source-only adapter exports with manifests, redacted runtime receipts, executable/service identities, exact upstream/derived hashes and per-tool placements. Do not copy private configuration, keys, state databases, inventories or logs wholesale into shared artifacts.</p>
+
+<p>Each acceptance report must name host OS/build, interpreter/runtime version, source/adapter identity, exact check and result, cleanup outcome, excluded scope and evidence destination. Native process startup, isolated synthetic acceptance, service commissioning and customer end-to-end acceptance are distinct gates.</p>
+</section><section class="chapter" id="chapter-12"><h2 id="12-operations-rollback-and-handover">12. Operations, rollback and handover</h2>
+
+<p>Check VPN state, endpoint aliases, service identity, source freshness, disk/retention and collector labels before a session. Keep runtime configuration private and separate from immutable source. Back up collection state, Grafana configuration/credential database, telemetry data and required P2P metadata using the component's consistent backup procedure; prove restore into an isolated destination.</p>
+
+<p>Stage updates into new version directories, verify input/output receipts and preserve existing state. Test one component/canary before expansion. Rollback code/configuration only through the component's supported path; database/schema downgrades may require an appropriate backup. Do not reset collector identity, job IDs or checkpoints to hide gaps.</p>
+
+<p>Disconnecting VPN or closing a browser does not cancel existing jobs or stop remote services. Native foreground processes and optional wrappers have different lifetimes; record what remains running. Stop only owned processes with the supplied profile controls. Do not use blanket scheduler cancellation, drain clearing or unrelated service restarts as cleanup.</p>
+
+<p>The installed-state handover records exact source/adapter hashes; Windows OS/build; real service/executable paths; native versus remote placement; listener/tunnel map; private configuration/credential locations without contents; persistent state/backup roots; collector/node scope; test and job IDs; acceptance gaps; owner; update and rollback instructions. Keep the P2P Linux-core exception, PythonCM execution guard and storage/lifecycle limits explicit.</p>
+</section><section class="chapter" id="chapter-13"><h2 id="13-troubleshooting-by-boundary">13. Troubleshooting by boundary</h2>
 
 <table>
 <thead>
 <tr>
   <th>Symptom</th>
-  <th>Check first</th>
-  <th>Next action</th>
+  <th>Discriminating check</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>NVFTP fails after VPN connection</td>
-  <td>VPN proxy/route policy and pre-staged payload inventory</td>
-  <td>Use the approved access path or stage packages before VPN; retain checksum verification</td>
+  <td>Native import or wheel failure</td>
+  <td>Actual CPython 3.12 x64 interpreter and fully materialized Windows wheelhouse; Linux wheels and embedded 3.14 controls are different runtimes</td>
 </tr>
 <tr>
-  <td>BCM works, app-server fails</td>
-  <td>Separate DNS, route, port and identity for app-server</td>
-  <td>Resolve the specific path with the network/cluster owner</td>
+  <td>Hash or adapter build mismatch</td>
+  <td>Exact manifest/base/export/patch identity; do not edit pins to conceal changed input</td>
 </tr>
 <tr>
-  <td>SSH host-key prompt changed</td>
-  <td>Independently supplied fingerprint and intended hostname</td>
-  <td>Resolve identity before continuing; do not disable checking</td>
+  <td>BCM reachable but app-server fails</td>
+  <td>Separate DNS/route/port/identity and VPN ACL for the second endpoint</td>
 </tr>
 <tr>
-  <td>UI unavailable</td>
-  <td>Tunnel process, remote service state, remote listener and local port collision</td>
-  <td>Verify service locally on backend, then reconstruct the correct tunnel</td>
+  <td>Rack inventory works but workflow is rejected</td>
+  <td>Expected PythonCM fail-closed boundary; inventory does not qualify execution-session cookies or task semantics</td>
 </tr>
 <tr>
-  <td>P2P console login fails</td>
-  <td>Correct console endpoint, bootstrap password state and patched Manager provenance</td>
-  <td>Use minimal-kit diagnostics; do not replace its binary with the legacy Rack lock</td>
+  <td>P2P console loads but login/transfer fails</td>
+  <td>Real Manager tunnel/API, Linux core health and actual seed/peer path; mock proxy acceptance is narrower</td>
 </tr>
 <tr>
-  <td>Offline install tries internet</td>
-  <td>Wrong platform wheelhouse, missing dependency or absent offline flag</td>
-  <td>Reconcile exact inventory and documented offline options</td>
+  <td>Native Observability ready but cluster metrics absent</td>
+  <td>Explicit discovery, telemetry direction, approved ingress/tunnel, labels and source permissions</td>
 </tr>
 <tr>
-  <td>Metrics stale</td>
-  <td>VPN direction, exporter/Alloy logs, receiver endpoint, time and labels</td>
-  <td>Trace a single scoped source end to end</td>
+  <td>Collection lock or path failure</td>
+  <td>Match the tested native adapter revision, actual file-object API and canonical Windows path; preserve traces and real exclusion</td>
 </tr>
 <tr>
-  <td>Collection gaps</td>
-  <td>Source retention, permissions, accounting/completion records, identity and size limits</td>
-  <td>Preserve sources and replay; report unresolved gaps explicitly</td>
+  <td>Collection gaps after restart</td>
+  <td>Source retention, accounting/completion inventory, durable identity, size limits and reported gaps; no recovery promise for deleted bytes</td>
 </tr>
 <tr>
-  <td>Wrong node appears</td>
-  <td>Retained example inventory, discovery labels or wrong cluster alias</td>
-  <td>Correct private configuration before expanding coverage</td>
+  <td>Auto Action state is uncertain</td>
+  <td>Inspect the remote scheduler and completion evidence before any replay; retain the durable attempt record</td>
 </tr>
 <tr>
-  <td>Native Windows import/command fails</td>
-  <td>Unix-only dependency or Linux executable</td>
-  <td>Use an approved validated runtime or complete the required port; record the compatibility failure</td>
+  <td>Foreground test passes but service fails</td>
+  <td>Service account/profile ACL, explicit interpreter, wrapper variant, SSH identity, environment and actual restart/reboot behavior</td>
 </tr>
 </tbody>
 </table>
-</section><section class="chapter" id="chapter-12"><h2 id="12-updates-rollback-and-handover">12. Updates, rollback and handover</h2>
+</section><section class="chapter" id="chapter-14"><h2 id="14-historical-delivery-and-reference-material">14. Historical delivery and reference material</h2>
 
-<p>Stage each new release beside the old one and verify its manifests before changes. Compare source revisions, runtime dependencies and configuration schema. Back up persistent state and record current service/configuration paths. Update one scoped component first and rerun its acceptance flow before expanding.</p>
+<p>The original revision02 six-tool bundle was designed for native Windows staging/SSH/browser control with Linux backends. Its <code>control/agent_handoff.md</code> and tool handoffs remain versioned references, not the primary native profile installation instructions. Do not deploy heavy Linux backends or enable virtualization to make a native-only acceptance appear complete.</p>
 
-<p>Rollback application binaries/configuration only through the component's supported procedure. Do not assume a database/state schema can be downgraded. Restore an appropriate backup into an isolated destination when required. Preserve collector identity, checkpoints and captured payloads; do not reset state or job IDs to hide gaps.</p>
+<p>The historical Linux Observability dependency packs and image-based stack do not execute natively on Windows. The new Windows core has the explicit feature/datasource limits in section 7. Historical full-object-store P2P, Rack provisioning actions and selected NVIDIA workload payloads retain independent gates; synthetic core checks do not qualify those optional paths.</p>
 
-<p>The private handover report should include release ID and hashes; component repositories/commits; Windows OS/build; exact backend placements and runtime versions; approved endpoint aliases; service/listener/tunnel mappings; configuration and credential file locations without values; state and backup paths; collector/node coverage; test/job IDs; measured results; skipped checks; known limits; rollback procedure; and responsible service owners.</p>
-</section><section class="chapter" id="chapter-13"><h2 id="13-source-and-reading-order">13. Source and reading order</h2>
+<p>Read <code>windows/README.md</code>, each native profile's README/OPERATIONS document and exact dependency/validation manifest before execution. The original framework documentation still determines cluster-side recipe semantics, collection capture limits and thin-node prerequisites. Keep documentation and evidence tied to the actual installed revision.</p>
 
-<p>The working control delivery is under <code>control/</code>; unpacked component sources and the additional PythonCM snapshot are under <code>components/</code>. This guide and its PDF are under <code>docs/</code>. Run root helper commands from the extracted sanitized control bundle or from <code>control/</code> in the checkout, not from the repository root. Keep the verified <code>control/</code> tree unchanged after its publication manifests are generated. Provenance records distinguish the original source hashes from any sanitized derivative published here.</p>
+<p>Original distribution: <a href="https://nvftp.nvidia.com/file-explorer/8250a39b-4b0d-47dd-ae22-27b0db9a4618/nvidia-space/shared/IREN_MKZ">NVFTP IREN_MKZ</a>. Source publication: <a href="https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS">NVIDIA OVA Monorepo Windows</a>.</p>
 
-<p>Start with the published repository README and validation report, then the original release <code>agent_handoff.md</code>, <code>RELEASE_INVENTORY.json</code>, <code>DEPENDENCIES.json</code>, <code>FILE_MANIFEST.json</code> and <code>docs/artifact-index.md</code>. Read <code>docs/windows-vpn-runbook.md</code> and <code>docs/airgap-and-acceptance.md</code> before site work. Each component has its own ZIP and handoff; those exact versioned instructions determine installation commands and supported options.</p>
-
-<p>Original distribution: <a href="https://nvftp.nvidia.com/file-explorer/8250a39b-4b0d-47dd-ae22-27b0db9a4618/nvidia-space/shared/IREN_MKZ">NVFTP IREN_MKZ</a>.</p>
-
-<p>Requested repository destination: <a href="https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS">nvis-ova / OVA-MONOREPO-WINDOWS</a>. Publication status and commit identity belong in the final validation record; this link alone is not proof of a completed push.</p>
-
-<p>For executable commands, use the source files from the checkout. The PDF is an operator reference; placeholders must be replaced with approved private site values before execution.</p>
-</section><section class="chapter" id="chapter-14"><h2 id="14-coordinate-with-the-existing-windows-agent">14. Coordinate with the existing Windows agent</h2>
-
-<p>The user has already deployed through another agent on the Windows VM and requests direct agent coordination. Use the configured Codex app-server endpoint and target thread if available. Do not create a GitLab issue, merge request or repository file as an agent message transport. Publishing the source repository is a separate task.</p>
-
-<p>The local CLI supports a remote queue interface; inspect <code>codex queue --help</code> on the coordinating host and use its documented <code>--remote</code> endpoint and thread arguments for that installed version. Do not guess the app-server address, expose it publicly or weaken its access controls. The actual endpoint/thread or an approved remote execution route is required before a message can be delivered. Preserve the existing agent's state and request read-only evidence first.</p>
-
-<p>For local CLI version 0.166.0, the inspected help establishes this form (replace placeholders and provision the named token environment variable through the approved secret store):</p>
-
-<pre><code>codex queue --remote &lt;APP_SERVER_ENDPOINT&gt; `
-  --remote-auth-token-env &lt;TOKEN_ENVIRONMENT_VARIABLE_NAME&gt; `
-  --thread &lt;EXISTING_THREAD_UUID_OR_EXACT_NAME&gt; `
-  --message "Please run the agreed read-only OVA native Windows inventory."
-</code></pre>
-
-<p><code>--resume</code> is optional: it attempts to resume that thread on the selected server. Queueing a message and resuming execution are separate operations; retain existing thread ownership and do not start duplicate installation work.</p>
-
-<p>Suggested first message to the Windows agent:</p>
-
-<pre><code>Inspect the existing OVA installation on this Windows VM. The user requires
-native Windows only: no WSL, Hyper-V, Linux guest or Linux container runtime.
-Do not reinstall or move services. Report Windows OS/build and the installed
-package/revision. For each of Exemplar, P2P, Rack Status PythonCM, Auto Action
-Trigger, Observability and OVA Collection Framework, report executable path,
-launch command, actual execution host/OS, process/service state, listener,
-configuration path, state directory and dependencies. Redact secret values.
-
-Identify the actual Rack repository/commit and whether RACK_SCHEDULER uses
-pythoncm. Describe VPN connectivity separately to BCM head node and app-server;
-use the supplied private Fortinet instructions and existing trusted SSH aliases.
-Run the read-only inventory helper from the published checkout:
-
-  .\scripts\Get-NativeWindowsDeploymentEvidence.ps1 `
-    -OutputDirectory &lt;FRESH_PRIVATE_EXTERNAL_DIRECTORY&gt; `
-    -BcmHeadNode &lt;APPROVED_BCM_HOST&gt; -AppServer &lt;APPROVED_APP_SERVER&gt;
-
-Run read-only native helper and application smoke checks only. Distinguish a
-Windows client from its backend and distinguish historical Linux fixture checks
-from an actual Windows run. Return logs/results through this app-server thread.
-Keep remediation, drain changes, new workloads and service moves disabled.
-</code></pre>
-
-<h3 id="native-capability-record-to-complete-on-the-vm">Native capability record to complete on the VM</h3>
-
-<table>
-<thead>
-<tr>
-  <th>Capability</th>
-  <th>Source evidence</th>
-  <th>Required actual-VM result</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td>Windows verification, PowerShell, SSH/SFTP and UI access</td>
-  <td>Native control helpers are supplied</td>
-  <td>OS/build, helper execution, hash verification and tunnel/UI log</td>
-</tr>
-<tr>
-  <td>Rack Status PythonCM backend</td>
-  <td>Requested source snapshot added; PythonCM provider exists</td>
-  <td>Native import/start/auth/read-only BCM check; prove no hidden Linux backend</td>
-</tr>
-<tr>
-  <td>P2P Manager/scheduler/seed/peer</td>
-  <td>Delivered minimal profile uses Linux assets</td>
-  <td>Identify native Windows binaries and support; prove synthetic bytes through actual peers</td>
-</tr>
-<tr>
-  <td>Observability core</td>
-  <td>Delivered image/binary packs target Linux</td>
-  <td>Identify native service builds, persistence and authenticated metrics/log ingestion</td>
-</tr>
-<tr>
-  <td>Collection controller</td>
-  <td>Delivered Linux service/hooks and portable preparation checks</td>
-  <td>Native state/storage/collection path or explicit missing port; exact-byte recovery evidence</td>
-</tr>
-<tr>
-  <td>Auto Trigger coordinator</td>
-  <td>Delivered Linux/Bash/Slurm scripts</td>
-  <td>Identify native coordinator and read-only monitoring path; retain disabled actions</td>
-</tr>
-<tr>
-  <td>Exemplar preparation/control</td>
-  <td>Portable preparation helpers plus Linux workload route</td>
-  <td>Native helper results and bounded remote execution path; GPU workloads remain on cluster</td>
-</tr>
-</tbody>
-</table>
-
-<p>Source availability is not a native backend pass. The final installed-state report must resolve every row with measured evidence or an explicit remaining gap.</p>
+<p>Use executable files from the checkout. The PDF is an operator reference; replace placeholders with approved private values and inspect the exact candidate before running commands.</p>
 </section></body></html>

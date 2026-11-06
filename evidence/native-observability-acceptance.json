@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "python_version": "3.12.10",
+  "python_bits": 64,
+  "os": "Windows Server 2025 Standard",
+  "os_build": "26100",
+  "production_commissioned": false,
+  "existing_services_or_jobs_changed": false,
+  "customer_contacted": false,
+  "execution": {
+    "profile": "observability-revision03",
+    "exit_code": 0,
+    "python_version": "3.12.10",
+    "architecture": "AMD64",
+    "os": "Windows-2025Server-10.0.26100-SP0",
+    "pack_sha256": "54cb4c0ef3064f202db9a7b93415593c491aa409a950b1ae4f4c581843b6617e",
+    "native_core_sha256": "da3de31526fa3a070e4db4118feeade3f959b23dafcc879c9a465b643b9ea625",
+    "started_utc": "2026-11-06T04:08:46.376469+00:00",
+    "finished_utc": "2026-11-06T04:10:00.454195+00:00",
+    "production_commissioned": false,
+    "original_failure_retained": true
+  },
+  "acceptance": {
+    "profile": "native-windows-isolated-core",
+    "production_commissioned": false,
+    "customer_cluster_contacted": false,
+    "checks": {
+      "four_process_readiness": "PASS",
+      "grafana_authenticated_api": "PASS",
+      "alloy_to_prometheus_remote_write_query": "PASS",
+      "alloy_to_loki_ingest_query": "PASS",
+      "grafana_dashboard_provisioning": "PASS",
+      "grafana_live_datasource_health": "PASS",
+      "restart_persisted_metrics_logs_and_grafana_identity": "PASS"
+    },
+    "started_utc": "2026-11-06T04:08:46.527057+00:00",
+    "ports": {
+      "grafana": 19001,
+      "prometheus": 19002,
+      "loki": 19003,
+      "loki_grpc": 19004,
+      "alloy": 19005,
+      "logs": 19006,
+      "metrics": 19007
+    },
+    "restart_cleanup": [
+      {
+        "component": "grafana",
+        "status": "stopped",
+        "graceful_control_break": true,
+        "forced_fallback": false
+      },
+      {
+        "component": "alloy",
+        "status": "stopped",
+        "graceful_control_break": true,
+        "forced_fallback": false
+      },
+      {
+        "component": "loki",
+        "status": "stopped",
+        "graceful_control_break": false,
+        "forced_fallback": true
+      },
+      {
+        "component": "prometheus",
+        "status": "stopped",
+        "graceful_control_break": true,
+        "forced_fallback": false
+      }
+    ],
+    "status": "PASS_ISOLATED_NATIVE_CORE",
+    "cleanup": [
+      {
+        "component": "grafana",
+        "status": "stopped",
+        "graceful_control_break": true,
+        "forced_fallback": false
+      },
+      {
+        "component": "alloy",
+        "status": "stopped",
+        "graceful_control_break": true,
+        "forced_fallback": false
+      },
+      {
+        "component": "loki",
+        "status": "stopped",
+        "graceful_control_break": false,
+        "forced_fallback": true
+      },
+      {
+        "component": "prometheus",
+        "status": "stopped",
+        "graceful_control_break": true,
+        "forced_fallback": false
+      }
+    ],
+    "finished_utc": "2026-11-06T04:10:00.333040+00:00"
+  },
+  "post_run": {
+    "owned_processes_remaining": 0,
+    "acceptance_ports_remaining": 0,
+    "extracted_pack_files_unchanged": true
+  },
+  "original_failure_receipt_retained": true,
+  "shutdown_limitation": "Loki required forced fallback on both stop cycles; restart persistence passed, graceful Loki shutdown is not qualified."
+}

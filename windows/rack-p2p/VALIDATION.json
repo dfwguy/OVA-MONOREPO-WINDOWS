@@ -1,0 +1,57 @@
+{
+  "checked_utc": "2026-11-06T04:09:07.770248+00:00",
+  "immutable_adapter_export": {
+    "archive_sha256": "83b3c7200f47ea5fd9cf858b3ef4c03e97327905a8602df6428abd8d967d7444",
+    "regular_files_including_self_manifest": 92,
+    "member_hashes": "PASS",
+    "base_hash_matches": "PASS",
+    "credential_and_private_IP_patterns": "PASS: no findings"
+  },
+  "local_preparation": {
+    "base_and_export_verification": "PASS",
+    "fresh_build_files": 2214,
+    "two_independent_build_receipts_identical": true,
+    "windows_wheels": 78,
+    "pypi_publisher_file_hash_matches": 78,
+    "dependency_metadata_conflicts": 0,
+    "p2p_separate_offline_closure_packages": 16,
+    "pythoncm_guard_tests": "PASS:3 tests; submit never called for PythonCM; Slurm boundary equivalent; modified preimage rejected",
+    "python_compile": "PASS",
+    "revision01_historical_build_receipt_sha256": "6e0c246f32324198d9e2382ae54de074e28b97cf920ca2cefa51c19315e9f123",
+    "revision02_test_cleanup_policy_tests": "PASS:4 tests; normal1000 cleanup only;1006 and unrelated errors still fail; successful close preserved.",
+    "revision02_current_build_receipt_sha256": "9bd8c1987ed6b114721c1cc4577fe151b6021ce270a8448cd6bc2c4d122d60cd",
+    "revision02_two_fresh_build_receipts_identical": true,
+    "revision02_local_receipt_sorting_scope": "Historical local platform-specific Path order. Canonical packaging revision changes receipt ordering only; all2214 application payload hashes remain unchanged.",
+    "current_canonical_linux_receipt_sha256": "aeb3fea1b330e090abad511aa1bda02ea72f4a99e17df7e8f34f10646b29c997"
+  },
+  "fresh_native_windows_offline_venv_runtime_acceptance": "PASS: official revision02 harness on Windows Server2025/CPython3.12.10x64; all21 unit checks and both clean offline venv install/pip-check paths passed. The full45-second TLS/WebSocket stability loop completed.",
+  "export_producer_tests": "Immutable adapters/VALIDATION.json records14 export-only tests performed on Windows; not full fresh-build live commissioning.",
+  "customer_operations_performed": false,
+  "p2p_core_ported_to_windows": false,
+  "pythoncm_workflow_execution_enabled": false,
+  "profile_revision": "20261106-native-rack-p2p-02",
+  "first_actual_windows_attempt": {
+    "result": "FAIL_HARNESS; not blanket PASS",
+    "source": "Actual safe VM receipt: evidence/native-rack-p2p-first-failure.json",
+    "combined_main_and_followup_unit_outcomes": "16 passed,1 error; both fresh venv offline install/pip-check steps passed. Follow-up checks were separate from the stopped main harness.",
+    "failure": "Delayed45s stability fixture stopped before its wait because successful websocket echo cleanup raised ConnectionClosed reason1000 (normal closure).",
+    "derived_test_only_correction": "Accept only normal1000 from websocket.close(); unexpected codes/exceptions, echo/auth/origin gates and the full45s health loop remain intact.",
+    "full_official_harness_rerun": "RESOLVED: revision02 official full harness passed21 unit checks, including the entire delayed45-second stability loop; first failed receipt is retained.",
+    "os_exit_capture": "OS launcher exit code was not retained; FAIL is directly recorded in the original harness receipt, not inferred as a passing run."
+  },
+  "cross_platform_receipt_determinism": {
+    "status": "PASS: actual Windows rebuild-only receipt exactly matches Linux canonical receipt; all2214 payload file records and actual files remain equal to accepted revision02.",
+    "correction": "Generated CAPABILITIES.json and BUILD_RECEIPT.json now explicitly use UTF-8/LF. Previous Windows/Linux receipt differences were attributed to platform newline translation, not an app runtime failure.",
+    "app_runtime_source_changed_by_this_correction": false,
+    "canonical_sort_fix": "ONE output_files sorting expression now uses relative POSIX path strings instead of platform-specific Path ordering.",
+    "linux_canonical_build_receipt_sha256": "aeb3fea1b330e090abad511aa1bda02ea72f4a99e17df7e8f34f10646b29c997",
+    "application_payload_hashes_unchanged": true,
+    "windows_canonical_build_receipt_sha256": "aeb3fea1b330e090abad511aa1bda02ea72f4a99e17df7e8f34f10646b29c997",
+    "actual_windows_receipt": "evidence/native-rack-p2p-canonical-comparison.json",
+    "independent_read_only_review": "evidence/native-rack-p2p-canonical-review.json",
+    "runtime_tests_not_repeated_for_packaging_only_change": true
+  },
+  "actual_windows_acceptance_receipt": "evidence/native-rack-p2p-acceptance.json",
+  "actual_windows_summary_receipt": "evidence/native-rack-p2p-summary.json",
+  "actual_windows_source_binding": "evidence/native-rack-p2p-source-binding.json"
+}

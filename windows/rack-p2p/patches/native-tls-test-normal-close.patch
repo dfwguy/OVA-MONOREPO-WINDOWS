@@ -1,0 +1,15 @@
+--- a/windows/test_server.py
++++ b/windows/test_server.py
+@@ -95,7 +95,11 @@
+             )
+             websocket.send("native-tls-websocket")
+             self.assertEqual(websocket.receive(timeout=3), "native-tls-websocket")
+-            websocket.close()
++            try:
++                websocket.close()
++            except ConnectionClosed as exc:
++                if exc.reason != 1000:
++                    raise
+             connection = http.client.HTTPSConnection(
+                 "127.0.0.1", self.port, context=self.context, timeout=3,
+             )

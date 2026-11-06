@@ -15,6 +15,7 @@ import sys
 import tempfile
 import threading
 import time
+import traceback
 import unittest
 import urllib.error
 import urllib.parse
@@ -24,6 +25,7 @@ sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(HERE))
 import native_locking
+OBSERVATIONS = {}
 from generation_pointer import publish_generation, resolve_generation
 from native_durable import atomic_write
 from build_runtime import build, REPOSITORY
@@ -46,10 +48,10 @@ class NativeCollection(unittest.TestCase):
     def test_actual_crossprocess_lock_and_process_death_release(self):
         path = self.temp / 'writer.lock'
         with path.open('a+b') as stream:
-            native_locking.flock(stream.fileno(), native_locking.LOCK_EX)
+            native_locking.flock(stream, native_locking.LOCK_EX)
             child = subprocess.run([sys.executable, '-B', __file__, '--lock-probe', str(path)], capture_output=True, text=True)
             self.assertEqual(child.returncode, 23, child.stdout + child.stderr)
-            native_locking.flock(stream.fileno(), native_locking.LOCK_UN)
+            native_locking.flock(stream, native_locking.LOCK_UN)
         code = "import sys;sys.path.insert(0,sys.argv[1]);import native_locking as l;f=open(sys.argv[2],'a+b');l.flock(f.fileno(),l.LOCK_EX);print('LOCKED',flush=True);sys.stdin.read()"
         child = subprocess.Popen([sys.executable, '-B', '-c', code, str(HERE), str(path)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         try:
@@ -58,12 +60,25 @@ class NativeCollection(unittest.TestCase):
         finally:
             child.kill()
             child.wait(timeout=15)
+            release_started = time.monotonic()
             child.stdin.close(); child.stdout.close(); child.stderr.close()
-        self.assertEqual(lock_probe(path), 0)
+        # LockFileEx documents resource-dependent OS unlock after process death.
+        # Keep exclusion while alive strict; require real reacquisition within5s.
+        deadline = release_started + 5
+        observed = lock_probe(path)
+        while observed == 23 and time.monotonic() < deadline:
+            time.sleep(min(0.02, max(0, deadline-time.monotonic())))
+            observed = lock_probe(path)
+        elapsed = time.monotonic()-release_started
+        OBSERVATIONS['post_death_lock_reacquisition_seconds'] = elapsed
+        self.assertEqual(observed, 0, 'OS did not release the dead process lock within5seconds.')
+        self.assertLessEqual(elapsed, 5.0, 'Reacquisition exceeded the strict5second acceptance budget.')
 
     def test_atomic_generation_pointer_preserves_pinned_readers(self):
         lake = self.temp / 'lake'
         lake.mkdir()
+        # Windows TEMP may use an8.3alias; production pointer resolves canonical paths.
+        lake = lake.resolve()
         generations = [lake / 'generation-1', lake / 'generation-2']
         for index, generation in enumerate(generations):
             generation.mkdir()
@@ -76,7 +91,7 @@ class NativeCollection(unittest.TestCase):
                 for index in range(40):
                     publish_generation(lake, generations[index % 2])
             except Exception as exc:
-                failures.append(str(exc))
+                failures.append(traceback.format_exc())
         thread = threading.Thread(target=writer)
         thread.start()
         for _ in range(100):
@@ -90,6 +105,51 @@ class NativeCollection(unittest.TestCase):
         (lake / 'current.json').write_text(json.dumps({'generation': '../escape', 'manifest_sha256': '0'*64}))
         with self.assertRaises(ValueError):
             resolve_generation(lake)
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows sharing and read-only attributes')
+    def test_real_held_reader_allows_bounded_atomic_replacement(self):
+        target = self.temp / 'current.json'
+        atomic_write(target, '{"version":1}')
+        failures = []
+        started = threading.Event()
+        def writer():
+            started.set()
+            try:
+                atomic_write(target, '{"version":2}')
+            except Exception:
+                failures.append(traceback.format_exc())
+        # Deliberately retain a legacy CRT reader that lacks FILE_SHARE_DELETE.
+        with target.open('rb') as held:
+            thread = threading.Thread(target=writer)
+            beginning = time.monotonic()
+            thread.start()
+            self.assertTrue(started.wait(1))
+            time.sleep(0.1)
+            self.assertTrue(thread.is_alive(), 'Replacement should wait while a non-delete-sharing reader is open.')
+            self.assertEqual(held.read(), b'{"version":1}')
+            self.assertTrue(target.exists(), 'Atomic replacement must not unlink the old destination.')
+        thread.join(timeout=3)
+        self.assertFalse(thread.is_alive())
+        self.assertFalse(failures, failures)
+        self.assertEqual(target.read_bytes(), b'{"version":2}')
+        OBSERVATIONS['legacy_reader_replacement_seconds'] = time.monotonic()-beginning
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows persistent denial semantics')
+    def test_persistent_access_denied_preserves_old_bytes(self):
+        import stat
+        target = self.temp / 'readonly.json'
+        atomic_write(target, '{"retained":true}')
+        target.chmod(stat.S_IREAD)
+        beginning = time.monotonic()
+        try:
+            with self.assertRaises(PermissionError):
+                atomic_write(target, '{"retained":false}')
+            self.assertTrue(target.exists())
+            self.assertEqual(target.read_bytes(), b'{"retained":true}')
+            self.assertLess(time.monotonic()-beginning, 2.5)
+            OBSERVATIONS['permanent_denial_preserved_bytes'] = True
+        finally:
+            target.chmod(stat.S_IWRITE | stat.S_IREAD)
 
     def test_transport_refuses_mutations_and_disabled_scheduler(self):
         from native_transport import command
@@ -206,6 +266,7 @@ if __name__ == '__main__':
         args.evidence.write_text(json.dumps({'schema_version': 1, 'platform': sys.platform,
             'python': sys.version, 'native_windows': os.name == 'nt', 'tests_run': result.testsRun,
             'failures': len(result.failures), 'errors': len(result.errors), 'passed': result.wasSuccessful(),
+            'observations': OBSERVATIONS, 'skipped': len(result.skipped),
             'scope': 'Synthetic real-process locks, atomic pointers, transport rejection, persistent ingestion, authenticated browser, query/search/export, bounded native supervision',
             'excluded': ['Live customer sources', 'Slurm/VPN commissioning', 'Service installation', 'Reboot/power-loss survival']}, indent=2) + '\n')
     sys.exit(not result.wasSuccessful())

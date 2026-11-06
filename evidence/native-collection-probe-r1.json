@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "profile": "native-collection",
+  "python_version": "3.12.10",
+  "python_bits": 64,
+  "architecture": "AMD64",
+  "os": "Windows Server 2025 Standard",
+  "os_build": "26100",
+  "production_commissioned": false,
+  "customer_contacted": false,
+  "existing_services_or_jobs_changed": false,
+  "pack_sha256": "744ed761cdcbdf8beb291bf9fa8b39e0a1b854234d257d3b9f686fad937a27a9",
+  "exit_code": 1,
+  "status": "FAIL",
+  "tests": {
+    "run": 4,
+    "failures": 3,
+    "errors": 0,
+    "passed": false
+  },
+  "diagnostics": [
+    {
+      "test": "cross-process lock / process death release",
+      "source_location": "tests/test_native_collection.py:62",
+      "observed_error": "AssertionError: 23 != 0",
+      "meaning": "Child-death follow-up still reported lock busy; native lock release acceptance failed."
+    },
+    {
+      "test": "atomic generation pointer",
+      "source_location": "tests/test_native_collection.py:84",
+      "observed_error": "Equivalent long-profile and DOS 8.3 paths compared unequal",
+      "meaning": "Path spelling mismatch in generation membership assertion; no private user paths included."
+    },
+    {
+      "test": "persistent real ingestion",
+      "source_location": "tests/test_native_collection.py:131 -> history.py:283 -> native_locking.py:28",
+      "observed_error": "TypeError: '_io.BufferedRandom' object cannot be interpreted as an integer",
+      "meaning": "Native locking path passed a file object where an integer was required."
+    }
+  ],
+  "passed_check": "Transport mutation and disabled scheduler rejection",
+  "runs": {
+    "initial_exit_code": 1,
+    "fresh_rerun_exit_code": 1,
+    "rerun_reason": "Initial output capture problem; repeated identical unmodified pack once in fresh isolated directories."
+  },
+  "post_run": {
+    "owned_test_python_processes_remaining": 0
+  },
+  "offline_venv_dependencies_only": true,
+  "pack_modified": false,
+  "fixes_applied": false
+}

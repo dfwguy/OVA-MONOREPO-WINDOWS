@@ -1,0 +1,15 @@
+--- a/backend/workflow_engine.py
++++ b/backend/workflow_engine.py
+@@ -870,6 +870,12 @@
+     conn, profile = _resolve_step_connection(step)
+     try:
+         sched = build_scheduler(block.get("kind"), connection=conn, profile=profile)
++        if sched.kind == "pythoncm":
++            raise RuntimeError(
++                "PythonCM workflow execution is disabled: workflow env/launch_mode/"
++                "execution_user forwarding and ProgramRunner lifecycle/session acceptance "
++                "are not qualified. Inventory access is a separate capability."
++            )
+         handle = sched.submit(spec)
+         _logger.info("Workflow %s step %s submitted job %s via %s", run_id, step_id, handle.job_id, sched.kind)
+         result = sched.wait(handle, timeout=spec.timeout)

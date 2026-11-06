@@ -104,7 +104,13 @@ def prepare(root, base):
     acl = subprocess.run(['icacls', str(root), '/inheritance:r', '/grant:r', owner + ':(OI)(CI)F', '*S-1-5-18:(OI)(CI)F'], capture_output=True, text=True)
     if acl.returncode:
         raise RuntimeError('Cannot protect the new runtime directory ACL: ' + acl.stderr)
-    for name in ['config', 'logs', 'data', 'config/targets', 'config/provisioning/datasources', 'config/provisioning/dashboards', 'config/dashboards']:
+    for name in [
+        'config', 'logs', 'data', 'config/targets', 'config/provisioning/datasources',
+        'config/provisioning/dashboards', 'config/dashboards', 'data/prometheus',
+        'data/grafana', 'logs/grafana', 'data/grafana-plugins', 'data/alloy',
+        'data/loki/chunks', 'data/loki/rules', 'data/loki/index',
+        'data/loki/index-cache', 'data/loki/wal', 'data/loki/compactor',
+    ]:
         (root / name).mkdir(parents=True, exist_ok=True)
     executables = {}
     for item in manifest['assets']:

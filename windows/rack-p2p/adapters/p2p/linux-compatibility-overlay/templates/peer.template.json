@@ -1,0 +1,86 @@
+{
+  "console": true,
+  "log": {
+    "level": "info"
+  },
+  "host": {
+    "idc": "example-site-su__SU__",
+    "location": "__RACK__",
+    "hostname": "__HOSTNAME__",
+    "ip": "__NODE_IP__"
+  },
+  "server": {
+    "pluginDir": "/opt/containers/.nvis-p2p/plugins",
+    "cacheDir": "/opt/containers/.nvis-p2p/cache"
+  },
+  "download": {
+    "protocol": "tcp",
+    "server": {
+      "socketPath": "/opt/containers/.nvis-p2p/run/dfdaemon.sock"
+    },
+    "bandwidthLimit": "50GB",
+    "backToSourceBandwidthLimit": "50GB",
+    "pieceTimeout": "90s",
+    "collectedPieceTimeout": "15s",
+    "concurrentPieceCount": 16
+  },
+  "upload": {
+    "server": {
+      "port": 12200,
+      "ip": "__NODE_IP__"
+    },
+    "disableShared": false,
+    "bandwidthLimit": "50GB"
+  },
+  "scheduler": {
+    "announceInterval": "10s",
+    "scheduleTimeout": "3h",
+    "maxScheduleCount": 50
+  },
+  "manager": {
+    "addr": "http://192.0.2.10:12003"
+  },
+  "seedPeer": {
+    "enable": false,
+    "type": "normal"
+  },
+  "dynconfig": {
+    "refreshInterval": "1m"
+  },
+  "storage": {
+    "server": {
+      "tcpPort": 12202,
+      "quicPort": 12203
+    },
+    "dir": "/opt/containers/.nvis-p2p/storage",
+    "keep": true,
+    "writeBufferSize": 1048576,
+    "readBufferSize": 1048576
+  },
+  "gc": {
+    "interval": "900s",
+    "policy": {
+      "taskTTL": "86400s",
+      "distHighThresholdPercent": 95,
+      "distLowThresholdPercent": 90
+    }
+  },
+  "proxy": {
+    "server": {
+      "port": 12201
+    },
+    "rules": [],
+    "registryMirror": {
+      "addr": "https://index.docker.io"
+    },
+    "disableBackToSource": true,
+    "prefetch": false,
+    "readBufferSize": 131072
+  },
+  "metrics": {
+    "server": {
+      "port": 12204,
+      "ip": "__NODE_IP__"
+    }
+  }
+}

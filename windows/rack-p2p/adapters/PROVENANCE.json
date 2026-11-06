@@ -1,0 +1,60 @@
+{
+  "scope": "source-only delta; no deployment or customer state",
+  "rack_status": {
+    "repository": "https://gitlab-master.nvidia.com/nvis/nvis-rack-status",
+    "upstream_commit": "337a25615c083a09f567aed3cf7e848e766b6e84",
+    "source_package_sha256": "1e42423d7737aa6f77acbc8864ab7eb38086a09106a4d345eba6698a52fb3ae7",
+    "modified_ledger_entries": 37,
+    "addition_ledger_entries": 16,
+    "excluded_additions": 3,
+    "older_pythoncm_fork_equivalence": "NOT_VERIFIED; no substitution"
+  },
+  "p2p": {
+    "repository": "https://gitlab-master.nvidia.com/nvis-ova/nvis-p2p",
+    "upstream_commit": "229032db49b40ea011c755f972f4900207473720",
+    "source_package_sha256": "5124c5799237f21d6fa2a90f27d0b4e51f265be398814a73623ac757d8ef0fa8",
+    "windows_scope": "console/proxy only; Manager/scheduler/seed/database/origin are NOT Windows ports",
+    "stale_historical_console_ledger": [
+      {
+        "path": "windows-control/console.py",
+        "old_recorded_sha256": "7593d0b48bf2062cf0dcf7dfc9d11273bf56220e9678701af8c4d95b6d0e6b79",
+        "current_source_sha256": "3497cbbd7164800e6c81e68ffd6c6446f0a2253e21d5d856b9a76f15bdf61882"
+      },
+      {
+        "path": "windows-control/test_console.py",
+        "old_recorded_sha256": "3e84fb4fcd551327a81f4ac7ee20f29a6543a819944e0043dcbe3729bbe6972f",
+        "current_source_sha256": "4e7be63a71f24044f26ddb8bfd16fe21fed8797d15b8b017fcb2b04a10b26600"
+      }
+    ],
+    "preexisting_linux_manager_derivative": {
+      "version": "v2.5.1-iren-authfix.1",
+      "upstream_commit": "5523218a3710b2d5bc8fbdb0b1473d3a4d64916d",
+      "windows_adaptation": false,
+      "binary_exported": false,
+      "version_string_is_pinned_artifact_identity": true
+    }
+  },
+  "windows_runtime_reference": {
+    "python": "3.12.10",
+    "wrapper": "WinSW2.12.0",
+    "wrapper_sha256": "b5066b7bbdfba1293e5d15cda3caaea88fbeab35bd5b38c41c913d492aadfc4f"
+  },
+  "excluded": [
+    {
+      "sanitized_source_relative_path": "windows/check_example.py",
+      "source_sha256": "240c23485f890f97afc1067f902e9a97718706958b397171da0d5da7994548d3",
+      "reason": "customer commissioning/live credential helper; source path label sanitized and source body not exported"
+    },
+    {
+      "sanitized_source_relative_path": "windows/check_live.py",
+      "source_sha256": "92f0091cff0e3ddaefebe6ffc3533e831183fa2bc6d2e267ea2c43a965b30c81",
+      "reason": "customer commissioning/live credential helper; source path label sanitized and source body not exported"
+    },
+    {
+      "sanitized_source_relative_path": "windows/configure_example.py",
+      "source_sha256": "9a4cb8a0e3f050ed0468beba2db35a481e1cab4f172a78e3e397ce6fbe81f378",
+      "reason": "customer commissioning/live credential helper; source path label sanitized and source body not exported"
+    }
+  ],
+  "site_data": "No runtime inventory, credentials, keys, tokens, var/state, logs, job outputs, wheels, EXEs, images, model weights or compiled frontend assets included."
+}

@@ -1,0 +1,35 @@
+{
+  "checked_utc": "2026-11-06T04:42:54.595531+00:00",
+  "builder": "tools/build_windows_release.py",
+  "test_platform": "Linux packaging host; six fixture archives were built and verified. This record does not assert final production archive identity.",
+  "fixture_tests": {
+    "count": 6,
+    "status": "PASS",
+    "scope": [
+      "deterministic ZIP bytes and embedded manifest",
+      "payload tamper rejection",
+      "private runtime path rejection",
+      "raw path normalization/traversal/reserved-name/case collision rejection",
+      "safe internal file symlink materialization",
+      "external/directory/looping symlink rejection"
+    ]
+  },
+  "pre_freeze_read_only_inventory": {
+    "included_files": 4672,
+    "payload_bytes": 2423872806,
+    "largest_member_bytes": 458585088,
+    "max_relative_path_characters": 180,
+    "all_existing_component_manifest_hashes_and_sizes": "PASS",
+    "not_the_final_artifact_inventory": true
+  },
+  "primary_zip_policy": {
+    "all_members_below_bytes": 2000000000,
+    "internal_file_symlinks_materialized": true,
+    "external_directory_looping_or_private_target_symlinks_rejected": true,
+    "root_artifacts_and_git_caches_venvs_node_modules_excluded": true,
+    "legacy_linux_observability_external_packs_excluded_from_primary_zip": true,
+    "native_windows_profile_dependencies_included": true
+  },
+  "final_archive_verification": "Required after build; external SHA256 and provenance sidecars are produced outside repository.",
+  "record_scope": "Pre-build release-tool validation. The final artifact identity and verification are recorded by external release sidecars and the GitLab download index."
+}

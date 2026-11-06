@@ -6,7 +6,7 @@
   "overall_status": "NATIVE_SIX_BACKEND_ACCEPTANCE_NOT_ESTABLISHED",
   "existing_windows_vm_deployment": "Reported by operator and connected Windows agent: adapted nvis/nvis-rack-status based on commit337a25615c083a09f567aed3cf7e848e766b6e84; adapter export/runtime evidence pending reconciliation",
   "windows_control_layer": {
-    "status": "NATIVE_RUNTIME_CI_PREPARED",
+    "status": "NATIVE_RUNTIME_CI_PASSED",
     "entrypoint": "tests/Test-WindowsControls.ps1",
     "scope": "PowerShell parsing, bundled native Python, manifests, all six source ZIP extractions, mocked SSH/SFTP guard checks",
     "does_not_prove": [
@@ -14,7 +14,10 @@
       "Live transport",
       "Six backend runtimes",
       "Cluster functional acceptance"
-    ]
+    ],
+    "commit_sha": "9c6b15938e2430dad78c3e194e92d05873b2581a",
+    "job_url": "https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS/-/jobs/531758252",
+    "evidence": "evidence/windows-control-ci.json"
   },
   "tools": [
     {
@@ -118,8 +121,23 @@
           "finding": "Installer creates 13 systemd units"
         }
       ],
-      "required_resolution": "Reconcile Windows implementation of atomic durable storage, writer exclusion, service/timer supervision and remote Slurm reads; validate capture completeness and restart recovery on the real VM."
+      "required_resolution": "Reconcile Windows implementation of atomic durable storage, writer exclusion, service/timer supervision and remote Slurm reads; validate capture completeness and restart recovery on the real VM.",
+      "native_adapter": {
+        "path": "windows/collection",
+        "status": "ISOLATED_NATIVE_ACCEPTANCE_PASSED",
+        "host": "WindowsServer2025",
+        "python": "CPython3.12.10 x64",
+        "tests_run": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "pack_sha256": "43919a233b15bcb56af0e3aa8ab0a4db4a5e85850af3c1dc88b543a5aeab818b",
+        "evidence": "evidence/native-collection-summary.json",
+        "source_binding": "evidence/native-collection-source-binding.json",
+        "live_site_commissioning": false
+      }
     }
   ],
-  "next_action": "Obtain the existing Windows agent endpoint/session or export its deployed code and per-tool service evidence, then reconcile and execute native acceptance against the resulting exact commit."
+  "next_action": "Obtain the existing Windows agent endpoint/session or export its deployed code and per-tool service evidence, then reconcile and execute native acceptance against the resulting exact commit.",
+  "assessment_scope": "Imported baseline snapshots; new native adapter acceptance is recorded separately and does not mutate those original source findings"
 }

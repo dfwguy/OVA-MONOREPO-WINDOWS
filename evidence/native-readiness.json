@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-06T04:47:44.747825+00:00",
+  "software_stage_status": "WINDOWS_COMPONENT_PROFILES_ACCEPTED_WITH_EXPLICIT_CAPABILITY_LIMITS",
+  "production_commissioning": "PENDING",
+  "all_six_full_backends_native_windows": false,
+  "linux_virtualization_used_on_windows": false,
+  "native_test_hosts": {
+    "actual_vm": "WindowsServer2025 build26100, CPython3.12.10 x64",
+    "control_ci": "WindowsServer2019, PowerShell5.1, bundled CPython3.14.10 x64"
+  },
+  "tools": [
+    {
+      "name": "Exemplar recipe",
+      "status": "NATIVE_PREPARATION_BOUNDARIES_ACCEPTED",
+      "accepted_scope": "Native preparation helper and upstream configuration/integrity gates; mocked remote execution boundary",
+      "evidence": [
+        "evidence/native-orchestration-acceptance.json",
+        "evidence/windows-control-ci-summary.json"
+      ],
+      "pending": "Selected recipe/image/model/GPU/partition/node/time scope and real cluster execution"
+    },
+    {
+      "name": "P2P",
+      "status": "WINDOWS_CONSOLE_PROXY_ACCEPTED_CORE_NOT_NATIVE",
+      "accepted_scope": "Real loopback Windows console/proxy fixture with a mock Manager;6 gateway unit tests in the21-test native Rack/P2P run",
+      "native_manager_scheduler_seed_database_core": false,
+      "evidence": [
+        "evidence/native-rack-p2p-acceptance.json",
+        "evidence/native-rack-p2p-summary.json"
+      ],
+      "pending": "Actual Manager/core integration and seed-to-peer transfer; shipped Dragonfly core remains Linux and is not certified as native Windows"
+    },
+    {
+      "name": "Rack Status / PythonCM capability",
+      "status": "FRESH_NATIVE_OFFLINE_ADAPTER_CHECKS_ACCEPTED",
+      "accepted_scope": "Native kernel locks, TLS/WebSocket with full45second stability, ConPTY and fail-closed PythonCM workflow boundary;21 combined native unit tests",
+      "evidence": [
+        "evidence/native-rack-p2p-acceptance.json",
+        "evidence/native-rack-p2p-summary.json",
+        "evidence/native-rack-p2p-source-binding.json"
+      ],
+      "pending": "Live configured BCM/PythonCM inventory and execution-session lifecycle; PythonCM workflow submission stays disabled"
+    },
+    {
+      "name": "Auto action trigger / single-node tests",
+      "status": "NATIVE_ORCHESTRATION_BOUNDARIES_ACCEPTED",
+      "accepted_scope": "Durable claims, uncertainty/replay guards, disabled Task Scheduler output and native controller construction;9 combined Auto Action/Exemplar tests",
+      "evidence": [
+        "evidence/native-orchestration-acceptance.json",
+        "evidence/windows-control-ci-summary.json"
+      ],
+      "pending": "Approved actual node/test/time scope and live execution; remediation and scheduled execution remain disabled by default"
+    },
+    {
+      "name": "Observability",
+      "status": "ISOLATED_NATIVE_CORE_ACCEPTED",
+      "accepted_scope": "Four real Windows processes; authenticated Grafana API, metrics and log ingestion/query, provisioning and persisted restart identity;7 end-to-end checks",
+      "evidence": [
+        "evidence/native-observability-acceptance.json"
+      ],
+      "pending": "Approved real collector targets, label/freshness checks, persistent service commissioning and graceful Loki stop qualification",
+      "limitation": "Loki required forced fallback during isolated stops; persistence passed but graceful Loki shutdown is not qualified"
+    },
+    {
+      "name": "OVA collection framework",
+      "status": "ISOLATED_NATIVE_COLLECTION_ACCEPTED",
+      "accepted_scope": "Six actual Windows tests: real crossprocess/death-release locks, concurrent pointer publication, held-reader sharing, permanent denial preservation, persistent ingest/restart/redaction, authenticated query/search/export and bounded supervision",
+      "evidence": [
+        "evidence/native-collection-summary.json",
+        "evidence/native-collection-source-binding.json"
+      ],
+      "accepted_pack_sha256": "43919a233b15bcb56af0e3aa8ab0a4db4a5e85850af3c1dc88b543a5aeab818b",
+      "pending": "Actual configured scheduler/mirror/collector source coverage, private deployment identity/ACLs, service registration and reboot/power-loss qualification"
+    }
+  ],
+  "source_qualification": {
+    "control_ci_commit": "9c6b15938e2430dad78c3e194e92d05873b2581a",
+    "control_ci_job_url": "https://gitlab-master.nvidia.com/nvis-ova/OVA-MONOREPO-WINDOWS/-/jobs/531758252",
+    "final_syntax_snapshot": "evidence/final-source-syntax.json",
+    "code_snapshot_sha256": "b0ee07312f9d9b43d840119e3902c6b5653ab09cbdb5c622ed0e1165c721cf8a",
+    "collection_source_wheel_binding_files": 42,
+    "rack_p2p_accepted_files_compared": 2382,
+    "rack_p2p_runtime_files_unchanged": 2214,
+    "rack_p2p_canonical_receipt_rebuild_at_report_creation": "PASS: actual Windows rebuild exit0; canonical receipt matches Linux byte-for-byte; all2214 payload files unchanged",
+    "rack_p2p_final_builder_sha256": "8005f14f8ae29319f5b211c5dfa9fa356cb170adac925d1a2908a8cbd60f3eff"
+  },
+  "commissioning_inputs_pending": [
+    "Approved Windows VPN connectivity to BCM head node and customer app server",
+    "Explicit host trust and credential-file references for the deployment identity",
+    "Bounded actual inventory, sources, workload and node/time/GPU scope",
+    "Actual service/state persistence and selected per-tool site canaries"
+  ],
+  "not_claimed": [
+    "Complete native Windows Dragonfly core",
+    "Live PythonCM workflow execution",
+    "Customer workload or remediation acceptance",
+    "Complete live cluster collection coverage",
+    "Reboot or power-loss survival"
+  ],
+  "previous_failed_probes_preserved": true,
+  "credential_values_in_report": false
+}

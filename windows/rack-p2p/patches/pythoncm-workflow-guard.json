@@ -1,0 +1,8 @@
+{
+  "source_path": "backend/workflow_engine.py",
+  "before_sha256": "096646721a96d2a925db53c4595dbd3775ff16f92c06ea2dbf3e16c371c994a1",
+  "after_sha256": "8e0e52c0cc6307d475cb2e59c8670fda36917f430cd44ef03d9334fd75dc2796",
+  "anchor": "        sched = build_scheduler(block.get(\"kind\"), connection=conn, profile=profile)\n        handle = sched.submit(spec)\n",
+  "replacement": "        sched = build_scheduler(block.get(\"kind\"), connection=conn, profile=profile)\n        if sched.kind == \"pythoncm\":\n            raise RuntimeError(\n                \"PythonCM workflow execution is disabled: workflow env/launch_mode/\"\n                \"execution_user forwarding and ProgramRunner lifecycle/session acceptance \"\n                \"are not qualified. Inventory access is a separate capability.\"\n            )\n        handle = sched.submit(spec)\n",
+  "reason": "Fail closed before submission: this exported workflow omits JobSpec env/launch_mode/execution_user and the saved real ProgramRunner probe rejected the execution-session cookie. No override is provided. Inventory and other scheduler providers remain separate."
+}

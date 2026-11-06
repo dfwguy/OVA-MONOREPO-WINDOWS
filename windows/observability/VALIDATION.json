@@ -5,7 +5,7 @@
     "publisher_sha256_all_four_archives": "PASS",
     "python_syntax": "PASS",
     "powershell_parser": "PASS",
-    "native_windows_runtime": "NOT_RUN_BY_PACKAGING_AGENT; actual host acceptance receipt required",
+    "native_windows_runtime": "PASS: actual Windows Server2025 build26100, CPython3.12.10x64; all7 real native checks passed, including restart persistence.",
     "unsafe_archive_fixture_rejection": "PASS: traversal/backslash/NUL members rejected"
   },
   "production_commissioned": false,
@@ -15,10 +15,27 @@
     "Original106dashboard/lake/plugin/collector parity not qualified.",
     "No Windows service installation or reboot-survival claim."
   ],
-  "profile_revision": "20261106-native-core-02",
+  "profile_revision": "20261106-native-core-03",
   "features": [
     "blocking serve action for optional external WinSW supervision",
     "restart persistence acceptance for metrics/logs/Grafana identity",
     "publisher SHA256-pinned offline Windows executables"
-  ]
+  ],
+  "first_windows_attempt": {
+    "revision": "20261106-native-core-02",
+    "result": "FAIL",
+    "source": "Coordinator actual VM report; the original failed receipt was retained by the VM agent and retention is confirmed by the final safe receipt.",
+    "root_cause": "Grafana SQLite could not open data/grafana/grafana.db because data/grafana did not exist. Grafana port19001 did not bind; other three services started.",
+    "cleanup": "All four private test processes cleaned up, per VM report",
+    "correction": "Prepare every configured component data, plugin and Grafana log directory before launch."
+  },
+  "modified_utc": "2026-11-06T04:05:54.543017+00:00",
+  "actual_windows_receipt": "evidence/native-observability-acceptance.json",
+  "tested_native_core_sha256": "da3de31526fa3a070e4db4118feeade3f959b23dafcc879c9a465b643b9ea625",
+  "shutdown_limit": "Loki required forced termination fallback in both stop cycles. Restart storage preservation passed; graceful Loki shutdown is not qualified.",
+  "post_run": {
+    "owned_processes_remaining": 0,
+    "acceptance_ports_remaining": 0,
+    "extracted_pack_files_unchanged": true
+  }
 }

@@ -20,6 +20,9 @@ if os.name == 'nt':
 
 def flock(file_descriptor, operation):
     """Lock byte zero; the OS also releases the lock when the handle/process closes."""
+    # Match fcntl.flock: callers may pass an integer fd or an open file object.
+    if hasattr(file_descriptor, 'fileno'):
+        file_descriptor = file_descriptor.fileno()
     if operation not in (LOCK_EX, LOCK_EX | LOCK_NB, LOCK_UN):
         raise ValueError('Only exclusive, nonblocking-exclusive and unlock are supported.')
     if os.name != 'nt':

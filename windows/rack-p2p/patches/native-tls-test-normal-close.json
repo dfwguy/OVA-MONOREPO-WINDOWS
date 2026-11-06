@@ -1,0 +1,8 @@
+{
+  "source_path": "windows/test_server.py",
+  "before_sha256": "e58c00984ec0aee42d27d64e99faa317751219b0d9c2be75af16b62949999492",
+  "after_sha256": "c5274a8cf259d859516f131f8da884e5fa747b6d4bf96461785c42baf67baa62",
+  "anchor": "            websocket.close()\n            connection = http.client.HTTPSConnection(\n",
+  "replacement": "            try:\n                websocket.close()\n            except ConnectionClosed as exc:\n                if exc.reason != 1000:\n                    raise\n            connection = http.client.HTTPSConnection(\n",
+  "reason": "Derived test-only correction for an observed normal-close race: ignore only ConnectionClosed reason1000 in client cleanup after successful echo. Unexpected close codes/other exceptions, auth/origin assertions and the entire45-second service-health loop are unchanged."
+}

@@ -1,0 +1,102 @@
+{
+  "reviewed_at_utc": "2026-11-06T03:44:56.8250877Z",
+  "mode": "LOCAL_SOURCE_AND_SAVED_EVIDENCE_ONLY",
+  "customer_operations_performed": false,
+  "installed_code_changed": false,
+  "current_repo": "nvis/nvis-rack-status",
+  "current_revision": "337a25615c083a09f567aed3cf7e848e766b6e84",
+  "current_source_zip_sha256": "1e42423d7737aa6f77acbc8864ab7eb38086a09106a4d345eba6698a52fb3ae7",
+  "older_reference": {
+    "repo": "nvis-ova/rack-status-pythoncm",
+    "revision": "8d1896",
+    "source_available_to_this_review": false,
+    "commit_equivalence_verified": false
+  },
+  "proof": {
+    "native_windows_web_and_head_terminal": "Saved live-acceptance.json: verified HTTPS, mutual SRP, authenticated APIs, head terminal",
+    "pythoncm_inventory": {
+      "saved_receipt_utc": "2026-11-05T06:14:22.2971396Z",
+      "ok": true
+    },
+    "programrunner": {
+      "probe_ok": false,
+      "error": "OSError: No valid cookie provided, did your session end?",
+      "workload_submitted": false,
+      "live_submit_status_cancel_results_verified": false
+    },
+    "helper_local_hashes_match_saved_remote_receipt": true,
+    "fresh_live_probe_this_review": false
+  },
+  "implemented_contract": [
+    "Windows never imports cluster-version-locked pythoncm SDK; existing Connection/host_exec invokes short-lived helpers on head using matching bundled interpreter",
+    "BCMProvider and bcm_query implement structured inventory/rack reads with cmsh fallback",
+    "Scheduler factory maps pythoncm to PythonCMScheduler; JobSpec has launch_mode/execution_user/env and per-node JobResult",
+    "ProgramRunner helper has probe/submit/status/cancel/result; explicit exact targets; durable per-node stdout/stderr/status; status atomically written last",
+    "Public status authoritative; wait mostly offline with authoritative check each12polls; cancellation stays online"
+  ],
+  "execution_gaps": [
+    "Actual ProgramRunner probe rejected missing/invalid BCM execution session cookie; successful inventory does not prove parallel execution authorization",
+    "workflow_engine.py:857 JobSpec constructor omits env, launch_mode and execution_user; Slurm exports placed in extra_args are ignored by PythonCMScheduler payload",
+    "PythonCM helper runs script via bash; SBATCH headers are comments and Slurm-only script bodies remain Slurm-dependent",
+    "PythonCM ProgramRunner is command fanout, not a Slurm GPU/CPU reservation queue; no GRES/exclusive allocation equivalence is established",
+    "Probe only lists active command status; even future probe success still needs explicitly authorized bounded lifecycle acceptance"
+  ],
+  "intentional_port_differences": [
+    "No head broker daemon",
+    "No broker restart watchdog action",
+    "No site-bound ops timers/cron or touchless deployment harness",
+    "Some frontend evidence/export extras omitted",
+    "validation_provenance.py not imported",
+    "Site facts moved to Platform/Project/Cluster, scheduler remains per-cluster opt-in, script paths use script_tree"
+  ],
+  "safe_port_contract": [
+    "Harvest actual current modules, head helpers, script_tree/paths, config/catalog models and transport as a coherent source closure; preserve native Windows portability changes",
+    "Compare actual older8d1896 tree file-by-file before any full-equivalence claim; current porting document is evidence of design intent, not proof against that exact commit",
+    "Use existing workflow engine and Scheduler; plumb explicit user/mode/env in owning contract before arming PythonCM Tools; do not add parallel runner",
+    "Keep session credentials and matching SDK on head; preserve service SSH identity context and no credential values in argv or export bundles",
+    "Future execution acceptance requires approved exact nodes/user, bounded harmless command, real ProgramRunner handle, per-node output/status, authoritative status and verified cancellation/durability",
+    "Keep Slurm-only tools disabled for PythonCM until actual native execution contracts and resource ownership are qualified; AutoAction remains separate Slurm tool"
+  ],
+  "files": [
+    {
+      "path": "backend\\bcm_query.py",
+      "sha256": "2a329255fa86bbb98d6973e738570e7c21c9b5189a81ac4ca7e0206fd297aaee"
+    },
+    {
+      "path": "backend\\platforms\\bcm.py",
+      "sha256": "552346daaea904cfd36f23012da4db395450ef215eccd192d456cc3beeb7f4fb"
+    },
+    {
+      "path": "backend\\schedulers\\base.py",
+      "sha256": "9cbe6be224466d26dc79ca9753623a0d323b1f0695bbf1a4663014aed6c9bea3"
+    },
+    {
+      "path": "backend\\schedulers\\factory.py",
+      "sha256": "ffdcbd4dc10c045e8dd09abba33c7300867d9632ce6024d0b95a4440ee0fde3f"
+    },
+    {
+      "path": "backend\\schedulers\\pythoncm.py",
+      "sha256": "d2650c6a6b86982e1beeddae58266ce90301c4cb78ea39f089664ecdb77d2b35"
+    },
+    {
+      "path": "backend\\workflow_engine.py",
+      "sha256": "c63691b1baea45b459a1e2c24b64305e8a3974c5f0159d6a8ea9a0794d4c581c"
+    },
+    {
+      "path": "bin\\scripts\\nvis_bcm_query.py",
+      "sha256": "42691061329e492f07f0834c2a13979f6cfa99cbcd45c4f01473dbfb063c0146"
+    },
+    {
+      "path": "bin\\scripts\\nvis_pythoncm_exec.py",
+      "sha256": "d7a15bd62d78f3df3790543f56d4ff94157284bdc371f3301de1f6072e3c8307"
+    },
+    {
+      "path": "docs\\explanation\\porting-the-pythoncm-fork.md",
+      "sha256": "5e5120e1e1ac7fe2d30af3fa4fd61b2631535b1e06357d69389a2f7f523b3848"
+    },
+    {
+      "path": "backend\\native_status.py",
+      "sha256": "3d9fc4f3b07a3be60e3eefa665d4c924a60dfa0eb59e7047a55ca39d9921d0af"
+    }
+  ]
+}

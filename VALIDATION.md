@@ -1,24 +1,32 @@
-# Validation status
+# Windows validation and commissioning status
 
-## Completed preparation
+The native software scopes below passed on real Windows hosts. This release does not certify customer connectivity, all upstream feature parity, persistent service installation, GPU execution or reboot/power-loss recovery.
 
-- Original control ZIP and both external Observability archives matched the NVFTP release index.
-- Intake found generated Rack runtime credential/state files. Six files were removed from the publication copy and the Rack toolkit, control manifests and root control archive were rebuilt. See [sanitation evidence](evidence/sanitization-removals.json) and [new artifact identities](evidence/sanitized-artifact-provenance.json).
-- [Published component integrity](evidence/published-component-integrity.json) checks the five supplied component file manifests. Observability and the added PythonCM snapshot have their source identities recorded separately.
-- Six portable control-helper tests passed on Linux: all-six toolkit extraction, strict manifest verification, tamper/unlisted/traversal rejection, unsafe ZIP names, collision/symlink refusal and existing-destination refusal. This verifies these helpers on Linux only.
-- A bounded recursive credential scan covers compressed payloads and reports its exclusions and classified vendor/test matches in [the scan report](evidence/recursive-secret-scan.json). This is not an exhaustive security certification.
-- The [user guide PDF](docs/OVA-MONOREPO-WINDOWS-User-Guide.pdf) was rendered and inspected separately from application runtime validation.
+| Scope | Actual result | Authoritative evidence |
+| --- | --- | --- |
+| Control delivery | 7 checks passed on Server 2019 / PowerShell 5.1, pipeline 79725803, job 531758252 | [CI receipt](evidence/windows-control-ci.json), [summary](evidence/windows-control-ci-summary.json) |
+| Exemplar preparation and one-node orchestration | 9 tests passed on native Server 2025 / CPython 3.12.10; transports mocked, no jobs submitted | [Native compatibility](docs/NATIVE_WINDOWS_COMPATIBILITY.md) |
+| Rack Status and P2P console/proxy | 21 tests passed, zero failures/errors/skips; fresh offline environments, TLS/WebSocket auth/origin checks, full 45-second stability, ConPTY, locks, workflow guard and mock Manager | [Acceptance](evidence/native-rack-p2p-acceptance.json), [source binding](evidence/native-rack-p2p-source-binding.json) |
+| Observability | 7 checks passed using four real native processes, authenticated APIs, actual metrics/log ingestion and restart persistence | [Acceptance](evidence/native-observability-acceptance.json) |
+| Collection | 6 tests passed, zero skips; real process locks, held-reader replacement contention, read-only denial, concurrent generation publication and authenticated ingest/query/export/restart | [Acceptance](evidence/native-collection-acceptance.json), [source binding](evidence/native-collection-source-binding.json) |
+| Optional runtime prerequisites | Three binaries matched pinned hashes; Python installer signature valid; WinSW binaries unsigned as documented | [Windows verification](evidence/runtime-prerequisites-windows.json) |
 
-## Windows control acceptance
+Tests used isolated runtime directories and retained the existing Rack and P2P services. The recorded first failed attempts remain available; their corrected reruns, rather than preparation claims, establish the final results. Read profile-specific receipts for exact assertions and exclusions. The source-binding report separates a metadata-only canonical build-receipt ordering correction from the application bytes used in the Rack/P2P runtime tests.
 
-The GitLab `windows-control-acceptance` job runs the native Windows PowerShell/Python harness. Its output artifact is `artifacts/windows-controls/windows-controls.json`. Consult the actual pipeline result before reporting success; the presence of the job definition is not evidence that it ran.
+## Deployment boundaries
 
-Transport argument/guard tests explicitly mock SSH, SCP and SFTP. The job does not contact customer hosts, configure a VPN, run GPU workloads or validate all six application backends.
+- **P2P:** the Windows console/proxy is qualified within its stated scope. Dragonfly Manager, scheduler, seed, PostgreSQL/Redis and peers remain Linux-side. No WSL or local Linux VM is used.
+- **PythonCM:** inventory capability does not establish ProgramRunner/workflow execution equivalence. Unqualified PythonCM workflow submissions fail closed; environment/user/launch-mode and execution-session contracts need separate qualification.
+- **Observability:** the native profile uses Prometheus in place of the original VictoriaMetrics deployment. Full legacy dashboard/plugin/lake parity is not established. Loki required a recorded forced-stop fallback; restart persistence passed, graceful Loki shutdown is unqualified.
+- **Customer connectivity:** corrected probes with the original jump chains and strict trust checks timed out. No changed SSH host key was established. An approved FortiClient connection and operator authentication are still required before BCM/app-server acceptance. No credentials, trust bypass or firewall changes are included.
+- **Service and workload commissioning:** WinSW/Task Scheduler definitions are supplied, with action scheduling disabled. Persistent SCM installation, reboot recovery, customer collectors, real GPU jobs and cluster-wide operations were not performed by these isolated tests.
 
-## Actual deployed VM acceptance
+## Source and publication integrity
 
-Direct coordination with the existing Windows Codex session is established through `codex queue --remote`, using a token-authenticated loopback-only app server and reverse SSH tunnel. The agent acknowledged the read-only deployment audit. No GitLab-based agent handoff is used.
+The original NVFTP release was checked against its release index. Intake removed six generated Rack credential/runtime files and rebuilt affected toolkits/manifests; see [sanitation evidence](evidence/sanitization-removals.json), [artifact provenance](evidence/sanitized-artifact-provenance.json) and [component integrity](evidence/published-component-integrity.json). Existing deployed credentials were not rotated by this packaging work.
 
-The user requires native Windows services and excludes Linux virtualization. The [compatibility assessment](docs/NATIVE_WINDOWS_COMPATIBILITY.md) identifies source-level blockers and distinguishes the supplied Linux backend path from that requirement. The VM audit reports an existing native Rack adaptation based on `nvis/nvis-rack-status` commit `337a256…`, absent from the original publication; its code is being harvested and reviewed. The older PythonCM fork is a comparison source, not a replacement instruction. Reconcile installed adaptations before replacing or porting services.
+The [bounded recursive scan](evidence/recursive-secret-scan.json) records coverage and classified vendor/test matches. A vendor PostgreSQL image retains its standard example snakeoil key; it must not be used for production TLS. This is not an exhaustive security certification.
 
-For each tool, acceptance still requires native executable/service identity, exact source/build, startup and functional result, durable state/restart evidence, and its approved cluster collector/workload boundary. VPN/DNS/SSH reachability to both BCM and app-server must be proven on the actual VM. Until those results exist, this delivery is a sanitized source/control candidate, not a certified six-service native Windows installation.
+The offline release builder creates an embedded `RELEASE_MANIFEST.json` with every shipped file's SHA-256 and size, rejects unsafe paths and external links, and excludes Git metadata, runtime secrets, caches and duplicate top-level archives. Its verifier checks the actual archive payload against that manifest. Source, offline dependencies, guide, PDF, NVIDIA assets and acceptance evidence are included.
+
+The [23-page operator PDF](docs/OVA-MONOREPO-WINDOWS-User-Guide.pdf), [PDF checks](docs/PDF_VALIDATION.json) and [branding provenance](docs/branding/ASSET_PROVENANCE.json) accompany the source. The animated diagram explicitly shows the Linux P2P core and commissioning boundaries.

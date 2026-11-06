@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "python_version": "3.12.10",
+  "python_bits": 64,
+  "os": "Windows Server 2025 Standard",
+  "os_build": "26100",
+  "production_commissioned": false,
+  "pack_sha256": "9563ce672236c0014309d5cb54d6163cb23aad09071d79a41e281bd239f6cfb5",
+  "pack_bytes": 65450838,
+  "status": "FAIL",
+  "original_harness": {
+    "profile": "fresh-native-rack-p2p-offline-adapters",
+    "started_utc": "2026-11-06T04:16:40.817372+00:00",
+    "python_version": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+    "checks": {
+      "rack-create-venv": {
+        "exit_code": 0,
+        "result": "PASS"
+      },
+      "rack-offline-install": {
+        "exit_code": 0,
+        "result": "PASS"
+      },
+      "rack-pip-check": {
+        "exit_code": 0,
+        "result": "PASS"
+      },
+      "p2p-create-venv": {
+        "exit_code": 0,
+        "result": "PASS"
+      },
+      "p2p-offline-install": {
+        "exit_code": 0,
+        "result": "PASS"
+      },
+      "p2p-pip-check": {
+        "exit_code": 0,
+        "result": "PASS"
+      },
+      "rack-kernel-file-locks": {
+        "exit_code": 0,
+        "result": "PASS"
+      },
+      "rack-native-tls-websocket": {
+        "exit_code": 1,
+        "result": "FAIL"
+      }
+    },
+    "customer_cluster_contacted": false,
+    "services_installed_or_changed": false,
+    "native_p2p_manager_core_tested": false,
+    "live_pythoncm_execution_qualified": false,
+    "status": "FAIL",
+    "error": "rack-native-tls-websocket failed; inspect the protected acceptance log directory.",
+    "finished_utc": "2026-11-06T04:18:33.018919+00:00",
+    "limits": [
+      "Native TLS/WebSocket fixture and local ConPTY checks are not customer login/SSH/head-terminal acceptance.",
+      "P2P tests use a loopback mock Manager; actual Manager/scheduler/seed/database core remains Linux.",
+      "PythonCM workflow submission is intentionally blocked until its explicit job fields and real execution-session lifecycle are qualified."
+    ]
+  },
+  "supplemental_first_invocations": {
+    "scope": "First invocations of the three checks not reached by the failed original harness; exact packaged commands and environment",
+    "original_acceptance_status": "FAIL_PRESERVED",
+    "checks": {
+      "rack-native-conpty": {
+        "exit_code": 0,
+        "result": "PASS",
+        "unit_tests_reported": 1
+      },
+      "pythoncm-fail-closed-workflow-boundary": {
+        "exit_code": 0,
+        "result": "PASS",
+        "unit_tests_reported": 3
+      },
+      "p2p-console-loopback-mock-manager": {
+        "exit_code": 0,
+        "result": "PASS",
+        "unit_tests_reported": 6
+      }
+    },
+    "customer_cluster_contacted": false,
+    "services_installed_or_changed": false,
+    "started_utc": "2026-11-06T04:20:21.777921+00:00",
+    "finished_utc": "2026-11-06T04:20:26.583004+00:00",
+    "status": "PASS_SUPPLEMENTAL_CHECKS"
+  },
+  "unit_outcomes": {
+    "passed": 16,
+    "errors": 1,
+    "total": 17
+  },
+  "procedure_checks": {
+    "passed": 10,
+    "failed": 1
+  },
+  "failure_diagnostics": [
+    {
+      "test": "NativeServerTest.test_service_survives_delayed_websocket_cleanup",
+      "source_location": "windows/test_server.py:113 -> reused test method:98 -> simple_websocket/ws.py:115",
+      "error": "simple_websocket.ConnectionClosed: code1000 normal closure raised by websocket.close()",
+      "delayed_45_second_wait_reached": false,
+      "tls_tests_passed": 2,
+      "tls_tests_errored": 1,
+      "tls_suite_seconds": 0.594,
+      "limits": "No claim that the delayed-cleanup stability regression passed; no test edits or rerun."
+    }
+  ],
+  "build": {
+    "output_files": 2214,
+    "receipt_sha256": "324fed8a50625341ac2b3621ddf00c38cde001a30f62d06c7a865c8d8badb25b",
+    "baseline_overlay_hash_verification": "PASS",
+    "source_files_copied_or_derived_only_in_fresh_runtime": true
+  },
+  "integrity": {
+    "extracted_pack_entries_verified": 2379,
+    "extracted_pack_changes": 0,
+    "original_export_unchanged": true
+  },
+  "existing_services_same_state_and_process_ids": true,
+  "raw_logs_retained_privately": true,
+  "limits": [
+    "P2P gateway uses mock Manager; core remains Linux.",
+    "PythonCM workflow is intentionally fail-closed; no live execution qualification.",
+    "No customer GPU/job/SCM operations."
+  ],
+  "execution": {
+    "observed_exit_code": null,
+    "expected_harness_exit_code": 1,
+    "expected_code_is_inferred": true,
+    "capture_limitation": "Launcher did not retain OS exit code; status FAIL is directly recorded in the original acceptance receipt."
+  },
+  "cleanup": {
+    "fresh_venv_owned_processes_remaining": 0,
+    "fixture_teardowns_completed": true,
+    "kill_issued": false
+  }
+}

@@ -3,7 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
-from native_durable import atomic_write
+from native_durable import atomic_write, read_atomic_text
 
 
 def publish_generation(lake, generation):
@@ -18,7 +18,7 @@ def publish_generation(lake, generation):
 
 def resolve_generation(lake):
     lake = Path(lake).resolve()
-    record = json.loads((lake / 'current.json').read_text(encoding='utf-8'))
+    record = json.loads(read_atomic_text(lake / 'current.json'))
     name = record['generation']
     if not re.fullmatch(r'generation-[A-Za-z0-9]+', name):
         raise ValueError('Invalid generation pointer.')

@@ -91,6 +91,7 @@ def supervise(runtime, config_path, max_seconds=None):
             if task.get('log_handle') and not task['log_handle'].closed:
                 task['log_handle'].close()
         atomic_write(state / 'native-supervisor.json', json.dumps({'schema_version':1, 'status':'stopped', 'pid':os.getpid(), 'site_acceptance':'NOT_COMMISSIONED', 'tasks':{name:{'running':False,'last_exit':task['process'].poll() if task['process'] else task['last_exit'],'runs':task['restarts']} for name,task in tasks.items()}}, indent=2))
+        native_locking.flock(owner, native_locking.LOCK_UN)
         owner.close()
 
 
