@@ -9,12 +9,10 @@ windows-control-acceptance:
   image: mcr.microsoft.com/windows/servercore:ltsc2019
   timeout: 45m
   variables:
-    GIT_LFS_SKIP_SMUDGE: '1'
     GIT_CONFIG_COUNT: '1'
     GIT_CONFIG_KEY_0: core.longpaths
     GIT_CONFIG_VALUE_0: 'true'
   script:
-    - git lfs pull --include="control/**" --exclude=""
     - powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File tests/Test-WindowsControls.ps1 -RepositoryRoot "$env:CI_PROJECT_DIR"
   artifacts:
     when: always
