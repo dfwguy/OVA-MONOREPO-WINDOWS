@@ -1,0 +1,31 @@
+# Native Windows collection adapter
+
+This adapter derives the existing OVA collection application into a fresh external runtime. It hosts SQLite WAL, immutable compressed evidence, Parquet generations, DuckDB queries and the authenticated Waitress browser natively on Windows. It does not use WSL, a Linux VM or Linux containers. Its offline wheel closure targets the actual deployment prerequisite: **CPython 3.12 x64**. The control bundle's Python3.14 embedded interpreter is a separate helper runtime.
+
+The baseline application remains unchanged. `BASELINE.json` pins every input file; `build_runtime.py` refuses mismatched inputs and applies explicit counted transformations to a new directory outside the repository. The output records original/derived/adapter hashes. Private settings, credentials, evidence and runtime output stay outside Git.
+
+## Runtime changes and limits
+
+- `LockFileEx` provides real exclusive process locks and releases ownership when a process dies. Nonblocking scan locks reject concurrent writers. The POSIX preparation route uses the original `flock` semantics.
+- Immutable generations use an atomic regular `current.json` pointer with a verified manifest hash. Readers pin a generation; publication needs no Windows symbolic-link privileges.
+- Windows file data are flushed before `MoveFileExW(REPLACE_EXISTING | WRITE_THROUGH)` publication. **POSIX directory fsync is not available here. Windows filesystem/storage power-loss and actual reboot survival remain unqualified.** Settings must explicitly acknowledge that boundary; the API records it. This adapter does not claim Linux-equivalent directory metadata durability.
+- Local input roots are explicit Windows directories populated by approved collectors or a controlled evidence mirror. Optional scheduler queries use native OpenSSH with host-key checking, a reviewed alias and a narrow read-only command allowlist. Batch scripts are fetched through stdout, keeping temporary Windows paths off the Linux head node. [Slurm documents the stdout form](https://slurm.schedmd.com/scontrol.html).
+- Native supervision replaces the systemd timer/service layout. `supervisor.py` schedules the existing workers, prevents a second supervisor with a real process lock, records worker exits/timeouts and restarts the browser. `service_wrapper.py` renders a descriptor around the separately supplied approved WinSW2.x executable. It does not register or start a service.
+
+Mirror mode is explicit: set `native_scheduler_enabled` to false and leave remote capture disabled until approved VPN/SSH/site sources are available. This demonstrates application operation with configured native evidence inputs; it does not establish live Slurm capture coverage.
+
+## Prepare and validate
+
+1. Create private settings from the existing collection schema. Set Windows absolute paths for `root`, `controller_log`, `completion_log`, `manifest_dirs`, `local_roots`, `browser_auth_file`, `ssh_known_hosts` and `ssh_identity_file`; set unique cluster/epoch identity and browser loopback port. Store a generated browser token of at least32characters outside collected roots. Set `native_windows_durability_acknowledged` true only after reading the boundary above. Use a separate persistent data root when building a new code version; never reset previous state to upgrade.
+2. Run `Prepare-NativeCollection.ps1` with the full native Python3.12 executable, fresh external venv/runtime directories and private config path. It verifies the ten wheel hashes and installs offline with `--require-hashes`, checks dependencies, then derives the runtime. It performs no service registration or customer scan.
+3. Run the isolated acceptance using the new venv interpreter:
+
+   ```powershell
+   C:\OVA\collection-venv\Scripts\python.exe -B .\windows\collection\tests\test_native_collection.py --evidence C:\OVA\private-evidence\collection-native.json
+   ```
+
+   Tests create temporary synthetic sources only. They exercise real crossprocess locking/process-death release, generation publication/readers, durable SQLite journal reuse after process restart, redaction without altering originals, Parquet generation, authenticated HTTP browsing, query/search and byte-verified export download. They do not contact a customer endpoint or install a service. `--allow-posix` runs preparation checks on Linux and is explicitly not native Windows acceptance.
+4. For scoped commissioning, point the derived runtime at approved native mirror roots and/or configure `native_scheduler_enabled`, `scheduler_ssh_alias` and `scheduler_remote_bin`. Keep SSH identity/known-host files private. Run a reviewed one-shot command with `SLURM_HISTORY_CONFIG` set to the private runtime config; inspect explicit health gaps/errors and selected-source freshness before enabling periodic collection.
+5. Render an external WinSW descriptor using `service_wrapper.py --runtime ... --python ... --winsw ... --output ...`. Review account permissions and private data/log ACLs before explicitly installing/starting the generated service under the approved service identity. Registration, restart commissioning and reboot acceptance require the actual Windows deployment scope. No credentials are embedded in the descriptor.
+
+Acceptance is limited to the evidence produced by the actual interpreter/host. Functional synthetic acceptance does not prove capture completeness, VPN routing, scheduler permissions, accounting retention, collector coverage, hardware performance, service-account access or reboot/power-loss survival.

@@ -222,5 +222,17 @@
     "removed_generated_runtime_files": 6,
     "evidence": "evidence/sanitization-removals.json",
     "original_control_sha256": "28765b63d5331dc1413a43152c433af288897059960d7f636385bb78247607e7"
-  }
+  },
+  "monorepo_security_revisions": [
+    {
+      "revision": "20261106-raw-zip-name-validation",
+      "timestamp_utc": "2026-11-06T03:48:49.862684+00:00",
+      "file": "scripts/unpack_toolkit.py",
+      "change": "Validate ZipInfo.orig_filename before normalized filename; reject normalization and NUL truncation differences before extraction. Windows path separator normalization must not bypass portable ZIP member policy.",
+      "separate_from_credential_removal": true,
+      "prior_sanitized_control_sha256": "568c40d2dfd5ef0c75421d4f792ba339b44a6c6996ba82efb3393712148fa0f2",
+      "local_test_status": "Two security fixtures passed as reported by Windows validation agent; full six-test suite follows artifact rebuild.",
+      "native_windows_recheck": "PENDING"
+    }
+  ]
 }

@@ -52,7 +52,12 @@ class ControlHelpers(unittest.TestCase):
             with self.subTest(member=name):
                 archive = self.temp / ('bad' + str(index) + '.zip')
                 with zipfile.ZipFile(archive, 'w') as z:
-                    z.writestr(name, b'fixture')
+                    # ZipInfo normalizes backslashes on Windows at construction.
+                    # Assign afterwards so the archive contains the actual hostile bytes.
+                    member = zipfile.ZipInfo()
+                    member.filename = name
+                    member.orig_filename = name
+                    z.writestr(member, b'fixture')
                 dest = self.temp / ('bad' + str(index))
                 with self.assertRaises(ValueError):
                     unpacker.unpack(archive, dest)

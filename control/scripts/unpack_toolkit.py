@@ -15,11 +15,16 @@ def unpack(archive, destination):
         seen = set()
         prefixes = {}
         for info in z.infolist():
-            path = PurePosixPath(info.filename)
-            raw_parts = info.filename.rstrip('/').split('/')
+            raw_name = info.orig_filename
+            # Windows ZipInfo normalizes backslashes; validate the original name
+            # before accepting any platform-specific normalization or NUL truncation.
+            if raw_name != info.filename:
+                raise ValueError(f'Normalized/unsafe archive member: {raw_name!r}')
+            path = PurePosixPath(raw_name)
+            raw_parts = raw_name.rstrip('/').split('/')
             mode = info.external_attr >> 16
-            if (not path.parts or path.is_absolute() or '..' in path.parts or '\\' in info.filename
-                    or ':' in info.filename or stat.S_ISLNK(mode)):
+            if (not path.parts or path.is_absolute() or '..' in path.parts or '\\' in raw_name
+                    or ':' in raw_name or stat.S_ISLNK(mode)):
                 raise ValueError(f'Unsafe archive member: {info.filename}')
             for part in raw_parts:
                 if (not part or part in ('.', '..') or part.endswith(('.', ' '))

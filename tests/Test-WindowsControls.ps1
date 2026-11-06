@@ -64,6 +64,18 @@ try {
         if (Test-Path -LiteralPath $stderrFile) { Get-Content -LiteralPath $stderrFile | ForEach-Object { Write-Output "$_" } }
         Assert-True ($pythonExit -eq 0) 'Native Windows Python acceptance failed.'
     }
+    Check 'Native Windows one-node orchestration and Exemplar preparation boundaries' {
+        Assert-True ([bool]$script:pythonExe) 'Python startup did not succeed.'
+        $nativeError = Join-Path $tempRoot 'native-orchestration-stderr.txt'
+        $oldPreference = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = 'Continue'
+            & $script:pythonExe -B (Join-Path $RepositoryRoot 'tests/test_native_orchestration.py') 2> $nativeError | ForEach-Object { Write-Output "$_" }
+            $nativeExit = $LASTEXITCODE
+        } finally { $ErrorActionPreference = $oldPreference }
+        if (Test-Path -LiteralPath $nativeError) { Get-Content -LiteralPath $nativeError | ForEach-Object { Write-Output "$_" } }
+        Assert-True ($nativeExit -eq 0) 'Native orchestration acceptance failed.'
+    }
     # These functions deliberately shadow executables, preventing network traffic.
     $global:OvaFixture = Join-Path $tempRoot 'fixture.zip'
     [IO.File]::WriteAllBytes($global:OvaFixture,[byte[]](1,2,3,4,5))
@@ -121,9 +133,9 @@ try {
         schema_version=1; recorded_utc=[DateTime]::UtcNow.ToString('o'); platform=[Environment]::OSVersion.ToString();
         commit_sha=$env:CI_COMMIT_SHA; pipeline_url=$env:CI_PIPELINE_URL; job_id=$env:CI_JOB_ID;
         powershell=$PSVersionTable.PSVersion.ToString(); architecture=$env:PROCESSOR_ARCHITECTURE;
-        scope='Native Windows control helpers, hashes, Python archive verification and tool extraction; mocked transport commands';
+        scope='Native Windows control helpers, hashes, toolkit extraction, one-node invocation guards and Exemplar preparation boundaries; mocked transport commands';
         excluded=@('Customer VPN','Live SSH/SFTP','Six backend runtime acceptance','GPU jobs','Remediation');
-        status=if($failed -eq 0 -and $results.Count -eq 6){'passed'}else{'failed'}; checks=$results.ToArray()
+        status=if($failed -eq 0 -and $results.Count -eq 7){'passed'}else{'failed'}; checks=$results.ToArray()
     }
     $report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $EvidenceDirectory 'windows-controls.json') -Encoding UTF8
     Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
