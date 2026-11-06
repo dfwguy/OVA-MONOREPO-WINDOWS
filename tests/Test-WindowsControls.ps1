@@ -2,10 +2,16 @@
 # this does not qualify Linux backends, customer VPN, cluster jobs, or remediation.
 [CmdletBinding()]
 param(
-    [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot),
+    [string]$RepositoryRoot = '',
     [string]$EvidenceDirectory
 )
 $ErrorActionPreference = 'Stop'
+# Windows PowerShell 5.1 may not initialize PSScriptRoot during parameter defaults.
+if (-not $RepositoryRoot) {
+    $testScriptPath=$MyInvocation.MyCommand.Path
+    if (-not $testScriptPath) { throw 'Pass -RepositoryRoot explicitly when invoking without a script file.' }
+    $RepositoryRoot=Split-Path -Parent (Split-Path -Parent $testScriptPath)
+}
 Set-StrictMode -Version Latest
 if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) { throw 'This acceptance entry point requires native Windows.' }
 $RepositoryRoot = (Resolve-Path -LiteralPath $RepositoryRoot).Path
@@ -52,7 +58,7 @@ try {
         $savedPreference=$ErrorActionPreference
         try {
             $ErrorActionPreference='Continue'
-            & $script:pythonExe -B (Join-Path $PSScriptRoot 'test_control_helpers.py') 2> $stderrFile
+            & $script:pythonExe -B (Join-Path $RepositoryRoot 'tests/test_control_helpers.py') 2> $stderrFile
             $pythonExit=$LASTEXITCODE
         } finally { $ErrorActionPreference=$savedPreference }
         if (Test-Path -LiteralPath $stderrFile) { Get-Content -LiteralPath $stderrFile | ForEach-Object { Write-Output "$_" } }

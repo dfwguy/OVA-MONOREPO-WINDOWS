@@ -15,8 +15,8 @@ Six-tool OVA delivery for a Windows management VM, with inspectable source, offl
 | --- | --- |
 | `control/` | Sanitized Windows staging/control delivery and six toolkits; its manifest checks this tree only. |
 | `components/` | Expanded toolkits and source for review. |
-| `components/rack-status-pythoncm/` | Requested PythonCM source, pinned to commit `8d1896e55cf24c23ef80d9ccef8a0d9a8a7962f7`. |
-| `components/nvis-rack-status/` | Different Rack implementation supplied by the original bundle; retained for provenance, not a PythonCM substitute. |
+| `components/rack-status-pythoncm/` | Comparison snapshot for PythonCM capability review, pinned to `8d1896e55cf24c23ef80d9ccef8a0d9a8a7962f7`; it does not supersede the deployed native Rack adaptation. |
+| `components/nvis-rack-status/` | Rack base supplied by the original bundle; the existing Windows adaptation is being reconciled against this source. |
 | `artifacts/` | Sanitized control archive and Linux architecture-specific offline Observability packs. |
 | `provenance/`, `evidence/` | Source identities, integrity checks, sanitation records and validation evidence. |
 | `tests/` | Portable integrity checks and actual Windows control-host acceptance harness. |
@@ -43,4 +43,4 @@ VPN configuration must come from the site owner. Verify Windows connectivity to 
 
 The original NVFTP distribution contained generated Rack runtime secret material. The publishing copy is sanitized; original archives are excluded. Use the sanitation and release records for the new checksums rather than treating historical NVFTP checksums as the checksum of a rebuilt archive. Source test evidence and Windows control acceptance are separate from six-service runtime acceptance.
 
-Agent coordination with the existing Windows Codex session will use `codex queue --remote` once its reachable app-server endpoint and session ID are supplied.
+Agent coordination with the existing Windows Codex session uses `codex queue --remote` through an authenticated, loopback-only SSH tunnel. The actual VM audit is in progress.

@@ -17,8 +17,8 @@ Transport argument/guard tests explicitly mock SSH, SCP and SFTP. The job does n
 
 ## Actual deployed VM acceptance
 
-Pending direct coordination with the existing Windows Codex session through `codex queue --remote`. The app-server endpoint and target session ID are required. No GitLab-based agent handoff is used.
+Direct coordination with the existing Windows Codex session is established through `codex queue --remote`, using a token-authenticated loopback-only app server and reverse SSH tunnel. The agent acknowledged the read-only deployment audit. No GitLab-based agent handoff is used.
 
-The user requires native Windows services and excludes Linux virtualization. The [compatibility assessment](docs/NATIVE_WINDOWS_COMPATIBILITY.md) identifies source-level blockers and distinguishes the supplied Linux backend path from that requirement. Reconcile adaptations already installed on the actual VM before replacing or porting services.
+The user requires native Windows services and excludes Linux virtualization. The [compatibility assessment](docs/NATIVE_WINDOWS_COMPATIBILITY.md) identifies source-level blockers and distinguishes the supplied Linux backend path from that requirement. The VM audit reports an existing native Rack adaptation based on `nvis/nvis-rack-status` commit `337a256…`, absent from the original publication; its code is being harvested and reviewed. The older PythonCM fork is a comparison source, not a replacement instruction. Reconcile installed adaptations before replacing or porting services.
 
 For each tool, acceptance still requires native executable/service identity, exact source/build, startup and functional result, durable state/restart evidence, and its approved cluster collector/workload boundary. VPN/DNS/SSH reachability to both BCM and app-server must be proven on the actual VM. Until those results exist, this delivery is a sanitized source/control candidate, not a certified six-service native Windows installation.

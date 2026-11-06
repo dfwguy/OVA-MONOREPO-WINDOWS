@@ -4,7 +4,7 @@
   "assessment_type": "static_source_and_payload_audit",
   "requested_architecture": "Native Windows VM hosts most or all six services; cluster hosts only thin collectors and workloads; no WSL or Linux virtualization",
   "overall_status": "NATIVE_SIX_BACKEND_ACCEPTANCE_NOT_ESTABLISHED",
-  "existing_windows_vm_deployment": "Reported by operator; files and runtime evidence not yet reconciled with this repository",
+  "existing_windows_vm_deployment": "Reported by operator and connected Windows agent: adapted nvis/nvis-rack-status based on commit337a25615c083a09f567aed3cf7e848e766b6e84; adapter export/runtime evidence pending reconciliation",
   "windows_control_layer": {
     "status": "NATIVE_RUNTIME_CI_PREPARED",
     "entrypoint": "tests/Test-WindowsControls.ps1",
@@ -48,7 +48,7 @@
     },
     {
       "name": "Rack Status (PythonCM)",
-      "status": "DIRECT_NATIVE_IMPORT_BLOCKERS",
+      "status": "OLDER_COMPARISON_SNAPSHOT_HAS_NATIVE_IMPORT_BLOCKERS",
       "evidence": [
         {
           "path": "components/rack-status-pythoncm/backend/app.py",
@@ -66,7 +66,8 @@
           "finding": "Runtime requirements include gunicorn"
         }
       ],
-      "required_resolution": "Reconcile deployed native fork; preserve locking semantics using a Windows implementation, use a qualified Windows application server, and exercise durable activity/lock behavior plus BCM PythonCM access."
+      "required_resolution": "Reconcile deployed native fork; preserve locking semantics using a Windows implementation, use a qualified Windows application server, and exercise durable activity/lock behavior plus BCM PythonCM access.",
+      "scope_note": "Findings apply to the included older rack-status-pythoncm comparison snapshot, not a demonstrated failure of the separate adapted nvis/nvis-rack-status deployment. Do not replace the working adapted deployment with this snapshot."
     },
     {
       "name": "Auto action trigger (single-node tests)",
